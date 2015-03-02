@@ -1,0 +1,1 @@
+{"message":"","cod":"200","city_id":23423,"calctime":0.0835,"cnt":1,"list":[{"main":{"temp":301.308,"temp_min":301.308,"temp_max":301.308,"pressure":1021.91,"sea_level":1024.77,"grnd_level":1021.91,"humidity":90},"wind":{"speed":4.39,"deg":190.002},"clouds":{"all":0},"weather":[{"id":800,"main":"Clear","description":"Sky is Clear","icon":"01d"}],"dt":1415608710}]}
