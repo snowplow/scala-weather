@@ -27,7 +27,8 @@ object Dependencies {
 
   object V {
     // Java
-    val jodaTime      = "2.7"
+    val jodaTime      = "2.9.1"
+    val jodaConvert   = "1.8.1"
 
     // Scala
     val scalaz        = "7.0.6"
@@ -49,6 +50,7 @@ object Dependencies {
   object Libraries {
     // Java
     val jodaTime     = "joda-time"                 % "joda-time"                    % V.jodaTime
+    val jodaConvert  = "org.joda"                  % "joda-convert"                 % V.jodaConvert
 
     // Scala
     val scalaz        = "org.scalaz"               %% "scalaz-core"                 % V.scalaz

@@ -20,6 +20,9 @@ import scala.concurrent.duration._
 // Scalaz
 import scalaz._
 
+// Joda
+import org.joda.time.DateTime
+
 // This library
 import Requests._
 import Responses._
@@ -74,6 +77,14 @@ class OwmCacheClient(
       case None =>
         getAndCache(latitude, longitude, timestamp, cacheKey) // Make request
     }
+  }
+
+  /**
+   * Overloaded `getCachedOrRequest` method with Joda DateTime instead of Unix epoch timestamp
+   */
+  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: DateTime): WeatherError \/ Weather = {
+    val unixTime: Int = (timestamp.getMillis / 1000).toInt
+    getCachedOrRequest(latitude, longitude, unixTime)
   }
 
   /**
