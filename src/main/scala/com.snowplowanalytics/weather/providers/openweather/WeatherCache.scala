@@ -14,8 +14,7 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 // Java
-import java.util.Date
-import java.util.Calendar
+import java.util.{ Calendar, Date, TimeZone }
 
 // Scalaz
 import scalaz.\/
@@ -64,7 +63,7 @@ trait WeatherCache[W <: OwmResponse] {
    * @return timestamp for beginning of day of this event
    */
   def getStartOfDay(timestamp: Timestamp): Day = {
-    val calendar: Calendar = Calendar.getInstance()
+    val calendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     calendar.setTime(new Date(timestamp.toLong * 1000))
     calendar.set(Calendar.HOUR_OF_DAY, 0)
     calendar.set(Calendar.MINUTE, 0)
