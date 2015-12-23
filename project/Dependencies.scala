@@ -34,7 +34,7 @@ object Dependencies {
     val scalaz        = "7.0.6"
     val json4s        = "3.2.11"
     val akka          = "2.3.14"
-    val akkaStreams   = "1.0"
+    val akkaStreams   = "2.0.2"
 
     object collUtil {
       val _210      = "6.3.4"

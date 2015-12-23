@@ -14,6 +14,7 @@ package com.snowplowanalytics.weather.providers.openweather
 
 // Akka
 import akka.http.scaladsl.model.Uri
+import akka.http.scaladsl.model.Uri.Query
 
 // TODO: replace it with plain URIs
 private[weather] object Requests {
@@ -34,8 +35,9 @@ private[weather] object Requests {
      */
     def constructQuery(appId: String): String = {
       val end = endpoint.map(e => (Uri.Path.Empty / e / resource)).getOrElse(Uri.Path.Empty / resource)
+      val params = Query(parameters ++ Map("appid" -> appId))
       Uri.Empty.withPath(Uri.Path.Empty / "data" / "2.5" ++ end)
-         .withQuery(parameters ++ Map("appid" -> appId))
+         .withQuery(params)
          .toString
     }
   }
