@@ -66,12 +66,14 @@ OpenWeatherMap provides several hosts for API with various benefits, which you c
 Both clients offer the same set of public methods:
 
 + `forecastById`
++ `forecastByName`
 + `forecastByCoords`
 + `currentById`
++ `currentByName`
 + `currentByCoords`
 + `historyById`
 + `historyByName`
-+ `historyByCoords
++ `historyByCoords`
 
 These methods were designed to follow OpenWeatherMap's own API calls as closely as possible. All of these calls receive similar arguments to those described in **[OpenWeatherMap API documentation] [owm-api-docs]**. For example, to receive a response equivalent to this API call: ``api.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid=YOURKEY``, run the following code:
 
@@ -137,7 +139,7 @@ client.getCachedOrRequest(10.2f, 32.4f, 1447096857)   // Nov 9 19:20:57 2015. Fr
 
 ## Copyright and license
 
-Scala Weather is copyright 2015 Snowplow Analytics Ltd.
+Scala Weather is copyright 2015-2016 Snowplow Analytics Ltd.
 
 Licensed under the **[Apache License, Version 2.0] [license]**  (the "License");
 you may not use this software except in compliance with the License.
@@ -166,7 +168,7 @@ limitations under the License.
 [travis]: https://travis-ci.org/snowplow/scala-weather
 [travis-image]: https://travis-ci.org/snowplow/scala-weather.png?branch=master
 
-[release-image]: http://img.shields.io/badge/release-0.1.0-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.2.0-blue.svg?style=flat
 [releases]: https://github.com/snowplow/scala-weather/releases
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat

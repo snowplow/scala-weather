@@ -13,8 +13,6 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import com.snowplowanalytics.weather.providers
-
 import com.typesafe.config.ConfigFactory
 
 import akka.actor.ActorSystem
