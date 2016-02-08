@@ -20,8 +20,8 @@ object BuildSettings {
     organization          :=  "com.snowplowanalytics",
     version               :=  "0.1.0",
     description           :=  "High-performance Scala library for performing current and historical weather lookups ",
-    scalaVersion          :=  "2.10.4",
-    crossScalaVersions    :=  Seq("2.10.4", "2.11.5"),
+    scalaVersion          :=  "2.10.5",
+    crossScalaVersions    :=  Seq("2.10.6", "2.11.7"),
     scalacOptions         :=  Seq("-feature", "-deprecation", "-encoding", "utf8"),
     resolvers             ++= Dependencies.resolutionRepos
   )
