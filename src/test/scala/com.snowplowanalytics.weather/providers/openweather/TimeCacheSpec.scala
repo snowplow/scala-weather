@@ -35,6 +35,7 @@ import org.specs2.concurrent.ExecutionEnv
 
 // This library
 import Requests.OwmHistoryRequest
+import WeatherCache._
 
 class TimeCacheSpec(implicit val ec: ExecutionEnv)  extends Specification with Mockito { def is = s2"""
 

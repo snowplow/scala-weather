@@ -24,8 +24,10 @@ import scalaz._
 import org.joda.time.DateTime
 
 // This library
+import Errors._
 import Requests._
 import Responses._
+import WeatherCache.{ CacheKey, Position }
 
 /**
  * Blocking OpenWeatherMap client with history (only) cache
