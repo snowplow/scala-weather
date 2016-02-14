@@ -30,6 +30,7 @@ object ScalaWeatherBuild extends Build {
       libraryDependencies <++= Dependencies.onVersion(
         all = Seq(
         Libraries.jodaTime,
+        Libraries.jodaConvert,
         Libraries.scalaz,
         Libraries.json4s,
         Libraries.json4sJackson,

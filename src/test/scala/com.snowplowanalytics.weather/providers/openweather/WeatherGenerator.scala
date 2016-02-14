@@ -18,6 +18,7 @@ import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen._
 
 import Responses._
+import WeatherCache._
 
 /**
   * Trait with methods for random weather generation

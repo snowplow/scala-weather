@@ -34,6 +34,7 @@ import org.json4s.JValue
 import org.json4s.jackson.JsonMethods.parseOpt
 
 // This library
+import Errors._
 import Requests.WeatherRequest
 
 /**
@@ -45,6 +46,8 @@ class AkkaHttpTransport(actorSystem: ActorSystem, apiHost: String) extends HttpA
   implicit val system: ActorSystem = actorSystem
   implicit val context: ExecutionContext = system.dispatcher
   implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+  private val timeout = 2.seconds
 
   // This will use request pool
   private val connectionFlow: Flow[HttpRequest, HttpResponse, Future[Http.OutgoingConnection]] =
@@ -72,18 +75,24 @@ class AkkaHttpTransport(actorSystem: ActorSystem, apiHost: String) extends HttpA
   }
 
   /**
-   * Wait 2 seconds for entity and convert it to string
+   * Wait for entity and convert it to string
    *
    * @param response full HTTP response
    * @return future entity content of HTTP response or throwable in case of timeout
    */
   private def getResponseContent(response: HttpResponse): WeatherError \/ Future[String] =
-    try {
-      \/.right(response.entity.toStrict(2.seconds).map(_.data.utf8String))
-    } catch {
-      case _: java.util.concurrent.TimeoutException =>
-        \/.left(TimeoutError("OpenWeatherMap Error: HTTP entity didn't processed in 2 seconds"))
-      case NonFatal(e) => \/.left(ParseError(s"OpenWeatherMap Error: Can't parse HTTP response. ${e.toString}"))
+    response.status match {
+      // OpenWeatherMap isn't helpful on errors,
+      // we need to catch them both in Transports (HTTP codes) and Clients (parsing)
+      case StatusCodes.Unauthorized => \/.left(AuthorizationError)
+      case _ => try {
+        \/.right(response.entity.toStrict(timeout).map(_.data.utf8String))
+      } catch {
+        case _: java.util.concurrent.TimeoutException =>
+          \/.left(TimeoutError(s"HTTP entity didn't processed in ${timeout.toString()}"))
+        case NonFatal(e) =>
+          \/.left(ParseError(s"Can't parse HTTP response. ${e.toString}"))
+      }
     }
 
   /**

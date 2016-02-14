@@ -23,6 +23,7 @@ import scalaz._
 import org.json4s.JValue
 
 // This library
+import Errors.WeatherError
 import Requests.WeatherRequest
 
 /**

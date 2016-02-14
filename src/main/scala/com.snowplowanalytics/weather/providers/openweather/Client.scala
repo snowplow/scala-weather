@@ -13,14 +13,19 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// Scala
+import scala.language.higherKinds
+
 // Scalaz
 import scalaz.\/
 
 // Json4s
 import org.json4s.JValue
 import org.json4s.DefaultFormats
+import org.json4s.jackson.compactJson
 
 // This library
+import Errors._
 import Implicits._
 import Responses._
 import Requests._
@@ -135,9 +140,23 @@ trait Client[Response[_]] {
     receive(OwmForecastRequest("city", Map("id" -> id.toString, "cnt" -> cnt.toString)))
 
   /**
+   * Get 5 day/3 hour forecast data by city name
+   * Docs: http://openweathermap.org/forecast#5days
+   *
+   * @param name name of the city
+   * @param country optional two-letter code
+   * @param cnt count of returned data
+   * @return either error or forecast wrapped in `Response`
+   */
+  def forecastByName(name: String, country: OptArg[String], cnt: OptArg[Int] = None): Response[Forecast] = {
+    val query = name + country.map("," + _).getOrElse("")
+    receive(OwmForecastRequest("city", Map("q" -> query, "cnt" -> cnt.toString)))
+  }
+
+  /**
    * Get forecast data for coordinates
    *
-   * @param lat lattitude
+   * @param lat latitude
    * @param lon longitude
    * @return either error or forecast wrapped in `Response`
    */
@@ -153,6 +172,20 @@ trait Client[Response[_]] {
    */
   def currentById(id: Int): Response[Current] =
     receive(OwmCurrentRequest("weather", Map("id" -> id.toString)))
+
+  /**
+   * Get 5 day/3 hour forecast data by city name
+   * Docs: http://openweathermap.org/forecast#5days
+   *
+   * @param name name of the city
+   * @param country optional two-letter code
+   * @param cnt count of returned data
+   * @return either error or forecast wrapped in `Response`
+   */
+  def currentByName(name: String, country: OptArg[String], cnt: OptArg[Int] = None): Response[Current] = {
+    val query = name + country.map("," + _).getOrElse("")
+    receive(OwmCurrentRequest("weather", Map("q" -> query, "cnt" -> cnt.toString)))
+  }
 
   /**
    * Get current weather data by city coordinates
@@ -173,11 +206,12 @@ trait Client[Response[_]] {
    *           `com.snowplowanalytics.weather.providers.openweather.Responses`
    * @return either error string or response case class
    */
-  protected[openweather] def extractWeather[W: Manifest](response: WeatherError \/ JValue): WeatherError \/ W =
-    response.flatMap { content =>
-      content.extractOpt match {
-        case Some(weather) => \/.right(weather)
-        case None => \/.left(ParseError(s"OpenWeatherMap Error: Object ${content} can't be mapped to ${manifest[W]}"))
+  protected[openweather] def extractWeather[W: Manifest](response: JValue): WeatherError \/ W =
+    response.extractOpt[W] match {
+      case Some(weather) => \/.right(weather)
+      case None => response.extractOpt[ErrorResponse] match {
+        case Some(error) => \/.left(error)
+        case None => \/.left(ParseError(s"Could not extract ${manifest[W]} from ${compactJson(response)}"))
       }
     }
 }

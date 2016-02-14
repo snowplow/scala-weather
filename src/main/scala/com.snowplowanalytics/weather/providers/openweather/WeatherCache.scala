@@ -14,8 +14,7 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 // Java
-import java.util.Date
-import java.util.Calendar
+import java.util.{ Calendar, Date, TimeZone }
 
 // Scalaz
 import scalaz.\/
@@ -24,6 +23,7 @@ import scalaz.\/
 import com.twitter.util.SynchronizedLruMap
 
 // This libraby
+import Errors.WeatherError
 import Responses.OwmResponse
 
 /**
@@ -33,6 +33,7 @@ import Responses.OwmResponse
  *           However now it could be used only only for History lookups
  */
 trait WeatherCache[W <: OwmResponse] {
+  import WeatherCache._
 
   val cacheSize: Int                 // Size of LRU cache
   val geoPrecision: Int              // nth part of one to round geo coordinates
@@ -64,7 +65,7 @@ trait WeatherCache[W <: OwmResponse] {
    * @return timestamp for beginning of day of this event
    */
   def getStartOfDay(timestamp: Timestamp): Day = {
-    val calendar: Calendar = Calendar.getInstance()
+    val calendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
     calendar.setTime(new Date(timestamp.toLong * 1000))
     calendar.set(Calendar.HOUR_OF_DAY, 0)
     calendar.set(Calendar.MINUTE, 0)
@@ -83,6 +84,24 @@ trait WeatherCache[W <: OwmResponse] {
   def roundCoordinate(coordinate: Float): Float =
     BigDecimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
       .setScale(1, BigDecimal.RoundingMode.HALF_UP).toFloat
+}
 
+object WeatherCache {
+  /**
+   * Cache key for obtaining record
+   *
+   * @param day timestamp for 0:00:00
+   * @param center rounded geo coordinates
+   */
+  case class CacheKey(day: Day, center: Position) {
+    def endOfDay = day + 86400
+  }
 
+  /**
+   * Class to represent geographical coordinates
+   *
+   * @param latitude place's latitude
+   * @param longitude places's longitude
+   */
+  case class Position(latitude: Float, longitude: Float)
 }

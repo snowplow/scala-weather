@@ -21,6 +21,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scalaz.\/
 
 // This library
+import Errors.WeatherError
 import Responses._
 import Requests._
 
@@ -33,7 +34,7 @@ import Requests._
 class OwmAsyncClient(appId: String, transport: HttpAsyncTransport) extends Client[AsyncWeather]  {
   def receive[W <: OwmResponse: Manifest](request: OwmRequest): Future[WeatherError \/ W] = {
     val processedResponse = transport.getData(request, appId)
-    processedResponse.map(extractWeather[W])
+    processedResponse.map(_.flatMap(extractWeather[W]))
   }
 }
 

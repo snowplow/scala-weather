@@ -19,6 +19,7 @@ import org.specs2.matcher.DisjunctionMatchers
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Gen
 
+import Errors._
 import Responses._
 
 class BatchGetSpec extends Specification with DisjunctionMatchers with ScalaCheck with WeatherGenerator { def is = s2"""

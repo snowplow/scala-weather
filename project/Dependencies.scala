@@ -27,13 +27,14 @@ object Dependencies {
 
   object V {
     // Java
-    val jodaTime      = "2.7"
+    val jodaTime      = "2.9.1"
+    val jodaConvert   = "1.8.1"
 
     // Scala
     val scalaz        = "7.0.6"
     val json4s        = "3.2.11"
     val akka          = "2.3.14"
-    val akkaStreams   = "1.0"
+    val akkaStreams   = "2.0.2"
 
     object collUtil {
       val _210      = "6.3.4"
@@ -49,6 +50,7 @@ object Dependencies {
   object Libraries {
     // Java
     val jodaTime     = "joda-time"                 % "joda-time"                    % V.jodaTime
+    val jodaConvert  = "org.joda"                  % "joda-convert"                 % V.jodaConvert
 
     // Scala
     val scalaz        = "org.scalaz"               %% "scalaz-core"                 % V.scalaz

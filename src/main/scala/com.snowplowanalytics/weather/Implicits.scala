@@ -12,7 +12,11 @@
  */
 package com.snowplowanalytics.weather
 
+// Scala
 import scala.language.implicitConversions
+
+// Joda
+import org.joda.time.DateTime
 
 object Implicits {
   /**
@@ -24,6 +28,15 @@ object Implicits {
     implicit def any2opt[T](t: T): OptArg[T] = new OptArg(Option(t)) // NOT Some(t)
     implicit def option2opt[T](o: Option[T]): OptArg[T] = new OptArg(o)
     implicit def opt2option[T](o: OptArg[T]): Option[T] = o.option
+
+    /**
+      * Convert joda time to Unix epoch timestamp
+      * OWM works with Unix timestamps in UTC TZ
+      *
+      * @param d joda time containing all information
+      * @return Unix epoch timestamp
+      */
+    implicit def optDateToInt(d: DateTime): OptArg[Int] = Some((d.getMillis / 1000).toInt)
   }
 
   /**

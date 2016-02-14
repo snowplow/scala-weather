@@ -13,7 +13,11 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// Scalaz
 import scalaz.\/
+
+// This library
+import Errors._
 
 /**
  * Case classes used for extracting data from JSON

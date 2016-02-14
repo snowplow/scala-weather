@@ -25,6 +25,7 @@ import org.specs2.mock.Mockito
 import org.specs2.matcher.DisjunctionMatchers
 
 import Requests.{ OwmHistoryRequest => HR }
+import Errors.TimeoutError
 
 // Mock transport which returns predefined responses
 class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito with DisjunctionMatchers { def is = s2"""
