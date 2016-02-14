@@ -1,4 +1,4 @@
-Version 0.2.0 (2016-02-xx)
+Version 0.2.0 (2016-02-14)
 --------------------------
 Removed OpenJDK from .travis.yml (#19)
 Fixed cache keys attached to UTC (#15)
