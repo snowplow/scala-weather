@@ -33,8 +33,7 @@ object Dependencies {
     // Scala
     val scalaz        = "7.0.6"
     val json4s        = "3.2.11"
-    val akka          = "2.3.14"
-    val akkaStreams   = "2.0.2"
+    val scalaj        = "2.3.0"
 
     object collUtil {
       val _210      = "6.3.4"
@@ -57,10 +56,7 @@ object Dependencies {
     val json4s        = "org.json4s"               %% "json4s-core"                 % V.json4s
     val json4sJackson = "org.json4s"               %% "json4s-jackson"              % V.json4s
     val json4sScalaz  = "org.json4s"               %% "json4s-scalaz"               % V.json4s
-    val akka          = "com.typesafe.akka"        %% "akka-actor"                  % V.akka
-    val akkaStreams   = "com.typesafe.akka"        %% "akka-stream-experimental"    % V.akkaStreams
-    val akkaHttpCore  = "com.typesafe.akka"        %% "akka-http-core-experimental" % V.akkaStreams
-    val akkaHttp      = "com.typesafe.akka"        %% "akka-http-experimental"      % V.akkaStreams
+    val scalaj        = "org.scalaj"               %% "scalaj-http"                 % V.scalaj
 
     object collUtil {
       val _210      = "com.twitter"                %% "util-collection"             % V.collUtil._210

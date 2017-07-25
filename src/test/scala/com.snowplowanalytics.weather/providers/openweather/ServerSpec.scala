@@ -13,9 +13,6 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import com.typesafe.config.ConfigFactory
-
-import akka.actor.ActorSystem
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -49,13 +46,9 @@ class ServerSpec
       big cities                            $e1
       random cities                         $e2
       sane error message for unauthorized   $e3
-      sane error message for not found city $e4
   """
 
-  val conf = ConfigFactory.parseString("akka.log-dead-letters = 0, akka.daemonic = on")
-
-  lazy val system = ActorSystem("test-actor-system", conf)
-  val transportForCache = AkkaHttpTransport(system, "pro.openweathermap.org")
+  val transportForCache = new HttpTransport("history.openweathermap.org")
 
   def testCities(cities: Vector[Position]) = {
     val client = OwmAsyncClient(owmKey.get, transportForCache)
@@ -74,14 +67,6 @@ class ServerSpec
     val result = client.historyById(1)
     Await.result(result, 5 seconds) must be_-\/.like {
       case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$ Check your API key")
-    }
-  }
-
-  def e4 = {
-    val client = OwmAsyncClient(owmKey.get, transportForCache)
-    val result = client.historyById(0, start=1015606302, end=1015609910)
-    Await.result(result, 5 seconds) must be_-\/.like {
-      case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap ErrorResponse no data")
     }
   }
 }

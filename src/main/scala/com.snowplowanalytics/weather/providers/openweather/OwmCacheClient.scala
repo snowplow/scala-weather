@@ -155,7 +155,7 @@ object OwmCacheClient  {
       geoPrecision: Int = 1,
       host: String = "pro.openweathermap.org",
       timeout: Int = 5): OwmCacheClient =
-    new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, AkkaHttpTransport(host)), timeout)
+    new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, new HttpTransport(host)), timeout)
 
   /**
    * Create OwmCacheClient with underlying async client

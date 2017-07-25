@@ -92,7 +92,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv)  extends Specification with M
         "end" -> "1450051200"     // "2015-12-14T00:00:00.000+00:00"
       )
     )
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmCacheClient("KEY", 2, 1, transport, 5)
     client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk)
     there.was(1.times(transport).getData(expectedRequest, "KEY"))

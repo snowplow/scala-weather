@@ -43,7 +43,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   val emptyHistoryResponse = \/.right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
 
   def e1 = {
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmCacheClient("KEY", 2, 1, transport, 5)
     client.getCachedOrRequest(4.44f, 3.33f, 100)
     client.getCachedOrRequest(4.44f, 3.33f, 100)
@@ -52,7 +52,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e2 = {
-    val transport = mock[AkkaHttpTransport]
+    val transport = mock[HttpTransport]
     transport.getData(HR("city", Map("end" -> "86400", "lon" -> "3.33", "cnt" -> "24", "start" -> "0", "lat" -> "4.44")), "KEY")
       .returns(Future.successful(\/.left(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]"))))
       .thenReturns(Future.successful(emptyHistoryResponse))
@@ -63,7 +63,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e3 = {
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmCacheClient("KEY", 2, 1, transport, 5)
     client.getCachedOrRequest(4.44f, 3.33f, 100)
     client.getCachedOrRequest(6.44f, 3.33f, 100)
@@ -73,7 +73,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e4 = {
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmCacheClient("KEY", 10, 1, transport, 5)
     client.getCachedOrRequest(10.4f, 32.1f, 1447070440)   // Nov 9 12:00:40 2015 GMT
     client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
@@ -82,7 +82,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e5 = {
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmCacheClient("KEY", 10, 2, transport, 5)
     client.getCachedOrRequest(10.8f, 32.1f, 1447070440)   // Nov 9 12:00:40 2015 GMT
     client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT

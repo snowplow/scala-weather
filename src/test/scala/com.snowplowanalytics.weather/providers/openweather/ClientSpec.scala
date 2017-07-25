@@ -37,7 +37,7 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
   val emptyHistoryResponse = \/.right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
 
   def e1 = {
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmAsyncClient("KEY", transport)
     val expectedRequest = OwmHistoryRequest(
       "city",
