@@ -16,9 +16,6 @@ package providers.openweather
 // Scala
 import scala.language.higherKinds
 
-// Scalaz
-import scalaz.\/
-
 // Json4s
 import org.json4s.JValue
 import org.json4s.DefaultFormats
@@ -206,12 +203,12 @@ trait Client[Response[_]] {
    *           `com.snowplowanalytics.weather.providers.openweather.Responses`
    * @return either error string or response case class
    */
-  protected[openweather] def extractWeather[W: Manifest](response: JValue): WeatherError \/ W =
+  protected[openweather] def extractWeather[W: Manifest](response: JValue): Either[WeatherError, W] =
     response.extractOpt[W] match {
-      case Some(weather) => \/.right(weather)
+      case Some(weather) => Right(weather)
       case None => response.extractOpt[ErrorResponse] match {
-        case Some(error) => \/.left(error)
-        case None => \/.left(ParseError(s"Could not extract ${manifest[W]} from ${compactJson(response)}"))
+        case Some(error) => Left(error)
+        case None => Left(ParseError(s"Could not extract ${manifest[W]} from ${compactJson(response)}"))
       }
     }
 }

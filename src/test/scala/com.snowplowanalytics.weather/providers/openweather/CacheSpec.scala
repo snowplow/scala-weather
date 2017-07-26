@@ -13,8 +13,6 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import scalaz.\/
-
 import scala.concurrent.Future
 
 import org.json4s.JsonDSL._
@@ -40,7 +38,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
 
   """
 
-  val emptyHistoryResponse = \/.right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
+  val emptyHistoryResponse = Right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
 
   def e1 = {
     val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
@@ -54,7 +52,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   def e2 = {
     val transport = mock[HttpTransport]
     transport.getData(HR("city", Map("end" -> "86400", "lon" -> "3.33", "cnt" -> "24", "start" -> "0", "lat" -> "4.44")), "KEY")
-      .returns(Future.successful(\/.left(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]"))))
+      .returns(Future.successful(Left(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]"))))
       .thenReturns(Future.successful(emptyHistoryResponse))
     val client = OwmCacheClient("KEY", 2, 1, transport, 5)
     client.getCachedOrRequest(4.44f, 3.33f, 100)

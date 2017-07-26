@@ -16,9 +16,6 @@ package providers.openweather
 // Java
 import java.util.{ Calendar, Date, TimeZone }
 
-// Scalaz
-import scalaz.\/
-
 // LRUCache
 import com.twitter.util.SynchronizedLruMap
 
@@ -38,8 +35,8 @@ trait WeatherCache[W <: OwmResponse] {
   val cacheSize: Int                 // Size of LRU cache
   val geoPrecision: Int              // nth part of one to round geo coordinates
 
-  type Cache = SynchronizedLruMap[CacheKey, WeatherError \/ W]
-  protected val cache: Cache = new SynchronizedLruMap[CacheKey, WeatherError \/ W](cacheSize)
+  type Cache = SynchronizedLruMap[CacheKey, Either[WeatherError, W]]
+  protected val cache: Cache = new SynchronizedLruMap[CacheKey, Either[WeatherError, W]](cacheSize)
 
   if (geoPrecision < 1) throw new IllegalArgumentException("OwmCacheClient geoPrecision must be greater than zero")
 

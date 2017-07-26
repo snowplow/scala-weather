@@ -13,9 +13,6 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Scalaz
-import scalaz.{ \/, \/-, -\/ }
-
 // Scala
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,7 +35,7 @@ import Requests.WeatherRequest
  */
 class HttpTransport(apiHost: String) extends HttpAsyncTransport {
 
-  def getData(request: WeatherRequest, appId: String): Future[WeatherError \/ JValue] = {
+  def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]] = {
     val uri = request.constructQuery(appId)
     val response = Future(Http("http://" + apiHost + uri).asString)
     response.map(processHttpResponse)
@@ -50,12 +47,8 @@ class HttpTransport(apiHost: String) extends HttpAsyncTransport {
    * @param response full HTTP response
    * @return future with either server error or JSON
    */
-  private def processHttpResponse(response: HttpResponse[String]): WeatherError \/ JValue = {
-    getResponseContent(response) match {
-      case \/-(content) => parseJson(content)
-      case -\/(failure) => \/.left(failure)
-    }
-  }
+  private def processHttpResponse(response: HttpResponse[String]): Either[WeatherError, JValue] =
+    getResponseContent(response).right.flatMap(parseJson)
 
   /**
    * Wait for entity and convert it to string
@@ -63,12 +56,12 @@ class HttpTransport(apiHost: String) extends HttpAsyncTransport {
    * @param response full HTTP response
    * @return future entity content of HTTP response or throwable in case of timeout
    */
-  private def getResponseContent(response: HttpResponse[String]): WeatherError \/ String =
+  private def getResponseContent(response: HttpResponse[String]): Either[WeatherError, String] =
     if (response.isSuccess) {
-      \/.right(response.body)
+      Right(response.body)
     } else {
-      if (response.code == 401) \/.left(AuthorizationError)
-      else \/.left(HTTPError(s"Request failed with status ${response.code}"))
+      if (response.code == 401) Left(AuthorizationError)
+      else Left(HTTPError(s"Request failed with status ${response.code}"))
     }
 
   /**
@@ -77,9 +70,9 @@ class HttpTransport(apiHost: String) extends HttpAsyncTransport {
    * @param content string containing JSON
    * @return disjunction of throwable and JValue
    */
-  private def parseJson(content: String): WeatherError \/ JValue =
+  private def parseJson(content: String): Either[WeatherError, JValue] =
     parseOpt(content) match {
-      case Some(json) => \/.right(json)
-      case None => \/.left(ParseError(s"OpenWeatherMap Error: string [$content] doesn't contain JSON"))
+      case Some(json) => Right(json)
+      case None => Left(ParseError(s"OpenWeatherMap Error: string [$content] doesn't contain JSON"))
     }
 }

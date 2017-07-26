@@ -31,10 +31,8 @@ object ScalaWeatherBuild extends Build {
         all = Seq(
         Libraries.jodaTime,
         Libraries.jodaConvert,
-        Libraries.scalaz,
         Libraries.json4s,
         Libraries.json4sJackson,
-        Libraries.json4sScalaz,
         Libraries.scalaj,
         Libraries.mockito,
         Libraries.specs2,

@@ -16,9 +16,6 @@ package providers.openweather
 // Scala
 import scala.concurrent.Future
 
-// Scalaz
-import scalaz._
-
 // json4s
 import org.json4s.JValue
 
@@ -38,5 +35,5 @@ trait HttpAsyncTransport {
    * @param appId API key
    * @return future either service-error or ready-to-process JSON
    */
-  def getData(request: WeatherRequest, appId: String): Future[WeatherError \/ JValue]
+  def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]]
 }

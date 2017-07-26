@@ -17,9 +17,6 @@ package providers.openweather
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// Scalaz
-import scalaz.\/
-
 // This library
 import Errors.WeatherError
 import Responses._
@@ -32,9 +29,9 @@ import Requests._
  * @param transport HTTP client for send requests, receive responses
  */
 class OwmAsyncClient(appId: String, transport: HttpAsyncTransport) extends Client[AsyncWeather]  {
-  def receive[W <: OwmResponse: Manifest](request: OwmRequest): Future[WeatherError \/ W] = {
+  def receive[W <: OwmResponse: Manifest](request: OwmRequest): Future[Either[WeatherError, W]] = {
     val processedResponse = transport.getData(request, appId)
-    processedResponse.map(_.flatMap(extractWeather[W]))
+    processedResponse.map(_.right.flatMap(extractWeather[W]))
   }
 }
 

@@ -14,10 +14,8 @@ Currently Scala Weather works with only one weather provider: **[OpenWeatherMap]
 
 Scala Weather currently provides two clients `OwmAsyncClient` and `OwmCacheClient`:
 
-1. `OwmAsyncClient` works in a fully asynchronous way, using akka-http under the hood and returning `Future[WeatherError \/ WeatherResponse]`, where `WeatherResponse` is one of the three OpenWeatherMap responses (`Current`, `History`, `Forecast`) as appropriate
-2. `OwmCacheClient` works in a blocking way, contains an LRU cache inside and returns `WeatherError \/ WeatherResponse`
-
-`\/` is a **[scalaz disjunction][scalaz-disjunction]**, which is isomorphic with Scala's native `Either`.
+1. `OwmAsyncClient` works in a fully asynchronous way returning `Future[Either[WeatherError, WeatherResponse]]`, where `WeatherResponse` is one of the three OpenWeatherMap responses (`Current`, `History`, `Forecast`) as appropriate
+2. `OwmCacheClient` works in a blocking way, contains an LRU cache inside and returns `Either[WeatherError, WeatherResponse]`
 
 Although you will typically want to use the `OwmAsyncClient`, note that Scala Weather was written to support the **[Snowplow][snowplow]** enrichment process, which uses `OwmCacheClient`.
 
@@ -27,7 +25,7 @@ Although you will typically want to use the `OwmAsyncClient`, note that Scala We
 
 First **[sign up][owm-signup]** to OpenWeatherMap to get your API key.
 
-Unfortunately, with free plan you can only perform current weather and forecast lookups; for historical data access you need to subscribe **[history plan][history-plan]**. If you use the free plan all `historyBy...` methods will return failures.
+Unfortunately, with the free plan you can only perform current weather and forecast lookups; for historical data access you need to subscribe to the **[history plan][history-plan]**. If you use the free plan all `historyBy...` methods will return failures.
 
 ### Installation
 
@@ -37,7 +35,6 @@ If you're using SBT, add the following lines to your build file:
 
 ```scala
 // Resolvers
-val snowplowRepo = "Snowplow Analytics" at "http://maven.snplow.com/releases/"
 val oldTwitterRepo = "Twitter Maven Repo" at "http://maven.twttr.com/"
 val newTwitterRepo = "Sonatype" at "https://oss.sonatype.org/content/repositories/releases"
 
@@ -75,7 +72,7 @@ Both clients offer the same set of public methods:
 These methods were designed to follow OpenWeatherMap's own API calls as closely as possible. All of these calls receive similar arguments to those described in **[OpenWeatherMap API documentation][owm-api-docs]**. For example, to receive a response equivalent to this API call: ``api.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid=YOURKEY``, run the following code:
 
 ```scala
-val weatherInLondon: Future[WeatherError \/ Current] = asyncClient.currentByCoords(35, 139)
+val weatherInLondon: Future[Either[WeatherError, Current]] = asyncClient.currentByCoords(35, 139)
 ```
 
 Notice that all temperature fields are in Kelvin, which is the OpenWeatherMap default (OWM only supports unit preference for the current weather).
@@ -84,7 +81,7 @@ Scala Weather doesn't try to validate your arguments (except of course their typ
 
 ```scala
 // Count supposed to be positive
-val forecast: Future[WeatherError \/ Current] = client.forecastById(3070325, cnt=-1)
+val forecast: Future[Either[WeatherError, Current]] = client.forecastById(3070325, cnt=-1)
 ```
 
 will still be executed and OpenWeatherMap will decide how to handle it (in this case, it will ignore negative count).
@@ -95,7 +92,7 @@ will still be executed and OpenWeatherMap will decide how to handle it (in this 
 
 Scala Weather provides a cache as part of the `weather.providers.openweather.OwmCacheClient`. It uses an **[LRU cache][lru]** under the hood and only works for historical lookups. OpenWeatherMap restricts the number of history lookups you can make on the paid plans, so this cache helps to minimize requests, especially when run from a "big data" runtime such as Hadoop, Storm or Spark.
 
-Note that the results of common methods like `historyById`, `currentByCoords` etc are not cached. You need to use `getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): WeatherError \/ Weather` to employ the cache.
+Note that the results of common methods like `historyById`, `currentByCoords` etc are not cached. You need to use `getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): Either[WeatherError, Weather]` to employ the cache.
 
 The following client constructor arguments help to tune the cache:
 

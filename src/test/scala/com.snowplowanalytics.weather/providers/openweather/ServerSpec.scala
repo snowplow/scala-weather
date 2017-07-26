@@ -18,7 +18,6 @@ import scala.concurrent.duration._
 
 import org.specs2.{ ScalaCheck, Specification }
 import org.specs2.concurrent.ExecutionEnv
-import org.specs2.matcher.DisjunctionMatchers
 import org.specs2.specification.ExecutionEnvironment
 
 import org.scalacheck.Prop.forAll
@@ -37,7 +36,6 @@ import ServerSpec._
 class ServerSpec
   extends Specification
     with ScalaCheck
-    with DisjunctionMatchers
     with ExecutionEnvironment
     with WeatherGenerator { def is(implicit ee: ExecutionEnv) = skipAllIf(owmKey.isEmpty) ^ s2"""
 
@@ -54,7 +52,7 @@ class ServerSpec
     val client = OwmAsyncClient(owmKey.get, transportForCache)
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
-      Await.result(history, 5 seconds) must be_\/-
+      Await.result(history, 5 seconds) must beRight
     }
   }
 
@@ -65,7 +63,7 @@ class ServerSpec
   def e3 = {
     val client = OwmAsyncClient("INVALID-KEY", transportForCache)
     val result = client.historyById(1)
-    Await.result(result, 5 seconds) must be_-\/.like {
+    Await.result(result, 5 seconds) must beLeft.like {
       case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$ Check your API key")
     }
   }

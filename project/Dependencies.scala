@@ -31,7 +31,6 @@ object Dependencies {
     val jodaConvert   = "1.8.1"
 
     // Scala
-    val scalaz        = "7.0.6"
     val json4s        = "3.2.11"
     val scalaj        = "2.3.0"
 
@@ -43,7 +42,7 @@ object Dependencies {
     // Tests
     val mockito     = "2.0.31-beta"
     val scalaCheck  = "1.12.5"
-    val specs2      = s"3.6.1-scalaz-$scalaz" // $scalaz is for binary-compatible 3.x.x
+    val specs2      = "3.6.1-scalaz-7.0.6"
   }
 
   object Libraries {
@@ -52,10 +51,8 @@ object Dependencies {
     val jodaConvert  = "org.joda"                  % "joda-convert"                 % V.jodaConvert
 
     // Scala
-    val scalaz        = "org.scalaz"               %% "scalaz-core"                 % V.scalaz
     val json4s        = "org.json4s"               %% "json4s-core"                 % V.json4s
     val json4sJackson = "org.json4s"               %% "json4s-jackson"              % V.json4s
-    val json4sScalaz  = "org.json4s"               %% "json4s-scalaz"               % V.json4s
     val scalaj        = "org.scalaj"               %% "scalaj-http"                 % V.scalaj
 
     object collUtil {
