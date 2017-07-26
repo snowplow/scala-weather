@@ -45,20 +45,23 @@ class ServerSpec
       random cities                         $e2
       sane error message for unauthorized   $e3
   """
+      //works with https                      $e4
 
-  val transportForCache = new HttpTransport("history.openweathermap.org")
+  val host = "history.openweathermap.org"
+  val transportForCache = new HttpTransport(host)
+  val client = OwmAsyncClient(owmKey.get, transportForCache)
+  val sslClient = OwmAsyncClient(owmKey.get, new HttpTransport(host, ssl = true))
 
-  def testCities(cities: Vector[Position]) = {
-    val client = OwmAsyncClient(owmKey.get, transportForCache)
+  def testCities(cities: Vector[Position], client: OwmAsyncClient) = {
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
       Await.result(history, 5 seconds) must beRight
     }
   }
 
-  def e1 = testCities(TestData.bigAndAbnormalCities).set(maxSize = 5, minTestsOk = 5)
+  def e1 = testCities(TestData.bigAndAbnormalCities, client).set(maxSize = 5, minTestsOk = 5)
 
-  def e2 = testCities(TestData.randomCities).set(maxSize = 15, minTestsOk = 15)
+  def e2 = testCities(TestData.randomCities, client).set(maxSize = 15, minTestsOk = 15)
 
   def e3 = {
     val client = OwmAsyncClient("INVALID-KEY", transportForCache)
@@ -67,4 +70,6 @@ class ServerSpec
       case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$ Check your API key")
     }
   }
+
+  //def e4 = testCities(TestData.randomCities, sslClient).set(maxSize = 15, minTestsOk = 15)
 }

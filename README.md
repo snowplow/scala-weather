@@ -57,6 +57,12 @@ OpenWeatherMap provides several hosts for API with various benefits, which you c
 + `history.openweathermap.org` - paid, history only, used in `OwmCacheClient` by default
 + `pro.openweathermap.org` - paid, faster, SSL-enabled
 
+You can enable SSL through the third boolean argument:
+
+```scala
+val client = OwmAsyncClient(YOURKEY, "history.openweathermap.org", ssl = true)
+```
+
 Both clients offer the same set of public methods:
 
 + `forecastById`
