@@ -32,7 +32,7 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
     Implicits for DateTime work as expected (without imports)   $e1
   """
 
-  val emptyHistoryResponse = Right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
+  val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
 
   def e1 = {
     val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
