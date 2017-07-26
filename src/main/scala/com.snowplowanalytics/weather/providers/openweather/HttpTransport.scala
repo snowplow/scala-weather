@@ -33,13 +33,15 @@ import Requests.WeatherRequest
  * Scalaj based transport
  * @param apiHost weather API server host
  */
-class HttpTransport(apiHost: String) extends HttpAsyncTransport {
+class HttpTransport(apiHost: String, ssl: Boolean = false) extends HttpAsyncTransport {
 
-  def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]] = {
-    val uri = request.constructQuery(appId)
-    val response = Future(Http("http://" + apiHost + uri).asString)
-    response.map(processHttpResponse)
-  }
+  def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]] =
+    Future {
+      val uri = request.constructQuery(appId)
+      val scheme = if (ssl) "https://" else "http://"
+      val url = scheme + apiHost + uri
+      Http(url).asString
+    }.map(processHttpResponse)
 
   /**
    * Get JSON out of HTTP response body
