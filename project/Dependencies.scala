@@ -28,41 +28,25 @@ object Dependencies {
     val jodaTime    = "2.9.9"
     val jodaConvert = "1.8.2"
     // Scala
-    val json4s      = "3.2.11"
-    val scalaj      = "2.3.0"
-    object collUtil {
-      val _210      = "6.3.4"
-      val _211      = "6.29.0"  // Should work on 2.10 too
-    }
+    val json4s   = "3.2.11"
+    val scalaj   = "2.3.0"
+    val collUtil = "6.34.0"
     // Tests
-    val specs2      = "3.9.4"
+    val specs2   = "3.9.4"
   }
 
   object Libraries {
     // Java
     val jodaTime        = "joda-time"   %  "joda-time"         % V.jodaTime
     val jodaConvert     = "org.joda"    %  "joda-convert"      % V.jodaConvert
-
     // Scala
     val json4s          = "org.json4s"  %% "json4s-core"       % V.json4s
     val json4sJackson   = "org.json4s"  %% "json4s-jackson"    % V.json4s
     val scalaj          = "org.scalaj"  %% "scalaj-http"       % V.scalaj
-
-    object collUtil {
-      val _210          = "com.twitter" %% "util-collection"   % V.collUtil._210
-      val _211          = "com.twitter" %% "util-collection"   % V.collUtil._211
-    }
-
+    val collUtil        = "com.twitter" %% "util-collection"   % V.collUtil
     // Tests
     val specs2          = "org.specs2"  %% "specs2-core"       % V.specs2 % "test"
     val specs2Mock      = "org.specs2"  %% "specs2-mock"       % V.specs2 % "test"
     val specsScalaCheck = "org.specs2"  %% "specs2-scalacheck" % V.specs2 % "test"
   }
-
-  def onVersion[A](all: Seq[A] = Seq(), on210: => Seq[A] = Seq(), on211: => Seq[A] = Seq()) =
-    scalaVersion(v => all ++ (if (v.contains("2.10.")) {
-      on210
-    } else {
-      on211
-    }))
 }

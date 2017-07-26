@@ -26,18 +26,15 @@
   )
   .settings(BuildSettings.publishSettings)
   .settings(
-    libraryDependencies <++= Dependencies.onVersion(
-      all = Seq(
-        Dependencies.Libraries.jodaTime,
-        Dependencies.Libraries.jodaConvert,
-        Dependencies.Libraries.json4s,
-        Dependencies.Libraries.json4sJackson,
-        Dependencies.Libraries.scalaj,
-        Dependencies.Libraries.specs2,
-        Dependencies.Libraries.specs2Mock,
-        Dependencies.Libraries.specsScalaCheck
-      ),
-      on210 = Seq(Dependencies.Libraries.collUtil._210),
-      on211 = Seq(Dependencies.Libraries.collUtil._211)
+    libraryDependencies ++= Seq(
+      Dependencies.Libraries.jodaTime,
+      Dependencies.Libraries.jodaConvert,
+      Dependencies.Libraries.json4s,
+      Dependencies.Libraries.json4sJackson,
+      Dependencies.Libraries.collUtil,
+      Dependencies.Libraries.scalaj,
+      Dependencies.Libraries.specs2,
+      Dependencies.Libraries.specs2Mock,
+      Dependencies.Libraries.specsScalaCheck
     )
   )
