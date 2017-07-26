@@ -42,8 +42,12 @@ object OwmAsyncClient {
   /**
    * Create async client with key and optionally different API host
    */
-  def apply(appId: String, host: String = "api.openweathermap.org"): OwmAsyncClient =
-    new OwmAsyncClient(appId, new HttpTransport(host))
+  def apply(
+    appId: String,
+    host: String = "history.openweathermap.org",
+    ssl: Boolean = false
+  ): OwmAsyncClient =
+    new OwmAsyncClient(appId, new HttpTransport(host, ssl))
 
   /**
    * Create async client with key and optionally non-standard (mock) HTTP transport
