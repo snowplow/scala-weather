@@ -13,6 +13,11 @@
 import sbt._
 import Keys._
 
+// Bintray plugin
+import bintray.BintrayPlugin._
+import bintray.BintrayKeys._
+
+
 object BuildSettings {
 
   lazy val compilerOptions = Seq(
@@ -35,15 +40,25 @@ object BuildSettings {
     "-target", "1.8"
   )
 
-  lazy val publishSettings = Seq(
-    // Enables publishing to maven repo
+  lazy val publishSettings = bintraySettings ++ Seq(
     publishMavenStyle := true,
-
-    publishTo <<= version { version =>
-      val basePath = "target/repo/%s".format {
-        if (version.trim.endsWith("SNAPSHOT")) "snapshots/" else "releases/"
-      }
-      Some(Resolver.file("Local Maven repository", file(basePath)) transactional())
-    }
+    publishArtifact := true,
+    publishArtifact in Test := false,
+    licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")),
+    bintrayOrganization := Some("snowplow"),
+    bintrayRepository := "snowplow-maven",
+    pomIncludeRepository := { _ => false },
+    homepage := Some(url("http://snowplowanalytics.com")),
+    scmInfo := Some(ScmInfo(url("https://github.com/snowplow/scala-weather"),
+      "scm:git@github.com:snowplow/scala-weather.git")),
+    pomExtra := (
+      <developers>
+        <developer>
+          <name>Snowplow Analytics Ltd</name>
+          <email>support@snowplowanalytics.com</email>
+          <organization>Snowplow Analytics Ltd</organization>
+          <organizationUrl>http://snowplowanalytics.com</organizationUrl>
+        </developer>
+      </developers>)
   )
 }

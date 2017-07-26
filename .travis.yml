@@ -1,9 +1,20 @@
 language: scala
 scala:
-- 2.10.6
-- 2.11.11
+  - 2.10.6
+  - 2.11.11
 jdk:
-- oraclejdk8
+  - oraclejdk8
 env:
   global:
-  - secure: zlCxTRtETfHexDUc18do/tIj3mBvEtwd7pCCPqOy+JgiY4X16XUJgdpg87w9tm1rKGTYXSnDye7xKvImKySLAI0FXY3IMPA1pOPvG79XH42Q2VXaoXf8Qu2HNbQNLmKTasz01C5Ogs98BYq6Rp4xV0vXStiEMj0wfIRXqCfskFg=
+    - secure: zlCxTRtETfHexDUc18do/tIj3mBvEtwd7pCCPqOy+JgiY4X16XUJgdpg87w9tm1rKGTYXSnDye7xKvImKySLAI0FXY3IMPA1pOPvG79XH42Q2VXaoXf8Qu2HNbQNLmKTasz01C5Ogs98BYq6Rp4xV0vXStiEMj0wfIRXqCfskFg=
+    - secure: BINTRAY_SNOWPLOW_MAVEN_USER
+    - secure: BINTRAY_SNOWPLOW_MAVEN_API_KEY
+script:
+  - sbt test
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: ./.travis/deploy.sh $TRAVIS_TAG
+  on:
+    condition: '"${TRAVIS_SCALA_VERSION}" == "2.11.11"'
+    tags: true
