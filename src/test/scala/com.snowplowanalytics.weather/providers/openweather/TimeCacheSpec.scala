@@ -80,7 +80,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv)  extends Specification with M
   }
 
   def e5 = {
-    val emptyHistoryResponse = Right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
+    val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(

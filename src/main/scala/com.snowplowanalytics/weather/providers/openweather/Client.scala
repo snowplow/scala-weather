@@ -67,7 +67,11 @@ trait Client[Response[_]] {
       measure: OptArg[Api.Measures.Value] = None): Response[History] = {
     val request = OwmHistoryRequest(
       "city",
-      Map("id" -> id.toString) ++ ("start", start) ++ ("end", end) ++ ("cnt", cnt) ++ ("type", measure.map(_.toString)))
+      Map("id" -> id.toString)
+        ++ ("start" -> start)
+        ++ ("end" -> end)
+        ++ ("cnt" -> cnt)
+        ++ ("type" -> measure.map(_.toString)))
     receive(request)
   }
 
@@ -93,7 +97,11 @@ trait Client[Response[_]] {
     val query = name + country.map("," + _).getOrElse("")
     val request = OwmHistoryRequest(
       "city",
-      Map("q" -> query) ++ ("start", start) ++ ("end", end) ++ ("cnt", cnt) ++ ("type", measure.map(_.toString)))
+      Map("q" -> query)
+        ++ ("start" -> start)
+        ++ ("end" -> end)
+        ++ ("cnt" -> cnt)
+        ++ ("type" -> measure.map(_.toString)))
     receive(request)
   }
 
@@ -119,10 +127,10 @@ trait Client[Response[_]] {
     val request = OwmHistoryRequest(
       "city",
       Map("lat" -> lat.toString, "lon" -> lon.toString)
-        ++ ("start", start)
-        ++ ("end", end)
-        ++ ("cnt", cnt)
-        ++ ("type", measure.map(_.toString)))
+        ++ ("start" -> start)
+        ++ ("end" -> end)
+        ++ ("cnt" -> cnt)
+        ++ ("type" -> measure.map(_.toString)))
     receive(request)
   }
 
