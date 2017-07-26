@@ -1,16 +1,16 @@
 language: scala
 scala:
-  - 2.10.6
-  - 2.11.11
+- 2.10.6
+- 2.11.11
 jdk:
-  - oraclejdk8
+- oraclejdk8
 env:
   global:
-    - secure: zlCxTRtETfHexDUc18do/tIj3mBvEtwd7pCCPqOy+JgiY4X16XUJgdpg87w9tm1rKGTYXSnDye7xKvImKySLAI0FXY3IMPA1pOPvG79XH42Q2VXaoXf8Qu2HNbQNLmKTasz01C5Ogs98BYq6Rp4xV0vXStiEMj0wfIRXqCfskFg=
-    - secure: BINTRAY_SNOWPLOW_MAVEN_USER
-    - secure: BINTRAY_SNOWPLOW_MAVEN_API_KEY
+  - secure: zlCxTRtETfHexDUc18do/tIj3mBvEtwd7pCCPqOy+JgiY4X16XUJgdpg87w9tm1rKGTYXSnDye7xKvImKySLAI0FXY3IMPA1pOPvG79XH42Q2VXaoXf8Qu2HNbQNLmKTasz01C5Ogs98BYq6Rp4xV0vXStiEMj0wfIRXqCfskFg=
+  - secure: InL3dTk1RWpb3AhbhJD7bUIgziCfM/N5KBJVbC46rv+EDa6nUXlKpL1ryMXI41uVoFBZHZ6AvcThKkhxjstG13kwRHDqat5oKqmR8iOoKV6U+QZhJpvYDuRhExEeHCyMiH9S7+Q9YYLd6YDhbA9yzpN3hpOcm7C0I+rGMy+b7EE=
+  - secure: mi3LGPt6UL3p1ze4x8WnbEnGY0aYmwEbEZi1EL3f8+IltBErY6C+9eU/vezkhmmTb1+BpKwJMGoQm/gaMWIct3c5wT33BqnUy689kfT1aFYy3s19V3a3WJQ0XhwY6sj1+8I6+FeQuBqtH9VFuCc2FPMWUTx7T9FFPXyNobpyGn4=
 script:
-  - sbt test
+- sbt test
 deploy:
   skip_cleanup: true
   provider: script
