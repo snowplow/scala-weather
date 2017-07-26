@@ -29,16 +29,14 @@ object ScalaWeatherBuild extends Build {
     .settings(
       libraryDependencies <++= Dependencies.onVersion(
         all = Seq(
-        Libraries.jodaTime,
-        Libraries.jodaConvert,
-        Libraries.json4s,
-        Libraries.json4sJackson,
-        Libraries.scalaj,
-        Libraries.mockito,
-        Libraries.specs2,
-        Libraries.specs2Mock,
-        Libraries.specsScalaCheck,
-        Libraries.scalaCheck
+          Libraries.jodaTime,
+          Libraries.jodaConvert,
+          Libraries.json4s,
+          Libraries.json4sJackson,
+          Libraries.scalaj,
+          Libraries.specs2,
+          Libraries.specs2Mock,
+          Libraries.specsScalaCheck
         ),
         on210 = Seq(Libraries.collUtil._210),
         on211 = Seq(Libraries.collUtil._211)
