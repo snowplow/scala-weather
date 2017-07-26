@@ -38,7 +38,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
 
   """
 
-  val emptyHistoryResponse = Right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
+  val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
 
   def e1 = {
     val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))

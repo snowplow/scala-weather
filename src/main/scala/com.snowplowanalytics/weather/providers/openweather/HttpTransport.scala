@@ -16,7 +16,6 @@ package providers.openweather
 // Scala
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.control.NonFatal
 
 // json4s
 import org.json4s.JValue

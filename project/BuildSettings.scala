@@ -15,20 +15,27 @@ import Keys._
 
 object BuildSettings {
 
-  // Basic settings for our app
-  lazy val basicSettings = Seq[Setting[_]](
-    organization          :=  "com.snowplowanalytics",
-    version               :=  "0.2.0",
-    description           :=  "High-performance Scala library for performing current and historical weather lookups",
-    scalaVersion          :=  "2.11.11",
-    crossScalaVersions    :=  Seq("2.10.6", "2.11.11"),
-    scalacOptions         :=  Seq("-feature", "-deprecation", "-encoding", "utf8"),
-    resolvers             ++= Dependencies.resolutionRepos
+  lazy val compilerOptions = Seq(
+    "-deprecation",
+    "-encoding", "UTF-8",
+    "-feature",
+    "-language:existentials",
+    "-language:higherKinds",
+    "-language:implicitConversions",
+    "-unchecked",
+    "-Yno-adapted-args",
+    "-Ywarn-dead-code",
+    "-Ywarn-numeric-widen",
+    "-Xfuture",
+    "-Xlint"
   )
 
-  // Publish settings
-  // TODO: update with ivy credentials etc when we start using Nexus
-  lazy val publishSettings = Seq[Setting[_]](
+  lazy val javaCompilerOptions = Seq(
+    "-source", "1.7",
+    "-target", "1.7"
+  )
+
+  lazy val publishSettings = Seq(
     // Enables publishing to maven repo
     publishMavenStyle := true,
 
@@ -39,6 +46,4 @@ object BuildSettings {
       Some(Resolver.file("Local Maven repository", file(basePath)) transactional())
     }
   )
-
-  lazy val buildSettings = basicSettings ++ publishSettings
 }
