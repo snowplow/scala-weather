@@ -25,8 +25,8 @@ object Dependencies {
 
   object V {
     // Java
-    val jodaTime    = "2.9.1"
-    val jodaConvert = "1.8.1"
+    val jodaTime    = "2.9.9"
+    val jodaConvert = "1.8.2"
     // Scala
     val json4s      = "3.2.11"
     val scalaj      = "2.3.0"
