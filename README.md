@@ -29,7 +29,7 @@ Unfortunately, with the free plan you can only perform current weather and forec
 
 ### Installation
 
-The latest version of Scala Weather is 0.1.0, which is cross-built against Scala 2.10.x and 2.11.x.
+The latest version of Scala Weather is 0.3.0, which is cross-built against Scala 2.10.x and 2.11.x.
 
 If you're using SBT, add the following lines to your build file:
 
@@ -39,7 +39,7 @@ val oldTwitterRepo = "Twitter Maven Repo" at "http://maven.twttr.com/"
 val newTwitterRepo = "Sonatype" at "https://oss.sonatype.org/content/repositories/releases"
 
 // Dependency
-val scalaWeather = "com.snowplowanalytics" %% "scala-weather"  % "0.1.0"
+val scalaWeather = "com.snowplowanalytics" %% "scala-weather"  % "0.3.0"
 ```
 
 ## Usage
@@ -168,7 +168,7 @@ limitations under the License.
 [travis]: https://travis-ci.org/snowplow/scala-weather
 [travis-image]: https://travis-ci.org/snowplow/scala-weather.png?branch=master
 
-[release-image]: http://img.shields.io/badge/release-0.2.0-blue.svg?style=flat
+[release-image]: http://img.shields.io/badge/release-0.3.0-blue.svg?style=flat
 [releases]: https://github.com/snowplow/scala-weather/releases
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
