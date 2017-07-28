@@ -15,7 +15,7 @@
   .settings(
     name               :=  "scala-weather",
     organization       :=  "com.snowplowanalytics",
-    version            :=  "0.3.0",
+    version            :=  "0.3.0-M1",
     description        :=  "High-performance Scala library for performing current and historical weather lookups",
     scalaVersion       :=  "2.11.11",
     crossScalaVersions :=  Seq("2.10.6", "2.11.11"),
