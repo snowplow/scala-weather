@@ -79,7 +79,7 @@ trait WeatherCache[W <: OwmResponse] {
    * @return rounded coordinate
    */
   def roundCoordinate(coordinate: Float): Float =
-    BigDecimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
+    BigDecimal.decimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
       .setScale(1, BigDecimal.RoundingMode.HALF_UP).toFloat
 }
 
