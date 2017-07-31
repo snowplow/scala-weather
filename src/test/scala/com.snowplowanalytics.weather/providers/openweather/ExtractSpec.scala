@@ -39,7 +39,7 @@ class ExtractSpec extends Specification { def is = s2"""
     extract history from error JSON                $e6
                                                    """
 
-  type Id[+X] = X
+  type Id[X] = X
   private val dummyClient = new Client[Id] {
     def receive[W <: OwmResponse: Manifest](owmRequest: OwmRequest) = ???
   }
