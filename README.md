@@ -29,7 +29,7 @@ Unfortunately, with the free plan you can only perform current weather and forec
 
 ### Installation
 
-The latest version of Scala Weather is 0.1.0, which is cross-built against Scala 2.10.x and 2.11.x.
+The latest version of Scala Weather is 0.3.0, which is cross-built against Scala 2.11.x and 2.12.x.
 
 If you're using SBT, add the following lines to your build file:
 
