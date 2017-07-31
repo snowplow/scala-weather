@@ -18,7 +18,7 @@
     version            :=  "0.2.0",
     description        :=  "High-performance Scala library for performing current and historical weather lookups",
     scalaVersion       :=  "2.11.11",
-    crossScalaVersions :=  Seq("2.10.6", "2.11.11"),
+    crossScalaVersions :=  Seq("2.11.11"),
     scalacOptions      :=  BuildSettings.compilerOptions,
     javacOptions       :=  BuildSettings.javaCompilerOptions,
     resolvers          ++= Dependencies.resolutionRepos,
