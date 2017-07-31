@@ -1,3 +1,21 @@
+Version 0.3.0 (2017-07-27)
+--------------------------
+Add HTTPS support (#18)
+Bump Scala version to 2.12 (#36)
+Cross-build against Scala 2.11 (#26)
+Drop support for Scala 2.10 (#37)
+Upgrade to Java 8 (#28)
+Bump SBT to 0.13.16 (#27)
+Replace akka-http by scalaj (#23)
+Bump joda-time to 2.9.9 (#32)
+Bump collection-util to 6.39.0 (#33)
+Bump specs2 to 3.9.4 (#31)
+Remove scalaz dependency (#30)
+Add CI/CD (#29)
+Update README markdown in according with CommonMark (#24)
+Add Bintray credentials to .travis.yml (#34)
+Add Sonatype credentials to .travis.yml (#35)
+
 Version 0.2.0 (2016-02-14)
 --------------------------
 Removed OpenJDK from .travis.yml (#19)

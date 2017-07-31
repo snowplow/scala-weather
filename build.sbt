@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2013-2015 Snowplow Analytics Ltd. All rights reserved.
+/*
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -15,7 +15,7 @@
   .settings(
     name               :=  "scala-weather",
     organization       :=  "com.snowplowanalytics",
-    version            :=  "0.2.0",
+    version            :=  "0.3.0",
     description        :=  "High-performance Scala library for performing current and historical weather lookups",
     scalaVersion       :=  "2.12.3",
     crossScalaVersions :=  Seq("2.11.11", "2.12.3"),
