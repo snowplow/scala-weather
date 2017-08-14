@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -12,9 +12,6 @@
  */
 package com.snowplowanalytics.weather
 package providers.openweather
-
-// Scalaz
-import scalaz.\/
 
 // This library
 import Errors._
@@ -39,7 +36,7 @@ object Responses {
       cnt: BigInt,
       cod: String,
       list: List[Weather]) extends OwmResponse {
-    def pickCloseIn(timestamp: Int): WeatherError \/ Weather =
+    def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
   }
 
@@ -47,7 +44,7 @@ object Responses {
       cnt: BigInt,
       cod: String,
       list: List[Weather]) extends OwmResponse {
-    def pickCloseIn(timestamp: Int): WeatherError \/ Weather =
+    def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
   }
 
@@ -100,11 +97,11 @@ object Responses {
    * @param timestamp original integer
    * @return close neighbour
    */
-  private[openweather] def pickClosestWeather(list: List[Weather], timestamp: Int): WeatherError \/ Weather =
-    if (timestamp < 1) \/.left(InternalError("Timestamp should be greater than 0"))
+  private[openweather] def pickClosestWeather(list: List[Weather], timestamp: Int): Either[WeatherError, Weather] =
+    if (timestamp < 1) Left(InternalError("Timestamp should be greater than 0"))
     else pickClosest(list, timestamp, (st: Weather) => (st.dt.toInt, st))
-        .map(\/.right(_))
-        .getOrElse(\/.left(InternalError("Server response has no weather stamps")))
+        .map(Right(_))
+        .getOrElse(Left(InternalError("Server response has no weather stamps")))
 
   /**
    * Helper function for taking closest value out of some list

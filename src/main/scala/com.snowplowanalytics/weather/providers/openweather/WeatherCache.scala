@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -15,9 +15,6 @@ package providers.openweather
 
 // Java
 import java.util.{ Calendar, Date, TimeZone }
-
-// Scalaz
-import scalaz.\/
 
 // LRUCache
 import com.twitter.util.SynchronizedLruMap
@@ -38,8 +35,8 @@ trait WeatherCache[W <: OwmResponse] {
   val cacheSize: Int                 // Size of LRU cache
   val geoPrecision: Int              // nth part of one to round geo coordinates
 
-  type Cache = SynchronizedLruMap[CacheKey, WeatherError \/ W]
-  protected val cache: Cache = new SynchronizedLruMap[CacheKey, WeatherError \/ W](cacheSize)
+  type Cache = SynchronizedLruMap[CacheKey, Either[WeatherError, W]]
+  protected val cache: Cache = new SynchronizedLruMap[CacheKey, Either[WeatherError, W]](cacheSize)
 
   if (geoPrecision < 1) throw new IllegalArgumentException("OwmCacheClient geoPrecision must be greater than zero")
 
@@ -82,7 +79,7 @@ trait WeatherCache[W <: OwmResponse] {
    * @return rounded coordinate
    */
   def roundCoordinate(coordinate: Float): Float =
-    BigDecimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
+    BigDecimal.decimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
       .setScale(1, BigDecimal.RoundingMode.HALF_UP).toFloat
 }
 

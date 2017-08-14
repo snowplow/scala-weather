@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -11,10 +11,6 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather.providers.openweather
-
-// Akka
-import akka.http.scaladsl.model.Uri
-import akka.http.scaladsl.model.Uri.Query
 
 // TODO: replace it with plain URIs
 private[weather] object Requests {
@@ -34,11 +30,10 @@ private[weather] object Requests {
      * @return URI object ready to be sent
      */
     def constructQuery(appId: String): String = {
-      val end = endpoint.map(e => (Uri.Path.Empty / e / resource)).getOrElse(Uri.Path.Empty / resource)
-      val params = Query(parameters ++ Map("appid" -> appId))
-      Uri.Empty.withPath(Uri.Path.Empty / "data" / "2.5" ++ end)
-         .withQuery(params)
-         .toString
+      val end = endpoint.map(e => s"$e/$resource").getOrElse(s"$resource")
+      val params = parameters ++ Map("appid" -> appId)
+      val queryString = params.map { case (a, b) => s"$a=$b" }.mkString("&")
+      s"/data/2.5/$end?$queryString"
     }
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -15,9 +15,6 @@ package providers.openweather
 
 // Scala
 import scala.concurrent.Future
-
-// Scalaz
-import scalaz._
 
 // json4s
 import org.json4s.JValue
@@ -38,5 +35,5 @@ trait HttpAsyncTransport {
    * @param appId API key
    * @return future either service-error or ready-to-process JSON
    */
-  def getData(request: WeatherRequest, appId: String): Future[WeatherError \/ JValue]
+  def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]]
 }

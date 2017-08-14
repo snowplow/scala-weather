@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -14,7 +14,6 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 import org.specs2.{ Specification, ScalaCheck }
-import org.specs2.matcher.DisjunctionMatchers
 
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Gen
@@ -22,7 +21,7 @@ import org.scalacheck.Gen
 import Errors._
 import Responses._
 
-class BatchGetSpec extends Specification with DisjunctionMatchers with ScalaCheck with WeatherGenerator { def is = s2"""
+class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator { def is = s2"""
 
   Pick neighbour item out of collection
 
@@ -67,15 +66,15 @@ class BatchGetSpec extends Specification with DisjunctionMatchers with ScalaChec
         weather = List(WeatherCondition("Haze", "haze", 721, "50n")),
         dt = 1447941171)
     )
-  ).pickCloseIn(1447941101).map(_.dt) must be_\/-(1447941171)
+  ).pickCloseIn(1447941101).right.map(_.dt) must beRight(1447941171)
 
   def e7 = forAll(genNonEmptyHistoryBatch, genTimestamp) { (h: History, t: Int) =>
-    h.pickCloseIn(t) must be_\/-
+    h.pickCloseIn(t) must beRight
   }
   def e8 = forAll(genEmptyHistoryBatch, genTimestamp) { (h: History, t: Int) =>
-    h.pickCloseIn(t) must be_-\/(InternalError("Server response has no weather stamps"))
+    h.pickCloseIn(t) must beLeft(InternalError("Server response has no weather stamps"))
   }
   def e9 = forAll(genNonEmptyHistoryBatch, Gen.oneOf(0, -1, -2)) { (h: History, t: Int) =>
-    h.pickCloseIn(t) must be_-\/(InternalError("Timestamp should be greater than 0"))
+    h.pickCloseIn(t) must beLeft(InternalError("Timestamp should be greater than 0"))
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -16,9 +16,6 @@ package providers.openweather
 // Scala
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-// Scalaz
-import scalaz._
 
 // Joda
 import org.joda.time.DateTime
@@ -55,7 +52,7 @@ class OwmCacheClient(
 
   private val requestTimeout = timeout.seconds
 
-  def receive[W <: OwmResponse: Manifest](request: OwmRequest): WeatherError \/ W =
+  def receive[W <: OwmResponse: Manifest](request: OwmRequest): Either[WeatherError, W] =
     await(request)
 
   /**
@@ -67,15 +64,15 @@ class OwmCacheClient(
    * @param timestamp event's timestamp
    * @return weather stamp immediately taken from cache or requested from server
    */
-  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): WeatherError \/ Weather = {
+  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): Either[WeatherError, Weather] = {
     val cacheKey = eventToCacheKey(timestamp, Position(latitude, longitude))
     cache.get(cacheKey) match {
-      case Some(\/-(cached)) =>
+      case Some(Right(cached)) =>
         cached.pickCloseIn(timestamp)                         // Cache hit
-      case Some(-\/(TimeoutError(_))) =>
+      case Some(Left(TimeoutError(_))) =>
         getAndCache(latitude, longitude, timestamp, cacheKey) // Retry if timeout
-      case Some(-\/(error)) =>
-        \/.left(error)                                        // Return error
+      case Some(Left(error)) =>
+        Left(error)                                        // Return error
       case None =>
         getAndCache(latitude, longitude, timestamp, cacheKey) // Make request
     }
@@ -84,7 +81,7 @@ class OwmCacheClient(
   /**
    * Overloaded `getCachedOrRequest` method with Joda DateTime instead of Unix epoch timestamp
    */
-  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: DateTime): WeatherError \/ Weather = {
+  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: DateTime): Either[WeatherError, Weather] = {
     val unixTime: Int = (timestamp.getMillis / 1000).toInt
     getCachedOrRequest(latitude, longitude, unixTime)
   }
@@ -103,7 +100,7 @@ class OwmCacheClient(
       latitude: Float,
       longitude: Float,
       realTimestamp: Timestamp,
-      cacheKey: CacheKey): WeatherError \/ Weather = {
+      cacheKey: CacheKey): Either[WeatherError, Weather] = {
     val response = historyByCoords(latitude, longitude, cacheKey.day, cacheKey.endOfDay, 24)
     cache.put(cacheKey, response)
     getWeatherStamp(response, realTimestamp)
@@ -118,11 +115,9 @@ class OwmCacheClient(
    * @return either error or weather stamp
    */
   private[openweather] def getWeatherStamp(
-      history: WeatherError \/ History,
-      timestamp: Int): WeatherError \/ Weather = for {
-    weather <- history
-    result <- weather.pickCloseIn(timestamp)
-  } yield result
+      history: Either[WeatherError, History],
+      timestamp: Int): Either[WeatherError, Weather] =
+    history.right.flatMap(_.pickCloseIn(timestamp))
 
   /**
    * Await for Future completed
@@ -133,12 +128,12 @@ class OwmCacheClient(
    * @tparam W type of Weather request
    * @return either response or error in case of timeout
    */
-  private def await[W <: OwmResponse: Manifest](request: OwmRequest): WeatherError \/ W =
+  private def await[W <: OwmResponse: Manifest](request: OwmRequest): Either[WeatherError, W] =
     try {
       Await.result(asyncClient.receive(request), requestTimeout)
     } catch {
       case e: java.util.concurrent.TimeoutException =>
-        \/.left(TimeoutError(s"OpenWeatherMap Error: server didn't responded in $timeout seconds. Timeout"))
+        Left(TimeoutError(s"OpenWeatherMap Error: server didn't responded in $timeout seconds. Timeout"))
     }
 }
 
@@ -155,7 +150,7 @@ object OwmCacheClient  {
       geoPrecision: Int = 1,
       host: String = "pro.openweathermap.org",
       timeout: Int = 5): OwmCacheClient =
-    new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, AkkaHttpTransport(host)), timeout)
+    new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, new HttpTransport(host)), timeout)
 
   /**
    * Create OwmCacheClient with underlying async client

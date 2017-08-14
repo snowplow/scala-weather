@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -13,15 +13,11 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import com.typesafe.config.ConfigFactory
-
-import akka.actor.ActorSystem
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 import org.specs2.{ ScalaCheck, Specification }
 import org.specs2.concurrent.ExecutionEnv
-import org.specs2.matcher.DisjunctionMatchers
 import org.specs2.specification.ExecutionEnvironment
 
 import org.scalacheck.Prop.forAll
@@ -40,7 +36,6 @@ import ServerSpec._
 class ServerSpec
   extends Specification
     with ScalaCheck
-    with DisjunctionMatchers
     with ExecutionEnvironment
     with WeatherGenerator { def is(implicit ee: ExecutionEnv) = skipAllIf(owmKey.isEmpty) ^ s2"""
 
@@ -49,39 +44,32 @@ class ServerSpec
       big cities                            $e1
       random cities                         $e2
       sane error message for unauthorized   $e3
-      sane error message for not found city $e4
+      works with https                      $e4
   """
 
-  val conf = ConfigFactory.parseString("akka.log-dead-letters = 0, akka.daemonic = on")
+  val host = "history.openweathermap.org"
+  val transportForCache = new HttpTransport(host)
+  val client = OwmAsyncClient(owmKey.get, transportForCache)
+  val sslClient = OwmAsyncClient(owmKey.get, new HttpTransport(host, ssl = true))
 
-  lazy val system = ActorSystem("test-actor-system", conf)
-  val transportForCache = AkkaHttpTransport(system, "pro.openweathermap.org")
-
-  def testCities(cities: Vector[Position]) = {
-    val client = OwmAsyncClient(owmKey.get, transportForCache)
+  def testCities(cities: Vector[Position], client: OwmAsyncClient) = {
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
-      Await.result(history, 5 seconds) must be_\/-
+      Await.result(history, 5 seconds) must beRight
     }
   }
 
-  def e1 = testCities(TestData.bigAndAbnormalCities).set(maxSize = 5, minTestsOk = 5)
+  def e1 = testCities(TestData.bigAndAbnormalCities, client).set(maxSize = 5, minTestsOk = 5)
 
-  def e2 = testCities(TestData.randomCities).set(maxSize = 15, minTestsOk = 15)
+  def e2 = testCities(TestData.randomCities, client).set(maxSize = 15, minTestsOk = 15)
 
   def e3 = {
     val client = OwmAsyncClient("INVALID-KEY", transportForCache)
     val result = client.historyById(1)
-    Await.result(result, 5 seconds) must be_-\/.like {
+    Await.result(result, 5 seconds) must beLeft.like {
       case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$ Check your API key")
     }
   }
 
-  def e4 = {
-    val client = OwmAsyncClient(owmKey.get, transportForCache)
-    val result = client.historyById(0, start=1015606302, end=1015609910)
-    Await.result(result, 5 seconds) must be_-\/.like {
-      case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap ErrorResponse no data")
-    }
-  }
+  def e4 = testCities(TestData.randomCities, sslClient).set(maxSize = 15, minTestsOk = 15)
 }

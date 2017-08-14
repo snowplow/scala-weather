@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2016 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -48,4 +48,7 @@ object Errors {
    * Error returned from weather provider, which can be extracted from JSON
    */
   case class ErrorResponse(cod: Option[String], message: String) extends WeatherError
+
+  /** Error linked to http but not linked to auth */
+  case class HTTPError(message: String) extends WeatherError
 }

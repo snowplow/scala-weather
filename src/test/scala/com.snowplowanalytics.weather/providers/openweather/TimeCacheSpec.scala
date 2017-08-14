@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -15,9 +15,6 @@ package providers.openweather
 
 // Scala
 import scala.concurrent.Future
-
-// Scalaz
-import scalaz.\/
 
 // Java
 import java.util.{ Calendar, Date, TimeZone }
@@ -83,7 +80,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv)  extends Specification with M
   }
 
   def e5 = {
-    val emptyHistoryResponse = \/.right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
+    val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(
@@ -92,7 +89,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv)  extends Specification with M
         "end" -> "1450051200"     // "2015-12-14T00:00:00.000+00:00"
       )
     )
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmCacheClient("KEY", 2, 1, transport, 5)
     client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk)
     there.was(1.times(transport).getData(expectedRequest, "KEY"))

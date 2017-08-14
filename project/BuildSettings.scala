@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -13,32 +13,51 @@
 import sbt._
 import Keys._
 
+// Bintray plugin
+import bintray.BintrayPlugin._
+import bintray.BintrayKeys._
+
 object BuildSettings {
 
-  // Basic settings for our app
-  lazy val basicSettings = Seq[Setting[_]](
-    organization          :=  "com.snowplowanalytics",
-    version               :=  "0.2.0",
-    description           :=  "High-performance Scala library for performing current and historical weather lookups ",
-    scalaVersion          :=  "2.10.5",
-    crossScalaVersions    :=  Seq("2.10.6", "2.11.7"),
-    scalacOptions         :=  Seq("-feature", "-deprecation", "-encoding", "utf8"),
-    resolvers             ++= Dependencies.resolutionRepos
+  lazy val compilerOptions = Seq(
+    "-deprecation",
+    "-encoding", "UTF-8",
+    "-feature",
+    "-language:existentials",
+    "-language:higherKinds",
+    "-language:implicitConversions",
+    "-unchecked",
+    "-Yno-adapted-args",
+    "-Ywarn-dead-code",
+    "-Ywarn-numeric-widen",
+    "-Xfuture",
+    "-Xlint"
   )
 
-  // Publish settings
-  // TODO: update with ivy credentials etc when we start using Nexus
-  lazy val publishSettings = Seq[Setting[_]](
-    // Enables publishing to maven repo
+  lazy val javaCompilerOptions = Seq(
+    "-source", "1.8",
+    "-target", "1.8"
+  )
+
+  lazy val publishSettings = bintraySettings ++ Seq(
     publishMavenStyle := true,
-
-    publishTo <<= version { version =>
-      val basePath = "target/repo/%s".format {
-        if (version.trim.endsWith("SNAPSHOT")) "snapshots/" else "releases/"
-      }
-      Some(Resolver.file("Local Maven repository", file(basePath)) transactional())
-    }
+    publishArtifact := true,
+    publishArtifact in Test := false,
+    licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.html")),
+    bintrayOrganization := Some("snowplow"),
+    bintrayRepository := "snowplow-maven",
+    pomIncludeRepository := { _ => false },
+    homepage := Some(url("http://snowplowanalytics.com")),
+    scmInfo := Some(ScmInfo(url("https://github.com/snowplow/scala-weather"),
+      "scm:git@github.com:snowplow/scala-weather.git")),
+    pomExtra := (
+      <developers>
+        <developer>
+          <name>Snowplow Analytics Ltd</name>
+          <email>support@snowplowanalytics.com</email>
+          <organization>Snowplow Analytics Ltd</organization>
+          <organizationUrl>http://snowplowanalytics.com</organizationUrl>
+        </developer>
+      </developers>)
   )
-
-  lazy val buildSettings = basicSettings ++ publishSettings
 }

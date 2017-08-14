@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -17,9 +17,6 @@ package providers.openweather
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-// Scalaz
-import scalaz.\/
-
 // This library
 import Errors.WeatherError
 import Responses._
@@ -32,9 +29,9 @@ import Requests._
  * @param transport HTTP client for send requests, receive responses
  */
 class OwmAsyncClient(appId: String, transport: HttpAsyncTransport) extends Client[AsyncWeather]  {
-  def receive[W <: OwmResponse: Manifest](request: OwmRequest): Future[WeatherError \/ W] = {
+  def receive[W <: OwmResponse: Manifest](request: OwmRequest): Future[Either[WeatherError, W]] = {
     val processedResponse = transport.getData(request, appId)
-    processedResponse.map(_.flatMap(extractWeather[W]))
+    processedResponse.map(_.right.flatMap(extractWeather[W]))
   }
 }
 
@@ -45,8 +42,12 @@ object OwmAsyncClient {
   /**
    * Create async client with key and optionally different API host
    */
-  def apply(appId: String, host: String = "api.openweathermap.org"): OwmAsyncClient =
-    new OwmAsyncClient(appId, AkkaHttpTransport(host))
+  def apply(
+    appId: String,
+    host: String = "history.openweathermap.org",
+    ssl: Boolean = false
+  ): OwmAsyncClient =
+    new OwmAsyncClient(appId, new HttpTransport(host, ssl))
 
   /**
    * Create async client with key and optionally non-standard (mock) HTTP transport

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -12,8 +12,6 @@
  */
 package com.snowplowanalytics.weather
 package providers.openweather
-
-import scalaz.\/
 
 import org.json4s.JsonDSL._
 
@@ -34,10 +32,10 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
     Implicits for DateTime work as expected (without imports)   $e1
   """
 
-  val emptyHistoryResponse = \/.right(("cnt", 0) ~ ("cod", "200") ~ ("list", Nil))
+  val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
 
   def e1 = {
-    val transport = mock[AkkaHttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
     val client = OwmAsyncClient("KEY", transport)
     val expectedRequest = OwmHistoryRequest(
       "city",
