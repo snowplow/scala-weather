@@ -11,20 +11,24 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 
- lazy val root = project.in(file("."))
+lazy val root = project
+  .in(file("."))
   .settings(
-    name               :=  "scala-weather",
-    organization       :=  "com.snowplowanalytics",
-    version            :=  "0.3.0",
-    description        :=  "High-performance Scala library for performing current and historical weather lookups",
-    scalaVersion       :=  "2.12.6",
-    crossScalaVersions :=  Seq("2.11.12", "2.12.6"),
-    scalacOptions      :=  BuildSettings.compilerOptions,
-    javacOptions       :=  BuildSettings.javaCompilerOptions,
-    resolvers          ++= Dependencies.resolutionRepos,
-    shellPrompt        := { _ => name.value + "> " }
+    name := "scala-weather",
+    organization := "com.snowplowanalytics",
+    version := "0.3.0",
+    description := "High-performance Scala library for performing current and historical weather lookups",
+    scalaVersion := "2.12.6",
+    crossScalaVersions := Seq("2.11.12", "2.12.6"),
+    scalacOptions := BuildSettings.compilerOptions,
+    javacOptions := BuildSettings.javaCompilerOptions,
+    resolvers ++= Dependencies.resolutionRepos,
+    shellPrompt := { _ =>
+      name.value + "> "
+    }
   )
   .settings(BuildSettings.publishSettings)
+  .settings(BuildSettings.formatting)
   .settings(
     libraryDependencies ++= Seq(
       Dependencies.Libraries.jodaTime,

@@ -17,13 +17,14 @@ package providers.openweather
  * Module for various predefined values in OWM specification
  */
 object Api {
+
   /**
    * Enums for measurements for history requests
    */
   object Measures extends Enumeration {
     val Tick = Value("tick")
     val Hour = Value("hour")
-    val Day = Value("day")
+    val Day  = Value("day")
   }
 
 }

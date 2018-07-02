@@ -16,7 +16,7 @@ package providers.openweather
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-import org.specs2.{ ScalaCheck, Specification }
+import org.specs2.{ScalaCheck, Specification}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.specification.ExecutionEnvironment
 
@@ -30,14 +30,12 @@ object ServerSpec {
 }
 
 import ServerSpec._
+
 /**
  * Test case classes extraction from real server responses
  */
-class ServerSpec
-  extends Specification
-    with ScalaCheck
-    with ExecutionEnvironment
-    with WeatherGenerator { def is(implicit ee: ExecutionEnv) = skipAllIf(owmKey.isEmpty) ^ s2"""
+class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment with WeatherGenerator {
+  def is(implicit ee: ExecutionEnv) = skipAllIf(owmKey.isEmpty) ^ s2"""
 
     Test server responses for history requests by coordinates (it can take several minutes)
 
@@ -47,17 +45,16 @@ class ServerSpec
       works with https                      $e4
   """
 
-  val host = "history.openweathermap.org"
+  val host              = "history.openweathermap.org"
   val transportForCache = new HttpTransport(host)
-  val client = OwmAsyncClient(owmKey.get, transportForCache)
-  val sslClient = OwmAsyncClient(owmKey.get, new HttpTransport(host, ssl = true))
+  val client            = OwmAsyncClient(owmKey.get, transportForCache)
+  val sslClient         = OwmAsyncClient(owmKey.get, new HttpTransport(host, ssl = true))
 
-  def testCities(cities: Vector[Position], client: OwmAsyncClient) = {
+  def testCities(cities: Vector[Position], client: OwmAsyncClient) =
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
       Await.result(history, 5 seconds) must beRight
     }
-  }
 
   def e1 = testCities(TestData.bigAndAbnormalCities, client).set(maxSize = 5, minTestsOk = 5)
 

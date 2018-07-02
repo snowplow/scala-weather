@@ -30,8 +30,8 @@ private[weather] object Requests {
      * @return URI object ready to be sent
      */
     def constructQuery(appId: String): String = {
-      val end = endpoint.map(e => s"$e/$resource").getOrElse(s"$resource")
-      val params = parameters ++ Map("appid" -> appId)
+      val end         = endpoint.map(e => s"$e/$resource").getOrElse(s"$resource")
+      val params      = parameters ++ Map("appid" -> appId)
       val queryString = params.map { case (a, b) => s"$a=$b" }.mkString("&")
       s"/data/2.5/$end?$queryString"
     }

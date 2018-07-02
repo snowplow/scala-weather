@@ -13,6 +13,7 @@
 package com.snowplowanalytics.weather.providers.openweather
 
 object Errors {
+
   /**
    * Superclass for non-fatal exceptions that can be happen for weather fetching/processing
    */

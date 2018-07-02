@@ -59,19 +59,17 @@ trait Client[Response[_]] {
    * @param measure one of predefined `Api.Measures` to constrain accuracy
    * @return either error or history wrapped in `Response`
    */
-  def historyById(
-      id: Int,
-      start: OptArg[Int] = None,
-      end: OptArg[Int] = None,
-      cnt: OptArg[Int] = None,
-      measure: OptArg[Api.Measures.Value] = None): Response[History] = {
-    val request = OwmHistoryRequest(
-      "city",
-      Map("id" -> id.toString)
-        ++ ("start" -> start)
-        ++ ("end" -> end)
-        ++ ("cnt" -> cnt)
-        ++ ("type" -> measure.map(_.toString)))
+  def historyById(id: Int,
+                  start: OptArg[Int]                  = None,
+                  end: OptArg[Int]                    = None,
+                  cnt: OptArg[Int]                    = None,
+                  measure: OptArg[Api.Measures.Value] = None): Response[History] = {
+    val request = OwmHistoryRequest("city",
+                                    Map("id" -> id.toString)
+                                      ++ ("start" -> start)
+                                      ++ ("end"   -> end)
+                                      ++ ("cnt"   -> cnt)
+                                      ++ ("type"  -> measure.map(_.toString)))
     receive(request)
   }
 
@@ -87,21 +85,19 @@ trait Client[Response[_]] {
    * @param measure one of predefined `Api.Measures` to constrain accuracy
    * @return either error or history wrapped in `Response`
    */
-  def historyByName(
-      name: String,
-      country: OptArg[String] = None,
-      start: OptArg[Int] = None,
-      end: OptArg[Int] = None,
-      cnt: OptArg[Int] = None,
-      measure: OptArg[Api.Measures.Value] = None): Response[History] = {
+  def historyByName(name: String,
+                    country: OptArg[String]             = None,
+                    start: OptArg[Int]                  = None,
+                    end: OptArg[Int]                    = None,
+                    cnt: OptArg[Int]                    = None,
+                    measure: OptArg[Api.Measures.Value] = None): Response[History] = {
     val query = name + country.map("," + _).getOrElse("")
-    val request = OwmHistoryRequest(
-      "city",
-      Map("q" -> query)
-        ++ ("start" -> start)
-        ++ ("end" -> end)
-        ++ ("cnt" -> cnt)
-        ++ ("type" -> measure.map(_.toString)))
+    val request = OwmHistoryRequest("city",
+                                    Map("q" -> query)
+                                      ++ ("start" -> start)
+                                      ++ ("end"   -> end)
+                                      ++ ("cnt"   -> cnt)
+                                      ++ ("type"  -> measure.map(_.toString)))
     receive(request)
   }
 
@@ -117,20 +113,18 @@ trait Client[Response[_]] {
    * @param measure one of predefined `Api.Measures` to constrain accuracy
    * @return either error or history wrapped in `Response`
    */
-  def historyByCoords(
-      lat: Float,
-      lon: Float,
-      start: OptArg[Int] = None,
-      end: OptArg[Int] = None,
-      cnt: OptArg[Int] = None,
-      measure: OptArg[Api.Measures.Value] = None): Response[History] = {
-    val request = OwmHistoryRequest(
-      "city",
-      Map("lat" -> lat.toString, "lon" -> lon.toString)
-        ++ ("start" -> start)
-        ++ ("end" -> end)
-        ++ ("cnt" -> cnt)
-        ++ ("type" -> measure.map(_.toString)))
+  def historyByCoords(lat: Float,
+                      lon: Float,
+                      start: OptArg[Int]                  = None,
+                      end: OptArg[Int]                    = None,
+                      cnt: OptArg[Int]                    = None,
+                      measure: OptArg[Api.Measures.Value] = None): Response[History] = {
+    val request = OwmHistoryRequest("city",
+                                    Map("lat" -> lat.toString, "lon" -> lon.toString)
+                                      ++ ("start" -> start)
+                                      ++ ("end"   -> end)
+                                      ++ ("cnt"   -> cnt)
+                                      ++ ("type"  -> measure.map(_.toString)))
     receive(request)
   }
 
@@ -214,9 +208,10 @@ trait Client[Response[_]] {
   protected[openweather] def extractWeather[W: Manifest](response: JValue): Either[WeatherError, W] =
     response.extractOpt[W] match {
       case Some(weather) => Right(weather)
-      case None => response.extractOpt[ErrorResponse] match {
-        case Some(error) => Left(error)
-        case None => Left(ParseError(s"Could not extract ${manifest[W]} from ${compactJson(response)}"))
-      }
+      case None =>
+        response.extractOpt[ErrorResponse] match {
+          case Some(error) => Left(error)
+          case None        => Left(ParseError(s"Could not extract ${manifest[W]} from ${compactJson(response)}"))
+        }
     }
 }

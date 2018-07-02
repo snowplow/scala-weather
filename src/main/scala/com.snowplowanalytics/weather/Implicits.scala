@@ -19,23 +19,24 @@ import scala.language.implicitConversions
 import org.joda.time.DateTime
 
 object Implicits {
+
   /**
    * Options as optional arguments
    * See: http://stackoverflow.com/questions/4199393/are-options-and-named-default-arguments-like-oil-and-water-in-a-scala-api
    */
   class OptArg[T] private (val option: Option[T])
   object OptArg {
-    implicit def any2opt[T](t: T): OptArg[T] = new OptArg(Option(t)) // NOT Some(t)
+    implicit def any2opt[T](t: T): OptArg[T]            = new OptArg(Option(t)) // NOT Some(t)
     implicit def option2opt[T](o: Option[T]): OptArg[T] = new OptArg(o)
     implicit def opt2option[T](o: OptArg[T]): Option[T] = o.option
 
     /**
-      * Convert joda time to Unix epoch timestamp
-      * OWM works with Unix timestamps in UTC TZ
-      *
-      * @param d joda time containing all information
-      * @return Unix epoch timestamp
-      */
+     * Convert joda time to Unix epoch timestamp
+     * OWM works with Unix timestamps in UTC TZ
+     *
+     * @param d joda time containing all information
+     * @return Unix epoch timestamp
+     */
     implicit def optDateToInt(d: DateTime): OptArg[Int] = Some((d.getMillis / 1000).toInt)
   }
 

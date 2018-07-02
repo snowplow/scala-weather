@@ -13,7 +13,7 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import org.specs2.{ Specification, ScalaCheck }
+import org.specs2.{ScalaCheck, Specification}
 
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Gen
@@ -21,7 +21,8 @@ import org.scalacheck.Gen
 import Errors._
 import Responses._
 
-class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator { def is = s2"""
+class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
+  def is = s2"""
 
   Pick neighbour item out of collection
 
@@ -42,31 +43,48 @@ class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
   // Make a pair of same value
   private val pair = (i: Int) => (i, i)
 
-  def e1 = pickClosest(List(100,14,1,5,10,12), 13, pair) must beSome(14)
-  def e2 = pickClosest(List(100,14,1,5,10,12), 9000, pair) must beSome(100)
-  def e3 = pickClosest(List(100,14,1,5,10,12), 2, pair) must beSome(1)
-  def e4 = pickClosest(List(100,14,1,5,10,12), 12, pair) must beSome(12)
+  def e1 = pickClosest(List(100, 14, 1, 5, 10, 12), 13, pair) must beSome(14)
+  def e2 = pickClosest(List(100, 14, 1, 5, 10, 12), 9000, pair) must beSome(100)
+  def e3 = pickClosest(List(100, 14, 1, 5, 10, 12), 2, pair) must beSome(1)
+  def e4 = pickClosest(List(100, 14, 1, 5, 10, 12), 12, pair) must beSome(12)
   def e5 = pickClosest(List(), 12, pair) must beNone
-  def e6 = History(2, "200",
-    List(
-      Weather(
-        main = MainInfo(Some(100), 50, BigDecimal(3), Some(BigDecimal(10)), BigDecimal(12), BigDecimal(10), BigDecimal(15)),
-        wind = Wind(1, 5, None, None, None),
-        clouds = Clouds(100),
-        rain = None,
-        snow = None,
-        weather = List(WeatherCondition("Clouds", "few clouds", 801, "02d")),
-        dt = 1447941977),
-      Weather(
-        main = MainInfo(Some(150), 50, BigDecimal(13), Some(BigDecimal(0)), BigDecimal(17), BigDecimal(10), BigDecimal(25)),
-        wind = Wind(1, 5, None, None, None),
-        clouds = Clouds(100),
-        rain = None,
-        snow = None,
-        weather = List(WeatherCondition("Haze", "haze", 721, "50n")),
-        dt = 1447941171)
-    )
-  ).pickCloseIn(1447941101).right.map(_.dt) must beRight(1447941171)
+  def e6 =
+    History(
+      2,
+      "200",
+      List(
+        Weather(
+          main = MainInfo(Some(100),
+                          50,
+                          BigDecimal(3),
+                          Some(BigDecimal(10)),
+                          BigDecimal(12),
+                          BigDecimal(10),
+                          BigDecimal(15)),
+          wind    = Wind(1, 5, None, None, None),
+          clouds  = Clouds(100),
+          rain    = None,
+          snow    = None,
+          weather = List(WeatherCondition("Clouds", "few clouds", 801, "02d")),
+          dt      = 1447941977
+        ),
+        Weather(
+          main = MainInfo(Some(150),
+                          50,
+                          BigDecimal(13),
+                          Some(BigDecimal(0)),
+                          BigDecimal(17),
+                          BigDecimal(10),
+                          BigDecimal(25)),
+          wind    = Wind(1, 5, None, None, None),
+          clouds  = Clouds(100),
+          rain    = None,
+          snow    = None,
+          weather = List(WeatherCondition("Haze", "haze", 721, "50n")),
+          dt      = 1447941171
+        )
+      )
+    ).pickCloseIn(1447941101).right.map(_.dt) must beRight(1447941171)
 
   def e7 = forAll(genNonEmptyHistoryBatch, genTimestamp) { (h: History, t: Int) =>
     h.pickCloseIn(t) must beRight

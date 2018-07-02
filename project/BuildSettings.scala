@@ -17,6 +17,9 @@ import Keys._
 import bintray.BintrayPlugin._
 import bintray.BintrayKeys._
 
+// Scalafmt plugin
+import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport.{scalafmtOnCompile, scalafmtTestOnCompile}
+
 object BuildSettings {
 
   lazy val compilerOptions = Seq(
@@ -59,5 +62,10 @@ object BuildSettings {
           <organizationUrl>http://snowplowanalytics.com</organizationUrl>
         </developer>
       </developers>)
+  )
+
+  lazy val formatting = Seq(
+    scalafmtOnCompile := true,
+    scalafmtTestOnCompile := true
   )
 }
