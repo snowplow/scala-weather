@@ -35,11 +35,6 @@ The latest version of Scala Weather is 0.3.0, which is cross-built against Scala
 If you're using SBT, add the following lines to your build file:
 
 ```scala
-// Resolvers
-val oldTwitterRepo = "Twitter Maven Repo" at "http://maven.twttr.com/"
-val newTwitterRepo = "Sonatype" at "https://oss.sonatype.org/content/repositories/releases"
-
-// Dependency
 val scalaWeather = "com.snowplowanalytics" %% "scala-weather"  % "0.3.0"
 ```
 
