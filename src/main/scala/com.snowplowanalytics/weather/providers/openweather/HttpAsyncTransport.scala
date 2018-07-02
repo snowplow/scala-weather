@@ -28,6 +28,7 @@ import Requests.WeatherRequest
  * Also supposed to be responsible for establishing HTTP connection
  */
 trait HttpAsyncTransport {
+
   /**
    * Build request and send it to the server and get future response
    *

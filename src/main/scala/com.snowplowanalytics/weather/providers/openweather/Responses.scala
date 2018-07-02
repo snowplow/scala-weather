@@ -25,25 +25,19 @@ object Responses {
   // RESPONSES
 
   // Very similar to Weather
-  final case class Current(
-      main: MainInfo,
-      wind: Wind,
-      clouds: Clouds,
-      coord: Option[Coordinates],
-      visibility: Option[BigInt]) extends OwmResponse
+  final case class Current(main: MainInfo,
+                           wind: Wind,
+                           clouds: Clouds,
+                           coord: Option[Coordinates],
+                           visibility: Option[BigInt])
+      extends OwmResponse
 
-  final case class Forecast(
-      cnt: BigInt,
-      cod: String,
-      list: List[Weather]) extends OwmResponse {
+  final case class Forecast(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
     def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
   }
 
-  final case class History(
-      cnt: BigInt,
-      cod: String,
-      list: List[Weather]) extends OwmResponse {
+  final case class History(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
     def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
   }
@@ -54,38 +48,36 @@ object Responses {
    * Weather conditions at exact moment, past, future or current
    * Core data type
    */
-  final case class Weather(
-      main: MainInfo,
-      wind: Wind,
-      clouds: Clouds,
-      rain: Option[Rain],
-      snow: Option[Snow],
-      weather: List[WeatherCondition],
-      dt: BigInt) extends OwmResponse
+  final case class Weather(main: MainInfo,
+                           wind: Wind,
+                           clouds: Clouds,
+                           rain: Option[Rain],
+                           snow: Option[Snow],
+                           weather: List[WeatherCondition],
+                           dt: BigInt)
+      extends OwmResponse
 
   /**
    * Common main information about weather
    */
-  case class MainInfo(
-      grnd_level: Option[BigDecimal],
-      humidity: BigDecimal,
-      pressure: BigDecimal,
-      sea_level: Option[BigDecimal],
-      temp: BigDecimal,
-      temp_min: BigDecimal,
-      temp_max: BigDecimal)
+  case class MainInfo(grnd_level: Option[BigDecimal],
+                      humidity: BigDecimal,
+                      pressure: BigDecimal,
+                      sea_level: Option[BigDecimal],
+                      temp: BigDecimal,
+                      temp_min: BigDecimal,
+                      temp_max: BigDecimal)
 
   /**
    * Textual description of the weather
    */
   case class WeatherCondition(main: String, description: String, id: Int, icon: String)
 
-  case class Wind(
-      speed: BigDecimal,
-      deg: BigDecimal,
-      gust: Option[BigDecimal],
-      var_end: Option[Int],
-      var_beg: Option[Int])
+  case class Wind(speed: BigDecimal,
+                  deg: BigDecimal,
+                  gust: Option[BigDecimal],
+                  var_end: Option[Int],
+                  var_beg: Option[Int])
   case class Coordinates(lon: BigDecimal, lat: BigDecimal)
   case class Clouds(all: BigInt)
   case class Snow(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
@@ -99,7 +91,8 @@ object Responses {
    */
   private[openweather] def pickClosestWeather(list: List[Weather], timestamp: Int): Either[WeatherError, Weather] =
     if (timestamp < 1) Left(InternalError("Timestamp should be greater than 0"))
-    else pickClosest(list, timestamp, (st: Weather) => (st.dt.toInt, st))
+    else
+      pickClosest(list, timestamp, (st: Weather) => (st.dt.toInt, st))
         .map(Right(_))
         .getOrElse(Left(InternalError("Server response has no weather stamps")))
 
@@ -112,8 +105,9 @@ object Responses {
    * @return closest object for some index
    */
   private[openweather] def pickClosest[A](list: List[A], index: Int, transform: A => (Int, A)): Option[A] =
-    list.map(transform)
-        .sortBy(x => Math.abs(index - x._1))
-        .headOption
-        .map(_._2)
+    list
+      .map(transform)
+      .sortBy(x => Math.abs(index - x._1))
+      .headOption
+      .map(_._2)
 }

@@ -36,9 +36,9 @@ class HttpTransport(apiHost: String, ssl: Boolean = false) extends HttpAsyncTran
 
   def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]] =
     Future {
-      val uri = request.constructQuery(appId)
+      val uri    = request.constructQuery(appId)
       val scheme = if (ssl) "https://" else "http://"
-      val url = scheme + apiHost + uri
+      val url    = scheme + apiHost + uri
       Http(url).asString
     }.map(processHttpResponse)
 
@@ -74,6 +74,6 @@ class HttpTransport(apiHost: String, ssl: Boolean = false) extends HttpAsyncTran
   private def parseJson(content: String): Either[WeatherError, JValue] =
     parseOpt(content) match {
       case Some(json) => Right(json)
-      case None => Left(ParseError(s"OpenWeatherMap Error: string [$content] doesn't contain JSON"))
+      case None       => Left(ParseError(s"OpenWeatherMap Error: string [$content] doesn't contain JSON"))
     }
 }

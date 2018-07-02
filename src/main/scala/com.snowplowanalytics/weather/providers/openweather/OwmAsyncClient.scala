@@ -28,7 +28,7 @@ import Requests._
  * @param appId API key
  * @param transport HTTP client for send requests, receive responses
  */
-class OwmAsyncClient(appId: String, transport: HttpAsyncTransport) extends Client[AsyncWeather]  {
+class OwmAsyncClient(appId: String, transport: HttpAsyncTransport) extends Client[AsyncWeather] {
   def receive[W <: OwmResponse: Manifest](request: OwmRequest): Future[Either[WeatherError, W]] = {
     val processedResponse = transport.getData(request, appId)
     processedResponse.map(_.right.flatMap(extractWeather[W]))
@@ -39,6 +39,7 @@ class OwmAsyncClient(appId: String, transport: HttpAsyncTransport) extends Clien
  * Companion object for async client
  */
 object OwmAsyncClient {
+
   /**
    * Create async client with key and optionally different API host
    */

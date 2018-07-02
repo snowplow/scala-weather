@@ -25,7 +25,8 @@ import org.specs2.mock.Mockito
 
 import Requests.OwmHistoryRequest
 
-class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito { def is = s2"""
+class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
+  def is = s2"""
 
   OWM Client API test
 
@@ -36,12 +37,13 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
 
   def e1 = {
     val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
-    val client = OwmAsyncClient("KEY", transport)
+    val client    = OwmAsyncClient("KEY", transport)
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(
-        "lat" -> "0.0", "lon" -> "0.0",
-        "start" -> "1449774761"  // "2015-12-10T19:12:41+00:00"
+        "lat"   -> "0.0",
+        "lon"   -> "0.0",
+        "start" -> "1449774761" // "2015-12-10T19:12:41+00:00"
       )
     )
     client.historyByCoords(0.00f, 0.00f, DateTime.parse("2015-12-11T02:12:41.000+07:00"))

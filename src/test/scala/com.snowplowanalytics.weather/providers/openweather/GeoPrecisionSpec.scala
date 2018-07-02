@@ -12,11 +12,12 @@
  */
 package com.snowplowanalytics.weather.providers.openweather
 
-import org.specs2.{ Specification, ScalaCheck }
+import org.specs2.{ScalaCheck, Specification}
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop.forAll
 
-class GeoPrecisionSpec extends Specification with ScalaCheck { def is = s2"""
+class GeoPrecisionSpec extends Specification with ScalaCheck {
+  def is = s2"""
 
   Float coordinates rounder specification
 
@@ -42,29 +43,28 @@ class GeoPrecisionSpec extends Specification with ScalaCheck { def is = s2"""
     throw exception for zero geoPrecision          $e11
                                                    """
 
-
   // We use here it because of Scala constructor order
   private[openweather] class CacheWithUnknownSize(
-      val geoPrecision: Int,
-      val cacheSize: Int = 1 // Must be > 0
+    val geoPrecision: Int,
+    val cacheSize: Int = 1 // Must be > 0
   ) extends WeatherCache[Responses.History]
 
   val rounderChecker1 = new CacheWithUnknownSize(1)
   val rounderChecker2 = new CacheWithUnknownSize(2)
   val rounderChecker5 = new CacheWithUnknownSize(5)
 
-  def e1 = rounderChecker1.roundCoordinate(1.321f) must beEqualTo(1.0f)
-  def e2 = rounderChecker1.roundCoordinate(1.921f) must beEqualTo(2.0f)
-  def e3 = rounderChecker2.roundCoordinate(1.321f) must beEqualTo(1.5f)
-  def e4 = rounderChecker2.roundCoordinate(2.6f) must beEqualTo(2.5f)
-  def e5 = rounderChecker2.roundCoordinate(2.85321f) must beEqualTo(3.0f)
-  def e6 = rounderChecker5.roundCoordinate(7.312f) must beEqualTo(7.4f)
-  def e7 = rounderChecker5.roundCoordinate(7.8001f) must beEqualTo(7.8f)
+  def e1  = rounderChecker1.roundCoordinate(1.321f) must beEqualTo(1.0f)
+  def e2  = rounderChecker1.roundCoordinate(1.921f) must beEqualTo(2.0f)
+  def e3  = rounderChecker2.roundCoordinate(1.321f) must beEqualTo(1.5f)
+  def e4  = rounderChecker2.roundCoordinate(2.6f) must beEqualTo(2.5f)
+  def e5  = rounderChecker2.roundCoordinate(2.85321f) must beEqualTo(3.0f)
+  def e6  = rounderChecker5.roundCoordinate(7.312f) must beEqualTo(7.4f)
+  def e7  = rounderChecker5.roundCoordinate(7.8001f) must beEqualTo(7.8f)
   def e11 = new CacheWithUnknownSize(0) must throwA[IllegalArgumentException]
 
   // Rounding arbitrary floats
-  val sensibleFloat =         // we want omit big exponents
-    Arbitrary.arbitrary[Float] suchThat (f => (f > -180.0) && (f < 180.0) )
+  val sensibleFloat = // we want omit big exponents
+    Arbitrary.arbitrary[Float] suchThat (f => (f > -180.0) && (f < 180.0))
 
   def e8 = forAll(sensibleFloat) { f: Float =>
     rounderChecker1.roundCoordinate(f).toString must endWith(".0")
@@ -73,6 +73,8 @@ class GeoPrecisionSpec extends Specification with ScalaCheck { def is = s2"""
     rounderChecker2.roundCoordinate(f).toString must endWith(".0") or endWith(".5")
   }
   def e10 = forAll(sensibleFloat) { f: Float =>
-    rounderChecker5.roundCoordinate(f).toString must endWith(".0") or endWith(".2") or endWith(".4") or endWith(".6") or endWith(".8")
+    rounderChecker5
+      .roundCoordinate(f)
+      .toString must endWith(".0") or endWith(".2") or endWith(".4") or endWith(".6") or endWith(".8")
   }
 }

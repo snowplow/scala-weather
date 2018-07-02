@@ -23,7 +23,7 @@ import Errors._
 package object weather {
 
   type Timestamp = Int
-  type Day = Int        // 0:00:00 timestamp of day
+  type Day       = Int // 0:00:00 timestamp of day
 
   // Type aliases/lambdas
   type ValidatedWeather[+A] = Either[WeatherError, A]

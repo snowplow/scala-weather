@@ -14,7 +14,7 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 // Java
-import java.util.{ Calendar, Date, TimeZone }
+import java.util.{Calendar, Date, TimeZone}
 
 // LRUCache
 import com.twitter.util.SynchronizedLruMap
@@ -32,8 +32,8 @@ import Responses.OwmResponse
 trait WeatherCache[W <: OwmResponse] {
   import WeatherCache._
 
-  val cacheSize: Int                 // Size of LRU cache
-  val geoPrecision: Int              // nth part of one to round geo coordinates
+  val cacheSize: Int    // Size of LRU cache
+  val geoPrecision: Int // nth part of one to round geo coordinates
 
   type Cache = SynchronizedLruMap[CacheKey, Either[WeatherError, W]]
   protected val cache: Cache = new SynchronizedLruMap[CacheKey, Either[WeatherError, W]](cacheSize)
@@ -48,10 +48,8 @@ trait WeatherCache[W <: OwmResponse] {
    * @return cache key
    */
   def eventToCacheKey(timestamp: Timestamp, position: Position): CacheKey = {
-    val timeFrame = getStartOfDay(timestamp)
-    val roundPosition = Position(
-      roundCoordinate(position.latitude),
-      roundCoordinate(position.longitude))
+    val timeFrame     = getStartOfDay(timestamp)
+    val roundPosition = Position(roundCoordinate(position.latitude), roundCoordinate(position.longitude))
     CacheKey(timeFrame, roundPosition)
   }
 
@@ -79,11 +77,14 @@ trait WeatherCache[W <: OwmResponse] {
    * @return rounded coordinate
    */
   def roundCoordinate(coordinate: Float): Float =
-    BigDecimal.decimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
-      .setScale(1, BigDecimal.RoundingMode.HALF_UP).toFloat
+    BigDecimal
+      .decimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
+      .setScale(1, BigDecimal.RoundingMode.HALF_UP)
+      .toFloat
 }
 
 object WeatherCache {
+
   /**
    * Cache key for obtaining record
    *

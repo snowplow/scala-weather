@@ -24,7 +24,7 @@ import org.joda.time.DateTime
 import Errors._
 import Requests._
 import Responses._
-import WeatherCache.{ CacheKey, Position }
+import WeatherCache.{CacheKey, Position}
 
 /**
  * Blocking OpenWeatherMap client with history (only) cache
@@ -44,11 +44,9 @@ import WeatherCache.{ CacheKey, Position }
  * @param asyncClient instance of `OwmAsyncClient` which will do all underlying work
  * @param timeout timeout in seconds after which active request will be considered failed
  */
-class OwmCacheClient(
-    val cacheSize: Int,
-    val geoPrecision: Int,
-    asyncClient: OwmAsyncClient,
-    val timeout: Int) extends Client[ValidatedWeather] with WeatherCache[History]{
+class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: OwmAsyncClient, val timeout: Int)
+    extends Client[ValidatedWeather]
+    with WeatherCache[History] {
 
   private val requestTimeout = timeout.seconds
 
@@ -68,11 +66,11 @@ class OwmCacheClient(
     val cacheKey = eventToCacheKey(timestamp, Position(latitude, longitude))
     cache.get(cacheKey) match {
       case Some(Right(cached)) =>
-        cached.pickCloseIn(timestamp)                         // Cache hit
+        cached.pickCloseIn(timestamp) // Cache hit
       case Some(Left(TimeoutError(_))) =>
         getAndCache(latitude, longitude, timestamp, cacheKey) // Retry if timeout
       case Some(Left(error)) =>
-        Left(error)                                        // Return error
+        Left(error) // Return error
       case None =>
         getAndCache(latitude, longitude, timestamp, cacheKey) // Make request
     }
@@ -96,11 +94,10 @@ class OwmCacheClient(
    * @param cacheKey cache key to use for bucket
    * @return near weather stamp
    */
-  private def getAndCache(
-      latitude: Float,
-      longitude: Float,
-      realTimestamp: Timestamp,
-      cacheKey: CacheKey): Either[WeatherError, Weather] = {
+  private def getAndCache(latitude: Float,
+                          longitude: Float,
+                          realTimestamp: Timestamp,
+                          cacheKey: CacheKey): Either[WeatherError, Weather] = {
     val response = historyByCoords(latitude, longitude, cacheKey.day, cacheKey.endOfDay, 24)
     cache.put(cacheKey, response)
     getWeatherStamp(response, realTimestamp)
@@ -114,9 +111,8 @@ class OwmCacheClient(
    * @param timestamp timestamp
    * @return either error or weather stamp
    */
-  private[openweather] def getWeatherStamp(
-      history: Either[WeatherError, History],
-      timestamp: Int): Either[WeatherError, Weather] =
+  private[openweather] def getWeatherStamp(history: Either[WeatherError, History],
+                                           timestamp: Int): Either[WeatherError, Weather] =
     history.right.flatMap(_.pickCloseIn(timestamp))
 
   /**
@@ -140,16 +136,16 @@ class OwmCacheClient(
 /**
  * Companion object for OwmClient with default transport based on akka http
  */
-object OwmCacheClient  {
+object OwmCacheClient {
+
   /**
    * Create OwmCacheClient with singleton-placed (in-scala-weather) akka system
    */
-  def apply(
-      appId: String,
-      cacheSize: Int = 5100,
-      geoPrecision: Int = 1,
-      host: String = "pro.openweathermap.org",
-      timeout: Int = 5): OwmCacheClient =
+  def apply(appId: String,
+            cacheSize: Int    = 5100,
+            geoPrecision: Int = 1,
+            host: String      = "pro.openweathermap.org",
+            timeout: Int      = 5): OwmCacheClient =
     new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, new HttpTransport(host)), timeout)
 
   /**
@@ -161,11 +157,10 @@ object OwmCacheClient  {
   /**
    * Create OwmCacheClient with underlying transport (probably another actor system)
    */
-  def apply(
-      appId: String,
-      cacheSize: Int,
-      geoPrecision: Int,
-      transport: HttpAsyncTransport,
-      timeout: Int): OwmCacheClient =
+  def apply(appId: String,
+            cacheSize: Int,
+            geoPrecision: Int,
+            transport: HttpAsyncTransport,
+            timeout: Int): OwmCacheClient =
     new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, transport), timeout)
 }
