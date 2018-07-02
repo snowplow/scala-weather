@@ -163,9 +163,6 @@ limitations under the License.
 [snowplow-repo]: https://github.com/snowplow/snowplow
 [weather-enrichment]: https://github.com/snowplow/snowplow/wiki/Weather-enrichment
 
-[vagrant-install]: http://docs.vagrantup.com/v2/installation/index.html
-[virtualbox-install]: https://www.virtualbox.org/wiki/Downloads
-
 [travis]: https://travis-ci.org/snowplow/scala-weather
 [travis-image]: https://travis-ci.org/snowplow/scala-weather.png?branch=master
 
