@@ -13,9 +13,10 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Scala
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+// cats
+import cats.effect.Sync
+import cats._
+import cats.implicits._
 
 // This library
 import Errors.WeatherError
@@ -28,8 +29,8 @@ import Requests._
  * @param appId API key
  * @param transport HTTP client for send requests, receive responses
  */
-class OwmAsyncClient(appId: String, transport: HttpAsyncTransport) extends Client[AsyncWeather] {
-  def receive[W <: OwmResponse: Manifest](request: OwmRequest): Future[Either[WeatherError, W]] = {
+class OwmAsyncClient[F[_]: FlatMap](appId: String, transport: HttpAsyncTransport[F]) extends Client[F] {
+  def receive[W <: OwmResponse: Manifest](request: OwmRequest): F[Either[WeatherError, W]] = {
     val processedResponse = transport.getData(request, appId)
     processedResponse.map(_.right.flatMap(extractWeather[W]))
   }
@@ -43,16 +44,16 @@ object OwmAsyncClient {
   /**
    * Create async client with key and optionally different API host
    */
-  def apply(
+  def apply[F[_]: Sync](
     appId: String,
     host: String = "history.openweathermap.org",
     ssl: Boolean = false
-  ): OwmAsyncClient =
-    new OwmAsyncClient(appId, new HttpTransport(host, ssl))
+  ): OwmAsyncClient[F] =
+    new OwmAsyncClient[F](appId, new HttpTransport[F](host, ssl))
 
   /**
    * Create async client with key and optionally non-standard (mock) HTTP transport
    */
-  def apply(appId: String, transport: HttpAsyncTransport): OwmAsyncClient =
-    new OwmAsyncClient(appId, transport)
+  def apply[F[_]: Sync](appId: String, transport: HttpAsyncTransport[F]): OwmAsyncClient[F] =
+    new OwmAsyncClient[F](appId, transport)
 }

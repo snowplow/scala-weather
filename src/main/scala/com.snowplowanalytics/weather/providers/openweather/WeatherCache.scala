@@ -19,7 +19,7 @@ import java.util.{Calendar, Date, TimeZone}
 // LRUCache
 import com.twitter.util.SynchronizedLruMap
 
-// This libraby
+// This library
 import Errors.WeatherError
 import Responses.OwmResponse
 

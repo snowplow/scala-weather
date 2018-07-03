@@ -14,8 +14,11 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 // Scala
-import scala.concurrent.Await
 import scala.concurrent.duration._
+
+// cats
+import cats.Id
+import cats.effect.IO
 
 // Joda
 import org.joda.time.DateTime
@@ -44,8 +47,8 @@ import WeatherCache.{CacheKey, Position}
  * @param asyncClient instance of `OwmAsyncClient` which will do all underlying work
  * @param timeout timeout in seconds after which active request will be considered failed
  */
-class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: OwmAsyncClient, val timeout: Int)
-    extends Client[ValidatedWeather]
+class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: OwmAsyncClient[IO], val timeout: Int)
+    extends Client[Id]
     with WeatherCache[History] {
 
   private val requestTimeout = timeout.seconds
@@ -125,12 +128,12 @@ class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: Owm
    * @return either response or error in case of timeout
    */
   private def await[W <: OwmResponse: Manifest](request: OwmRequest): Either[WeatherError, W] =
-    try {
-      Await.result(asyncClient.receive(request), requestTimeout)
-    } catch {
-      case e: java.util.concurrent.TimeoutException =>
+    asyncClient
+      .receive(request)
+      .unsafeRunTimed(requestTimeout)
+      .getOrElse(
         Left(TimeoutError(s"OpenWeatherMap Error: server didn't responded in $timeout seconds. Timeout"))
-    }
+      )
 }
 
 /**
@@ -146,21 +149,23 @@ object OwmCacheClient {
             geoPrecision: Int = 1,
             host: String      = "pro.openweathermap.org",
             timeout: Int      = 5): OwmCacheClient =
-    new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, new HttpTransport(host)), timeout)
+    new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, new HttpTransport[IO](host)), timeout)
 
   /**
    * Create OwmCacheClient with underlying async client
    */
-  def apply(cacheSize: Int, geoPrecision: Int, asyncClient: OwmAsyncClient, timeout: Int): OwmCacheClient =
+  // TODO: think about hardcoding `IO` here
+  def apply(cacheSize: Int, geoPrecision: Int, asyncClient: OwmAsyncClient[IO], timeout: Int): OwmCacheClient =
     new OwmCacheClient(cacheSize, geoPrecision, asyncClient, timeout)
 
   /**
    * Create OwmCacheClient with underlying transport (probably another actor system)
    */
+  // TODO: think about hardcoding `IO` here
   def apply(appId: String,
             cacheSize: Int,
             geoPrecision: Int,
-            transport: HttpAsyncTransport,
+            transport: HttpAsyncTransport[IO],
             timeout: Int): OwmCacheClient =
     new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, transport), timeout)
 }

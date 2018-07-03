@@ -17,7 +17,7 @@ import org.json4s.JsonDSL._
 
 import org.joda.time.DateTime
 
-import scala.concurrent.Future
+import cats.effect.IO
 
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
@@ -36,7 +36,7 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
   val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
 
   def e1 = {
-    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport[IO]].defaultReturn(IO.pure(emptyHistoryResponse))
     val client    = OwmAsyncClient("KEY", transport)
     val expectedRequest = OwmHistoryRequest(
       "city",

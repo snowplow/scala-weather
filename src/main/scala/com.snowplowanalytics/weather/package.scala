@@ -14,9 +14,6 @@ package com.snowplowanalytics
 
 import com.snowplowanalytics.weather.providers.openweather.Errors
 
-// Scala
-import scala.concurrent.Future
-
 // This library
 import Errors._
 
@@ -27,5 +24,4 @@ package object weather {
 
   // Type aliases/lambdas
   type ValidatedWeather[+A] = Either[WeatherError, A]
-  type AsyncWeather[+A] = Future[Either[WeatherError, A]]
 }

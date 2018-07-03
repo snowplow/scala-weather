@@ -16,6 +16,8 @@ package providers.openweather
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+import cats.effect.IO
+
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.specification.ExecutionEnvironment
@@ -46,14 +48,16 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
   """
 
   val host              = "history.openweathermap.org"
-  val transportForCache = new HttpTransport(host)
+  val transportForCache = new HttpTransport[IO](host)
   val client            = OwmAsyncClient(owmKey.get, transportForCache)
-  val sslClient         = OwmAsyncClient(owmKey.get, new HttpTransport(host, ssl = true))
+  val sslClient         = OwmAsyncClient(owmKey.get, new HttpTransport[IO](host, ssl = true))
 
-  def testCities(cities: Vector[Position], client: OwmAsyncClient) =
+  def testCities(cities: Vector[Position], client: OwmAsyncClient[IO]) =
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
-      Await.result(history, 5 seconds) must beRight
+      val result  = history.unsafeRunTimed(5 seconds)
+      result must beSome
+      result.get must beRight
     }
 
   def e1 = testCities(TestData.bigAndAbnormalCities, client).set(maxSize = 5, minTestsOk = 5)
@@ -62,8 +66,9 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
 
   def e3 = {
     val client = OwmAsyncClient("INVALID-KEY", transportForCache)
-    val result = client.historyById(1)
-    Await.result(result, 5 seconds) must beLeft.like {
+    val result = client.historyById(1).unsafeRunTimed(5 seconds)
+    result must beSome
+    result.get must beLeft.like {
       case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$ Check your API key")
     }
   }
