@@ -30,6 +30,7 @@ object BuildSettings {
     "-language:higherKinds",
     "-language:implicitConversions",
     "-unchecked",
+    "-Ypartial-unification",
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-numeric-widen",

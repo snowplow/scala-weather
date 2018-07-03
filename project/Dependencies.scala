@@ -26,8 +26,8 @@ object Dependencies {
     val jodaConvert = "2.1"
     // Scala
     val json4s   = "3.2.11"
-    val scalaj   = "2.3.0"
     val collUtil = "6.39.0"
+    val hammock  = "0.8.5"
     // Tests
     val specs2   = "3.9.4"
   }
@@ -39,8 +39,9 @@ object Dependencies {
     // Scala
     val json4s          = "org.json4s"  %% "json4s-core"       % V.json4s
     val json4sJackson   = "org.json4s"  %% "json4s-jackson"    % V.json4s
-    val scalaj          = "org.scalaj"  %% "scalaj-http"       % V.scalaj
     val collUtil        = "com.twitter" %% "util-collection"   % V.collUtil
+    val hammockCore     = "com.pepegar" %% "hammock-core"      % V.hammock
+    val hammockCirce    = "com.pepegar" %% "hammock-circe"     % V.hammock
     // Tests
     val specs2          = "org.specs2"  %% "specs2-core"       % V.specs2 % "test"
     val specs2Mock      = "org.specs2"  %% "specs2-mock"       % V.specs2 % "test"

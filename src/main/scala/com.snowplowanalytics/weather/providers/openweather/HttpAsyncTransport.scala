@@ -13,9 +13,6 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Scala
-import scala.concurrent.Future
-
 // json4s
 import org.json4s.JValue
 
@@ -27,14 +24,14 @@ import Requests.WeatherRequest
  * Basic trait responsible for receiving data via HTTP
  * Also supposed to be responsible for establishing HTTP connection
  */
-trait HttpAsyncTransport {
+trait HttpAsyncTransport[F[_]] {
 
   /**
-   * Build request and send it to the server and get future response
+   * Build request and send it to the server and get response wrapped in effect type
    *
    * @param request helper for generating correct URI
    * @param appId API key
-   * @return future either service-error or ready-to-process JSON
+   * @return either service-error or ready-to-process JSON, wrapped in effect type
    */
-  def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]]
+  def getData(request: WeatherRequest, appId: String): F[Either[WeatherError, JValue]]
 }

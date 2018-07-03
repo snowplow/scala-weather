@@ -13,8 +13,8 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Scala
-import scala.concurrent.Future
+// cats
+import cats.effect.IO
 
 // Java
 import java.util.{Calendar, Date, TimeZone}
@@ -93,7 +93,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
         "end"   -> "1450051200" // "2015-12-14T00:00:00.000+00:00"
       )
     )
-    val transport = mock[HttpTransport].defaultReturn(Future.successful(emptyHistoryResponse))
+    val transport = mock[HttpTransport[IO]].defaultReturn(IO.pure(emptyHistoryResponse))
     val client    = OwmCacheClient("KEY", 2, 1, transport, 5)
     client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk)
     there.was(1.times(transport).getData(expectedRequest, "KEY"))

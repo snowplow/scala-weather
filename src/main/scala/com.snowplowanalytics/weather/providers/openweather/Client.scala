@@ -28,25 +28,25 @@ import Responses._
 import Requests._
 
 /**
- * Base client trait with defined client methods such a `historyById`, `historyByName`
+ * Base client trait with defined client methods such as `historyById`, `historyByName`
  * common for subclasses
  *
- * @tparam Response response wrapper for `Client` subclass, such as `Future`
+ * @tparam F response wrapper for `Client` subclass, such as cats `IO`
  *                  all `receive` logic should be wrapped in it
  */
-trait Client[Response[_]] {
+trait Client[F[_]] {
 
   private implicit val formats = DefaultFormats
 
   /**
    * Main client logic for Request => Response function,
-   * where Response is wrappeed in tparam `Response`
+   * where Response is wrappeed in tparam `F`
    *
    * @param owmRequest request built by client method
    * @tparam W type of weather response to extract
-   * @return extracted either error or weather
+   * @return extracted either error or weather wrapped in `F`
    */
-  def receive[W <: OwmResponse: Manifest](owmRequest: OwmRequest): Response[W]
+  def receive[W <: OwmResponse: Manifest](owmRequest: OwmRequest): F[Either[WeatherError, W]]
 
   /**
    * Get historical data by city id
@@ -57,13 +57,13 @@ trait Client[Response[_]] {
    * @param end end (unix time, UTC)
    * @param cnt count of returned data
    * @param measure one of predefined `Api.Measures` to constrain accuracy
-   * @return either error or history wrapped in `Response`
+   * @return either error or history wrapped in `F`
    */
   def historyById(id: Int,
                   start: OptArg[Int]                  = None,
                   end: OptArg[Int]                    = None,
                   cnt: OptArg[Int]                    = None,
-                  measure: OptArg[Api.Measures.Value] = None): Response[History] = {
+                  measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
     val request = OwmHistoryRequest("city",
                                     Map("id" -> id.toString)
                                       ++ ("start" -> start)
@@ -83,14 +83,14 @@ trait Client[Response[_]] {
    * @param end end (unix time, UTC)
    * @param cnt count of returned data
    * @param measure one of predefined `Api.Measures` to constrain accuracy
-   * @return either error or history wrapped in `Response`
+   * @return either error or history wrapped in `F`
    */
   def historyByName(name: String,
                     country: OptArg[String]             = None,
                     start: OptArg[Int]                  = None,
                     end: OptArg[Int]                    = None,
                     cnt: OptArg[Int]                    = None,
-                    measure: OptArg[Api.Measures.Value] = None): Response[History] = {
+                    measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
     val query = name + country.map("," + _).getOrElse("")
     val request = OwmHistoryRequest("city",
                                     Map("q" -> query)
@@ -111,14 +111,14 @@ trait Client[Response[_]] {
    * @param end end (unix time, UTC)
    * @param cnt count of returned data
    * @param measure one of predefined `Api.Measures` to constrain accuracy
-   * @return either error or history wrapped in `Response`
+   * @return either error or history wrapped in `F`
    */
   def historyByCoords(lat: Float,
                       lon: Float,
                       start: OptArg[Int]                  = None,
                       end: OptArg[Int]                    = None,
                       cnt: OptArg[Int]                    = None,
-                      measure: OptArg[Api.Measures.Value] = None): Response[History] = {
+                      measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
     val request = OwmHistoryRequest("city",
                                     Map("lat" -> lat.toString, "lon" -> lon.toString)
                                       ++ ("start" -> start)
@@ -133,9 +133,9 @@ trait Client[Response[_]] {
    * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_forecast#Get-forecast-by-city-id
    *
    * @param id id of the city
-   * @return either error or forecast wrapped in `Response`
+   * @return either error or forecast wrapped in `F`
    */
-  def forecastById(id: Int, cnt: OptArg[Int] = None): Response[Forecast] =
+  def forecastById(id: Int, cnt: OptArg[Int] = None): F[Either[WeatherError, Forecast]] =
     receive(OwmForecastRequest("city", Map("id" -> id.toString, "cnt" -> cnt.toString)))
 
   /**
@@ -145,9 +145,11 @@ trait Client[Response[_]] {
    * @param name name of the city
    * @param country optional two-letter code
    * @param cnt count of returned data
-   * @return either error or forecast wrapped in `Response`
+   * @return either error or forecast wrapped in `F`
    */
-  def forecastByName(name: String, country: OptArg[String], cnt: OptArg[Int] = None): Response[Forecast] = {
+  def forecastByName(name: String,
+                     country: OptArg[String],
+                     cnt: OptArg[Int] = None): F[Either[WeatherError, Forecast]] = {
     val query = name + country.map("," + _).getOrElse("")
     receive(OwmForecastRequest("city", Map("q" -> query, "cnt" -> cnt.toString)))
   }
@@ -157,9 +159,9 @@ trait Client[Response[_]] {
    *
    * @param lat latitude
    * @param lon longitude
-   * @return either error or forecast wrapped in `Response`
+   * @return either error or forecast wrapped in `F`
    */
-  def forecastByCoords(lat: Float, lon: Float, cnt: OptArg[Int] = None): Response[Weather] =
+  def forecastByCoords(lat: Float, lon: Float, cnt: OptArg[Int] = None): F[Either[WeatherError, Weather]] =
     receive(OwmForecastRequest("weather", Map("lat" -> lat.toString, "lon" -> lon.toString, "cnt" -> cnt.toString)))
 
   /**
@@ -167,9 +169,9 @@ trait Client[Response[_]] {
    * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_weather#3-By-city-ID
    *
    * @param id id of the city
-   * @return either error or current weather wrapped in `Response`
+   * @return either error or current weather wrapped in `F`
    */
-  def currentById(id: Int): Response[Current] =
+  def currentById(id: Int): F[Either[WeatherError, Current]] =
     receive(OwmCurrentRequest("weather", Map("id" -> id.toString)))
 
   /**
@@ -179,9 +181,11 @@ trait Client[Response[_]] {
    * @param name name of the city
    * @param country optional two-letter code
    * @param cnt count of returned data
-   * @return either error or forecast wrapped in `Response`
+   * @return either error or forecast wrapped in `F`
    */
-  def currentByName(name: String, country: OptArg[String], cnt: OptArg[Int] = None): Response[Current] = {
+  def currentByName(name: String,
+                    country: OptArg[String],
+                    cnt: OptArg[Int] = None): F[Either[WeatherError, Current]] = {
     val query = name + country.map("," + _).getOrElse("")
     receive(OwmCurrentRequest("weather", Map("q" -> query, "cnt" -> cnt.toString)))
   }
@@ -192,9 +196,9 @@ trait Client[Response[_]] {
    *
    * @param lat latitude
    * @param lon longitude
-   * @return either error or current weather wrapped in `Response`
+   * @return either error or current weather wrapped in `F`
    */
-  def currentByCoords(lat: Float, lon: Float): Response[Current] =
+  def currentByCoords(lat: Float, lon: Float): F[Either[WeatherError, Current]] =
     receive(OwmCurrentRequest("weather", Map("lat" -> lat.toString, "lon" -> lon.toString)))
 
   /**

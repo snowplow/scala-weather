@@ -13,56 +13,74 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Scala
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+// cats
+import cats.effect.Sync
+import cats.implicits._
 
 // json4s
 import org.json4s.JValue
 import org.json4s.jackson.JsonMethods.parseOpt
 
-// scalaj
-import scalaj.http._
+// hammock
+import hammock._
+import hammock.jvm.Interpreter
 
 // This library
 import Errors._
 import Requests.WeatherRequest
 
 /**
- * Scalaj based transport
+ * Hammock based transport
  * @param apiHost weather API server host
  */
-class HttpTransport(apiHost: String, ssl: Boolean = false) extends HttpAsyncTransport {
+class HttpTransport[F[_]: Sync](apiHost: String, ssl: Boolean = false) extends HttpAsyncTransport[F] {
 
-  def getData(request: WeatherRequest, appId: String): Future[Either[WeatherError, JValue]] =
-    Future {
-      val uri    = request.constructQuery(appId)
-      val scheme = if (ssl) "https://" else "http://"
-      val url    = scheme + apiHost + uri
-      Http(url).asString
-    }.map(processHttpResponse)
+  private implicit val interpreter = Interpreter[F]
+
+  /**
+   * Fetch data from the API
+   *
+   * @param request helper for generating correct URI
+   * @param appId API key
+   * @return either error or ready-to-process JSON, wrapped in effect type
+   */
+  def getData(request: WeatherRequest, appId: String): F[Either[WeatherError, JValue]] = {
+    val uri    = request.constructQuery(appId)
+    val scheme = if (ssl) "https://" else "http://"
+    val url    = scheme + apiHost + uri
+
+    Uri
+      .fromString(url)
+      .leftMap(InternalError)
+      .traverse { uri: Uri =>
+        Hammock
+          .request(Method.GET, uri, Map())
+          .map(processHttpResponse)
+          .exec[F]
+      }
+      .map(x => x.joinRight)
+  }
 
   /**
    * Get JSON out of HTTP response body
    *
    * @param response full HTTP response
-   * @return future with either server error or JSON
+   * @return either server error or JSON
    */
-  private def processHttpResponse(response: HttpResponse[String]): Either[WeatherError, JValue] =
+  private def processHttpResponse(response: HttpResponse): Either[WeatherError, JValue] =
     getResponseContent(response).right.flatMap(parseJson)
 
   /**
    * Wait for entity and convert it to string
    *
    * @param response full HTTP response
-   * @return future entity content of HTTP response or throwable in case of timeout
+   * @return either entity content of HTTP response or throwable in case of timeout
    */
-  private def getResponseContent(response: HttpResponse[String]): Either[WeatherError, String] =
-    if (response.isSuccess) {
-      Right(response.body)
-    } else {
-      if (response.code == 401) Left(AuthorizationError)
-      else Left(HTTPError(s"Request failed with status ${response.code}"))
+  private def getResponseContent(response: HttpResponse): Either[WeatherError, String] =
+    response.status match {
+      case Status.OK           => Right(response.entity.content.toString)
+      case Status.Unauthorized => Left(AuthorizationError)
+      case _                   => Left(HTTPError(s"Request failed with status ${response.status.code}"))
     }
 
   /**
