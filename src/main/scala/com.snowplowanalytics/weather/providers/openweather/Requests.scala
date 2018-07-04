@@ -14,7 +14,8 @@ package com.snowplowanalytics.weather.providers.openweather
 
 // TODO: replace it with plain URIs
 private[weather] object Requests {
-  abstract sealed trait WeatherRequest {
+
+  sealed trait WeatherRequest {
     def constructQuery(appId: String): String
   }
 
@@ -27,7 +28,7 @@ private[weather] object Requests {
      * Construct URI for specific type of request and all other data
      *
      * @param appId API key
-     * @return URI object ready to be sent
+     * @return URI string ready to be sent
      */
     def constructQuery(appId: String): String = {
       val end         = endpoint.map(e => s"$e/$resource").getOrElse(s"$resource")

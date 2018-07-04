@@ -22,8 +22,8 @@ import java.util.{Calendar, Date, TimeZone}
 // Joda
 import org.joda.time.DateTime
 
-// Json4s
-import org.json4s.JsonDSL._
+// circe
+import io.circe.literal._
 
 // Specs2
 import org.specs2.Specification
@@ -82,7 +82,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
   }
 
   def e5 = {
-    val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
+    val emptyHistoryResponse = Right(json"""{"cnt": 0, "cod": "200", "list": []}""")
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(

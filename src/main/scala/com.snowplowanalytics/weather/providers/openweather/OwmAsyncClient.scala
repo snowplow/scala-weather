@@ -15,11 +15,19 @@ package providers.openweather
 
 // cats
 import cats.effect.Sync
-import cats._
 import cats.implicits._
+import cats._
+
+// circe
+import io.circe.parser.parse
+import io.circe.{Decoder, Json}
+
+// hammock
+import hammock.{Hammock, HttpResponse, Method, Status, Uri}
+import hammock.jvm.Interpreter
 
 // This library
-import Errors.WeatherError
+import Errors._
 import Responses._
 import Requests._
 
@@ -27,33 +35,64 @@ import Requests._
  * Asynchronous OpenWeatherMap client
  *
  * @param appId API key
- * @param transport HTTP client for send requests, receive responses
  */
-class OwmAsyncClient[F[_]: FlatMap](appId: String, transport: HttpAsyncTransport[F]) extends Client[F] {
-  def receive[W <: OwmResponse: Manifest](request: OwmRequest): F[Either[WeatherError, W]] = {
-    val processedResponse = transport.getData(request, appId)
-    processedResponse.map(_.right.flatMap(extractWeather[W]))
+case class OwmAsyncClient[F[_]: Sync](appId: String, apiHost: String = "api.openweathermap.org", ssl: Boolean = false)
+    extends Client[F] {
+
+  private implicit val interpreter = Interpreter[F]
+
+  def receive[W <: OwmResponse](request: OwmRequest)(implicit wDecoder: Decoder[W]): F[Either[WeatherError, W]] = {
+
+    val uri    = request.constructQuery(appId)
+    val scheme = if (ssl) "https://" else "http://"
+    val url    = scheme + apiHost + uri
+
+    Uri
+      .fromString(url)
+      .leftMap(InternalError)
+      .traverse { uri: Uri =>
+        Hammock
+          .request(Method.GET, uri, Map())
+          .map(response => processResponse(response))
+          .exec[F]
+      }
+      .map(x => x.joinRight)
   }
-}
-
-/**
- * Companion object for async client
- */
-object OwmAsyncClient {
 
   /**
-   * Create async client with key and optionally different API host
+   * Get JSON out of HTTP response body
+   *
+   * @param response full HTTP response
+   * @return either server error or JSON
    */
-  def apply[F[_]: Sync](
-    appId: String,
-    host: String = "history.openweathermap.org",
-    ssl: Boolean = false
-  ): OwmAsyncClient[F] =
-    new OwmAsyncClient[F](appId, new HttpTransport[F](host, ssl))
+  private def processResponse[A: Decoder](response: HttpResponse): Either[WeatherError, A] =
+    getResponseContent(response)
+      .flatMap(parseJson)
+      .flatMap(json => extractWeather(json))
 
   /**
-   * Create async client with key and optionally non-standard (mock) HTTP transport
+   * Convert the response to string
+   *
+   * @param response full HTTP response
+   * @return either entity content of HTTP response or WeatherError
    */
-  def apply[F[_]: Sync](appId: String, transport: HttpAsyncTransport[F]): OwmAsyncClient[F] =
-    new OwmAsyncClient[F](appId, transport)
+  private def getResponseContent(response: HttpResponse): Either[WeatherError, String] =
+    response.status match {
+      case Status.OK           => Right(response.entity.content.toString)
+      case Status.Unauthorized => Left(AuthorizationError)
+      case _                   => Left(HTTPError(s"Request failed with status ${response.status.code}"))
+    }
+
+  /**
+   * Try to parse JSON
+   *
+   * @param content string containing JSON
+   * @return either WeatherError or expected value
+   */
+  private def parseJson(content: String): Either[WeatherError, Json] =
+    parse(content)
+      .leftMap(e =>
+        ParseError(
+          s"OpenWeatherMap Error when trying to parse following json: \n$content\n\nMessage from the parser:\n ${e.message}"))
+
 }

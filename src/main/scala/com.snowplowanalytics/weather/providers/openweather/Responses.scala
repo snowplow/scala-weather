@@ -13,6 +13,9 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// circe
+import io.circe.generic.JsonCodec
+
 // This library
 import Errors._
 
@@ -25,6 +28,7 @@ object Responses {
   // RESPONSES
 
   // Very similar to Weather
+  @JsonCodec
   final case class Current(main: MainInfo,
                            wind: Wind,
                            clouds: Clouds,
@@ -32,11 +36,13 @@ object Responses {
                            visibility: Option[BigInt])
       extends OwmResponse
 
+  @JsonCodec
   final case class Forecast(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
     def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
   }
 
+  @JsonCodec
   final case class History(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
     def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
@@ -48,6 +54,7 @@ object Responses {
    * Weather conditions at exact moment, past, future or current
    * Core data type
    */
+  @JsonCodec
   final case class Weather(main: MainInfo,
                            wind: Wind,
                            clouds: Clouds,
@@ -60,6 +67,7 @@ object Responses {
   /**
    * Common main information about weather
    */
+  @JsonCodec
   case class MainInfo(grnd_level: Option[BigDecimal],
                       humidity: BigDecimal,
                       pressure: BigDecimal,
@@ -71,17 +79,19 @@ object Responses {
   /**
    * Textual description of the weather
    */
+  @JsonCodec
   case class WeatherCondition(main: String, description: String, id: Int, icon: String)
 
+  @JsonCodec
   case class Wind(speed: BigDecimal,
                   deg: BigDecimal,
                   gust: Option[BigDecimal],
                   var_end: Option[Int],
                   var_beg: Option[Int])
-  case class Coordinates(lon: BigDecimal, lat: BigDecimal)
-  case class Clouds(all: BigInt)
-  case class Snow(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
-  case class Rain(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
+  @JsonCodec case class Coordinates(lon: BigDecimal, lat: BigDecimal)
+  @JsonCodec case class Clouds(all: BigInt)
+  @JsonCodec case class Snow(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
+  @JsonCodec case class Rain(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
 
   /**
    * Pick an Integer from `list` which is close-in to `item`

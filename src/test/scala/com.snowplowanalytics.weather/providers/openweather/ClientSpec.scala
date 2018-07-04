@@ -13,16 +13,20 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import org.json4s.JsonDSL._
-
 import org.joda.time.DateTime
 
+// cats
 import cats.effect.IO
 
+// circe
+import io.circe.literal._
+
+// tests
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 
+// this library
 import Requests.OwmHistoryRequest
 
 class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
@@ -33,7 +37,7 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
     Implicits for DateTime work as expected (without imports)   $e1
   """
 
-  val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
+  val emptyHistoryResponse = Right(json"""{"cnt": 0, "cod": "200", "list": []}""")
 
   def e1 = {
     val transport = mock[HttpTransport[IO]].defaultReturn(IO.pure(emptyHistoryResponse))

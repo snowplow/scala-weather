@@ -13,12 +13,20 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// Scala
 import scala.io.Source
 
-import org.json4s.jackson.parseJson
+// cats
+import cats.Id
 
+// specs2
 import org.specs2.Specification
 
+// circe
+import io.circe.Decoder
+import io.circe.parser.parse
+
+// This library
 import Errors._
 import Responses._
 import Requests.OwmRequest
@@ -40,43 +48,42 @@ class ExtractSpec extends Specification {
     extract history from error JSON                $e6
                                                    """
 
-  type Id[X] = X
   private val dummyClient = new Client[Id] {
-    def receive[W <: OwmResponse: Manifest](owmRequest: OwmRequest) = ???
+    def receive[W <: OwmResponse: Decoder](owmRequest: OwmRequest) = ???
   }
 
   def e1 = {
-    val json    = parseJson(Source.fromURL(getClass.getResource("/history.json")).mkString)
+    val json    = parse(Source.fromURL(getClass.getResource("/history.json")).mkString).right.get
     val weather = dummyClient.extractWeather[History](json)
     weather must beRight
   }
 
   def e2 = {
-    val json    = parseJson(Source.fromURL(getClass.getResource("/history-empty.json")).mkString)
+    val json    = parse(Source.fromURL(getClass.getResource("/history-empty.json")).mkString).right.get
     val weather = dummyClient.extractWeather[History](json)
     weather.right.map(_.list.length) must beRight(0)
   }
 
   def e3 = {
-    val json    = parseJson(Source.fromURL(getClass.getResource("/current.json")).mkString)
+    val json    = parse(Source.fromURL(getClass.getResource("/current.json")).mkString).right.get
     val weather = dummyClient.extractWeather[Current](json)
     weather.right.map(_.main.humidity) must beRight(62)
   }
 
   def e4 = {
-    val json    = parseJson(Source.fromURL(getClass.getResource("/forecast.json")).mkString)
+    val json    = parse(Source.fromURL(getClass.getResource("/forecast.json")).mkString).right.get
     val weather = dummyClient.extractWeather[Forecast](json)
     weather.right.map(_.cod) must beRight("200")
   }
 
   def e5 = {
-    val json    = parseJson(Source.fromURL(getClass.getResource("/empty.json")).mkString)
+    val json    = parse(Source.fromURL(getClass.getResource("/empty.json")).mkString).right.get
     val weather = dummyClient.extractWeather[History](json)
     weather.right.map(_.cod) must beLeft
   }
 
   def e6 = {
-    val json    = parseJson(Source.fromURL(getClass.getResource("/nodata.json")).mkString)
+    val json    = parse(Source.fromURL(getClass.getResource("/nodata.json")).mkString).right.get
     val weather = dummyClient.extractWeather[History](json)
     weather.right.map(_.cod) must beLeft(ErrorResponse(Some("404"), "no data"))
   }
