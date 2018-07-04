@@ -25,7 +25,8 @@ lazy val root = project
     resolvers ++= Dependencies.resolutionRepos,
     shellPrompt := { _ =>
       name.value + "> "
-    }
+    },
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
   )
   .settings(BuildSettings.publishSettings)
   .settings(BuildSettings.formatting)
@@ -33,11 +34,10 @@ lazy val root = project
     libraryDependencies ++= Seq(
       Dependencies.Libraries.jodaTime,
       Dependencies.Libraries.jodaConvert,
-      Dependencies.Libraries.json4s,
-      Dependencies.Libraries.json4sJackson,
       Dependencies.Libraries.collUtil,
       Dependencies.Libraries.hammockCore,
       Dependencies.Libraries.hammockCirce,
+      Dependencies.Libraries.circeLiteral,
       Dependencies.Libraries.specs2,
       Dependencies.Libraries.specs2Mock,
       Dependencies.Libraries.specsScalaCheck

@@ -13,17 +13,20 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import scala.concurrent.Await
+// Scala
 import scala.concurrent.duration._
 
+// cats
 import cats.effect.IO
 
+// tests
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.specification.ExecutionEnvironment
 
 import org.scalacheck.Prop.forAll
 
+// This library
 import WeatherCache.Position
 import Errors.WeatherError
 

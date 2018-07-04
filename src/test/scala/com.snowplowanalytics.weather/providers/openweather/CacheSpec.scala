@@ -13,15 +13,19 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// cats
 import cats.effect.IO
 
-import org.json4s.JsonDSL._
+// circe
+import io.circe.literal._
 
+// tests
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 import org.specs2.matcher.DisjunctionMatchers
 
+// This library
 import Requests.{OwmHistoryRequest => HR}
 import Errors.TimeoutError
 
@@ -39,7 +43,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
 
   """
 
-  val emptyHistoryResponse = Right(("cnt" -> 0) ~ ("cod" -> "200") ~ ("list" -> Nil))
+  val emptyHistoryResponse = Right(json"""{"cnt": 0, "cod": "200", "list": []}""")
 
   def e1 = {
     val transport = mock[HttpTransport[IO]].defaultReturn(IO.pure(emptyHistoryResponse))

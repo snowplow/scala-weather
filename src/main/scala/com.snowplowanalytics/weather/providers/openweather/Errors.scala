@@ -12,6 +12,8 @@
  */
 package com.snowplowanalytics.weather.providers.openweather
 
+import io.circe.generic.JsonCodec
+
 object Errors {
 
   /**
@@ -48,7 +50,7 @@ object Errors {
   /**
    * Error returned from weather provider, which can be extracted from JSON
    */
-  case class ErrorResponse(cod: Option[String], message: String) extends WeatherError
+  @JsonCodec case class ErrorResponse(cod: Option[String], message: String) extends WeatherError
 
   /** Error linked to http but not linked to auth */
   case class HTTPError(message: String) extends WeatherError

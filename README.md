@@ -15,7 +15,8 @@ Currently Scala Weather works with only one weather provider: **[OpenWeatherMap]
 
 Scala Weather currently provides two clients `OwmAsyncClient` and `OwmCacheClient`:
 
-1. `OwmAsyncClient` works in a fully asynchronous way returning `Future[Either[WeatherError, WeatherResponse]]`, where `WeatherResponse` is one of the three OpenWeatherMap responses (`Current`, `History`, `Forecast`) as appropriate
+1. `OwmAsyncClient` takes `F` as a type parameter. It can be any type thas has a `cats.effect.Sync` instance (e.g. `cats.effect.IO`).  
+Returns `F[Either[WeatherError, WeatherResponse]]`, where `WeatherResponse` is one of the three OpenWeatherMap responses (`Current`, `History`, `Forecast`) as appropriate
 2. `OwmCacheClient` works in a blocking way, contains an LRU cache inside and returns `Either[WeatherError, WeatherResponse]`
 
 Although you will typically want to use the `OwmAsyncClient`, note that Scala Weather was written to support the **[Snowplow][snowplow]** enrichment process, which uses `OwmCacheClient`.
@@ -30,12 +31,12 @@ Unfortunately, with the free plan you can only perform current weather and forec
 
 ### Installation
 
-The latest version of Scala Weather is 0.3.0, which is cross-built against Scala 2.11.x and 2.12.x.
+The latest version of Scala Weather is 0.4.0-SNAPSHOT, which is cross-built against Scala 2.11.x and 2.12.x.
 
 If you're using SBT, add the following lines to your build file:
 
 ```scala
-val scalaWeather = "com.snowplowanalytics" %% "scala-weather"  % "0.3.0"
+val scalaWeather = "com.snowplowanalytics" %% "scala-weather" % "0.4.0-SNAPSHOT"
 ```
 
 ## Usage
@@ -44,7 +45,8 @@ Once you have your API key, you can create a client:
 
 ```scala
 import com.snowplowanalytics.weather.providers.openweather.OwmAsyncClient
-val client = OwmAsyncClient(YOURKEY)
+import cats.effect.IO
+val client = OwmAsyncClient[IO](YOURKEY)
 ```
 
 OpenWeatherMap provides several hosts for API with various benefits, which you can pass as the second argument:
@@ -56,7 +58,7 @@ OpenWeatherMap provides several hosts for API with various benefits, which you c
 You can enable SSL through the third boolean argument:
 
 ```scala
-val client = OwmAsyncClient(YOURKEY, "history.openweathermap.org", ssl = true)
+val client = OwmAsyncClient[IO](YOURKEY, "history.openweathermap.org", ssl = true)
 ```
 
 Both clients offer the same set of public methods:
@@ -74,7 +76,7 @@ Both clients offer the same set of public methods:
 These methods were designed to follow OpenWeatherMap's own API calls as closely as possible. All of these calls receive similar arguments to those described in **[OpenWeatherMap API documentation][owm-api-docs]**. For example, to receive a response equivalent to this API call: ``api.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid=YOURKEY``, run the following code:
 
 ```scala
-val weatherInLondon: Future[Either[WeatherError, Current]] = asyncClient.currentByCoords(35, 139)
+val weatherInLondon: IO[Either[WeatherError, Current]] = client.currentByCoords(35, 139)
 ```
 
 Notice that all temperature fields are in Kelvin, which is the OpenWeatherMap default (OWM only supports unit preference for the current weather).
@@ -83,7 +85,7 @@ Scala Weather doesn't try to validate your arguments (except of course their typ
 
 ```scala
 // Count supposed to be positive
-val forecast: Future[Either[WeatherError, Current]] = client.forecastById(3070325, cnt=-1)
+val forecast: IO[Either[WeatherError, Current]] = client.forecastById(3070325, cnt=-1)
 ```
 
 will still be executed and OpenWeatherMap will decide how to handle it (in this case, it will ignore negative count).
@@ -128,9 +130,9 @@ For example, the following code will make only one request to OpenWeatherMap, bu
 
 ```scala
 val client = OwmCacheClient(MYKEY, 10, 1, 5)
-client.getCachedOrRequest(10.4f, 32.1f, 1447070440)   // Nov 9 12:00:40 2015.
-client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015. From cache
-client.getCachedOrRequest(10.2f, 32.4f, 1447096857)   // Nov 9 19:20:57 2015. From cache
+client.getCachedOrRequest(10.4f, 32.1f, 1514765952)   // Jan 1 12:19:12 2018.
+client.getCachedOrRequest(10.1f, 32.312f, 1514765952) // Jan 1 15:06:47 2015. From cache
+client.getCachedOrRequest(10.2f, 32.4f, 1514765952)   // Nov 9 19:20:57 2015. From cache
 ```
 
 ## Copyright and license

@@ -16,10 +16,11 @@ package providers.openweather
 // Scala
 import scala.language.higherKinds
 
-// Json4s
-import org.json4s.JValue
-import org.json4s.DefaultFormats
-import org.json4s.jackson.compactJson
+// cats
+import cats.syntax.either._
+
+// circe
+import io.circe.{Decoder, Json}
 
 // This library
 import Errors._
@@ -36,8 +37,6 @@ import Requests._
  */
 trait Client[F[_]] {
 
-  private implicit val formats = DefaultFormats
-
   /**
    * Main client logic for Request => Response function,
    * where Response is wrappeed in tparam `F`
@@ -46,7 +45,7 @@ trait Client[F[_]] {
    * @tparam W type of weather response to extract
    * @return extracted either error or weather wrapped in `F`
    */
-  def receive[W <: OwmResponse: Manifest](owmRequest: OwmRequest): F[Either[WeatherError, W]]
+  def receive[W <: OwmResponse: Decoder](owmRequest: OwmRequest): F[Either[WeatherError, W]]
 
   /**
    * Get historical data by city id
@@ -204,18 +203,16 @@ trait Client[F[_]] {
   /**
    * Transform JSON into parseable format and try to extract specified response
    *
-   * @param response either of previous or JSON
+   * @param response response json
    * @tparam W specific response case class from
    *           `com.snowplowanalytics.weather.providers.openweather.Responses`
-   * @return either error string or response case class
+   * @return either weather error or response case class
    */
-  protected[openweather] def extractWeather[W: Manifest](response: JValue): Either[WeatherError, W] =
-    response.extractOpt[W] match {
-      case Some(weather) => Right(weather)
-      case None =>
-        response.extractOpt[ErrorResponse] match {
-          case Some(error) => Left(error)
-          case None        => Left(ParseError(s"Could not extract ${manifest[W]} from ${compactJson(response)}"))
-        }
+  protected[openweather] def extractWeather[W: Decoder](response: Json): Either[WeatherError, W] =
+    response.as[W].leftFlatMap { _ =>
+      response.as[ErrorResponse] match {
+        case Right(error) => Left(error)
+        case Left(_)      => Left(ParseError(s"Could not extract ${Decoder[W].toString} from ${response.toString}"))
+      }
     }
 }
