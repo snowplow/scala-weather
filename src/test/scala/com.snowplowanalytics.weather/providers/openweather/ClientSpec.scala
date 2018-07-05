@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -13,21 +13,21 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// joda
 import org.joda.time.DateTime
 
 // cats
 import cats.effect.IO
 
-// circe
-import io.circe.literal._
-
 // tests
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
+import org.mockito.ArgumentMatchers.{eq => eqTo}
 
 // this library
 import Requests.OwmHistoryRequest
+import Responses.History
 
 class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
   def is = s2"""
@@ -37,11 +37,11 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
     Implicits for DateTime work as expected (without imports)   $e1
   """
 
-  val emptyHistoryResponse = Right(json"""{"cnt": 0, "cod": "200", "list": []}""")
+  val emptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
 
   def e1 = {
-    val transport = mock[HttpTransport[IO]].defaultReturn(IO.pure(emptyHistoryResponse))
-    val client    = OwmAsyncClient("KEY", transport)
+    val client = spy(new OwmAsyncClient[IO]("KEY"))
+    doReturn(emptyHistoryResponse).when(client).receive(any[OwmHistoryRequest])(any())
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(
@@ -51,7 +51,7 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
       )
     )
     client.historyByCoords(0.00f, 0.00f, DateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(1.times(transport).getData(expectedRequest, "KEY"))
+    there.was(1.times(client).receive(eqTo(expectedRequest))(any()))
   }
 
 }

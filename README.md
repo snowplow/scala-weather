@@ -18,7 +18,7 @@ Scala Weather currently provides two clients `OwmAsyncClient` and `OwmCacheClien
 
 1. `OwmAsyncClient` takes `F` as a type parameter. It can be any type thas has a `cats.effect.Sync` instance (e.g. `cats.effect.IO`).  
 Returns `F[Either[WeatherError, WeatherResponse]]`, where `WeatherResponse` is one of the three OpenWeatherMap responses (`Current`, `History`, `Forecast`) as appropriate
-2. `OwmCacheClient` works in a blocking way, contains an LRU cache inside and returns `Either[WeatherError, WeatherResponse]`
+2. `OwmCacheClient` works similar, but also employs timeouts and contains an LRU cache inside for history requests
 
 Although you will typically want to use the `OwmAsyncClient`, note that Scala Weather was written to support the **[Snowplow][snowplow]** enrichment process, which uses `OwmCacheClient`.
 
@@ -32,12 +32,12 @@ Unfortunately, with the free plan you can only perform current weather and forec
 
 ### Installation
 
-The latest version of Scala Weather is 0.4.0-SNAPSHOT, which is cross-built against Scala 2.11.x and 2.12.x.
+The latest version of Scala Weather is 0.3.0, which is cross-built against Scala 2.11.x and 2.12.x.
 
 If you're using SBT, add the following lines to your build file:
 
 ```scala
-val scalaWeather = "com.snowplowanalytics" %% "scala-weather" % "0.4.0-SNAPSHOT"
+val scalaWeather = "com.snowplowanalytics" %% "scala-weather" % "0.3.0"
 ```
 
 ## Usage
@@ -97,7 +97,7 @@ will still be executed and OpenWeatherMap will decide how to handle it (in this 
 
 Scala Weather provides a cache as part of the `weather.providers.openweather.OwmCacheClient`. It uses an **[LRU cache][lru]** under the hood and only works for historical lookups. OpenWeatherMap restricts the number of history lookups you can make on the paid plans, so this cache helps to minimize requests, especially when run from a "big data" runtime such as Hadoop, Storm or Spark.
 
-Note that the results of common methods like `historyById`, `currentByCoords` etc are not cached. You need to use `getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): Either[WeatherError, Weather]` to employ the cache.
+Note that the results of common methods like `historyById`, `currentByCoords` etc are not cached. You need to use `getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): F[Either[WeatherError, Weather]]` to employ the cache.
 
 The following client constructor arguments help to tune the cache:
 
@@ -130,15 +130,15 @@ This cache value usually consist of several (8-24) `Weather` objects, each with 
 For example, the following code will make only one request to OpenWeatherMap, but return 3 distinct results:
 
 ```scala
-val client = OwmCacheClient(MYKEY, 10, 1, 5)
-client.getCachedOrRequest(10.4f, 32.1f, 1514765952)   // Jan 1 12:19:12 2018.
-client.getCachedOrRequest(10.1f, 32.312f, 1514765952) // Jan 1 15:06:47 2015. From cache
-client.getCachedOrRequest(10.2f, 32.4f, 1514765952)   // Nov 9 19:20:57 2015. From cache
+val client = OwmCacheClient[IO](MYKEY, 10, 1, 5.seconds)
+client.getCachedOrRequest(10.4f, 32.1f, 1514765952).unsafeRunSync()   // Jan 1 12:19:12 2018.
+client.getCachedOrRequest(10.1f, 32.312f, 1514765952).unsafeRunSync() // Jan 1 15:06:47 2015. From cache
+client.getCachedOrRequest(10.2f, 32.4f, 1514765952).unsafeRunSync()   // Nov 9 19:20:57 2015. From cache
 ```
 
 ## Copyright and license
 
-Scala Weather is copyright 2015-2016 Snowplow Analytics Ltd.
+Scala Weather is copyright 2015-2018 Snowplow Analytics Ltd.
 
 Licensed under the **[Apache License, Version 2.0][license]**  (the "License");
 you may not use this software except in compliance with the License.

@@ -12,7 +12,6 @@
  */
 package com.snowplowanalytics.weather.providers.openweather
 
-// TODO: replace it with plain URIs
 private[weather] object Requests {
 
   sealed trait WeatherRequest {

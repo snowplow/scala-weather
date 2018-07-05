@@ -14,11 +14,13 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 // Scala
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 // cats
-import cats.Id
-import cats.effect.IO
+import cats.syntax.functor._
+import cats.syntax.flatMap._
+import cats.effect.{Concurrent, Timer}
 
 // circe
 import io.circe.Decoder
@@ -34,8 +36,7 @@ import WeatherCache.{CacheKey, Position}
 
 /**
  * Blocking OpenWeatherMap client with history (only) cache
- * Uses AsyncOwmClient under the hood, have same method set, which
- * return Weather instead of Future[Weather]
+ * Uses AsyncOwmClient under the hood, have same method set, but also uses timeouts
  *
  * WARNING. This client uses pro.openweathermap.org for data access,
  * It will not work with free OWM licenses.
@@ -48,16 +49,20 @@ import WeatherCache.{CacheKey, Position}
  *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
  *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
  * @param asyncClient instance of `OwmAsyncClient` which will do all underlying work
- * @param timeout timeout in seconds after which active request will be considered failed
+ * @param requestTimeout timeout after which active request will be considered failed
  */
-class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: OwmAsyncClient[IO], val timeout: Int)
-    extends Client[Id]
+class OwmCacheClient[F[_]: Concurrent](
+  val cacheSize: Int,
+  val geoPrecision: Int,
+  asyncClient: OwmAsyncClient[F],
+  val requestTimeout: FiniteDuration)(implicit val executionContext: ExecutionContext)
+    extends Client[F]
     with WeatherCache[History] {
 
-  private val requestTimeout = timeout.seconds
+  private val timer: Timer[F] = Timer.derive[F]
 
-  def receive[W <: OwmResponse: Decoder](request: OwmRequest): Either[WeatherError, W] =
-    await(request)
+  def receive[W <: OwmResponse: Decoder](request: OwmRequest): F[Either[WeatherError, W]] =
+    timeout(asyncClient.receive(request), requestTimeout)
 
   /**
    * Search history in cache and if not found request and await it from server
@@ -68,24 +73,24 @@ class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: Owm
    * @param timestamp event's timestamp
    * @return weather stamp immediately taken from cache or requested from server
    */
-  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): Either[WeatherError, Weather] = {
+  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): F[Either[WeatherError, Weather]] = {
     val cacheKey = eventToCacheKey(timestamp, Position(latitude, longitude))
-    cache.get(cacheKey) match {
+    Concurrent[F].delay(cache.get(cacheKey)).flatMap {
       case Some(Right(cached)) =>
-        cached.pickCloseIn(timestamp) // Cache hit
+        Concurrent[F].delay(cached.pickCloseIn(timestamp)) // Cache hit
       case Some(Left(TimeoutError(_))) =>
-        getAndCache(latitude, longitude, timestamp, cacheKey) // Retry if timeout
+        getAndCache(latitude, longitude, timestamp, cacheKey)
       case Some(Left(error)) =>
-        Left(error) // Return error
+        Concurrent[F].point(Left(error))
       case None =>
-        getAndCache(latitude, longitude, timestamp, cacheKey) // Make request
+        getAndCache(latitude, longitude, timestamp, cacheKey)
     }
   }
 
   /**
    * Overloaded `getCachedOrRequest` method with Joda DateTime instead of Unix epoch timestamp
    */
-  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: DateTime): Either[WeatherError, Weather] = {
+  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: DateTime): F[Either[WeatherError, Weather]] = {
     val unixTime: Int = (timestamp.getMillis / 1000).toInt
     getCachedOrRequest(latitude, longitude, unixTime)
   }
@@ -103,11 +108,12 @@ class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: Owm
   private def getAndCache(latitude: Float,
                           longitude: Float,
                           realTimestamp: Timestamp,
-                          cacheKey: CacheKey): Either[WeatherError, Weather] = {
-    val response = historyByCoords(latitude, longitude, cacheKey.day, cacheKey.endOfDay, 24)
-    cache.put(cacheKey, response)
-    getWeatherStamp(response, realTimestamp)
-  }
+                          cacheKey: CacheKey): F[Either[WeatherError, Weather]] =
+    historyByCoords(latitude, longitude, cacheKey.day, cacheKey.endOfDay, 24)
+      .map { response =>
+        cache.put(cacheKey, response)
+        getWeatherStamp(response, realTimestamp)
+      }
 
   /**
    * Get exact weather stamp from history batch-request (probably failed)
@@ -122,20 +128,19 @@ class OwmCacheClient(val cacheSize: Int, val geoPrecision: Int, asyncClient: Owm
     history.right.flatMap(_.pickCloseIn(timestamp))
 
   /**
-   * Run the IO synchronously, with (unprecise) timeout
-   * it's fine for event enrichment, since it's sequental operation
+   * Apply timeout to the `operation` parameter. To be replaced by Concurrent[F].timeout in cats-effect 1.0.0
    *
-   * @param request request built by client method
-   * @tparam W type of Weather request
-   * @return either response or error in case of timeout
+   * @param operation The operation we want to run with a timeout
+   * @param duration Duration to timeout after
+   * @return either Left(TimeoutError) or a result of the operation, wrapped in F
    */
-  private def await[W <: OwmResponse: Decoder](request: OwmRequest): Either[WeatherError, W] =
-    asyncClient
-      .receive(request)
-      .unsafeRunTimed(requestTimeout)
-      .getOrElse(
-        Left(TimeoutError(s"OpenWeatherMap Error: server didn't responded in $timeout seconds. Timeout"))
-      )
+  private def timeout[W](operation: F[Either[WeatherError, W]], duration: FiniteDuration): F[Either[WeatherError, W]] =
+    Concurrent[F]
+      .race(operation, timer.sleep(duration))
+      .map {
+        case Left(value) => value
+        case Right(_)    => Left(TimeoutError(s"OpenWeatherMap request timed out after ${duration.toSeconds} seconds"))
+      }
 }
 
 /**
@@ -146,16 +151,20 @@ object OwmCacheClient {
   /**
    * Create OwmCacheClient with singleton-placed (in-scala-weather) akka system
    */
-  def apply(appId: String,
-            cacheSize: Int    = 5100,
-            geoPrecision: Int = 1,
-            host: String      = "pro.openweathermap.org",
-            timeout: Int      = 5): OwmCacheClient =
-    new OwmCacheClient(cacheSize, geoPrecision, OwmAsyncClient(appId, host), timeout)
+  def apply[F[_]: Concurrent](
+    appId: String,
+    cacheSize: Int          = 5100,
+    geoPrecision: Int       = 1,
+    host: String            = "pro.openweathermap.org",
+    timeout: FiniteDuration = 5.seconds)(implicit executionContext: ExecutionContext): OwmCacheClient[F] =
+    new OwmCacheClient(cacheSize, geoPrecision, new OwmAsyncClient(appId, host), timeout)
 
   /**
    * Create OwmCacheClient with underlying async client
    */
-  def apply(cacheSize: Int, geoPrecision: Int, asyncClient: OwmAsyncClient[IO], timeout: Int): OwmCacheClient =
+  def apply[F[_]: Concurrent](cacheSize: Int,
+                              geoPrecision: Int,
+                              asyncClient: OwmAsyncClient[F],
+                              timeout: FiniteDuration)(implicit executionContext: ExecutionContext): OwmCacheClient[F] =
     new OwmCacheClient(cacheSize, geoPrecision, asyncClient, timeout)
 }

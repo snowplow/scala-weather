@@ -16,7 +16,6 @@ package providers.openweather
 // cats
 import cats.effect.Sync
 import cats.implicits._
-import cats._
 
 // circe
 import io.circe.parser.parse
@@ -41,7 +40,7 @@ case class OwmAsyncClient[F[_]: Sync](appId: String, apiHost: String = "api.open
 
   private implicit val interpreter = Interpreter[F]
 
-  def receive[W <: OwmResponse](request: OwmRequest)(implicit wDecoder: Decoder[W]): F[Either[WeatherError, W]] = {
+  def receive[W <: OwmResponse: Decoder](request: OwmRequest): F[Either[WeatherError, W]] = {
 
     val uri    = request.constructQuery(appId)
     val scheme = if (ssl) "https://" else "http://"
@@ -50,20 +49,20 @@ case class OwmAsyncClient[F[_]: Sync](appId: String, apiHost: String = "api.open
     Uri
       .fromString(url)
       .leftMap(InternalError)
-      .traverse { uri: Uri =>
+      .traverse { uri =>
         Hammock
           .request(Method.GET, uri, Map())
-          .map(response => processResponse(response))
+          .map(uri => processResponse(uri))
           .exec[F]
       }
       .map(x => x.joinRight)
   }
 
   /**
-   * Get JSON out of HTTP response body
+   * Decode response case class from HttpResponse body
    *
    * @param response full HTTP response
-   * @return either server error or JSON
+   * @return either error or decoded case class
    */
   private def processResponse[A: Decoder](response: HttpResponse): Either[WeatherError, A] =
     getResponseContent(response)
@@ -74,7 +73,7 @@ case class OwmAsyncClient[F[_]: Sync](appId: String, apiHost: String = "api.open
    * Convert the response to string
    *
    * @param response full HTTP response
-   * @return either entity content of HTTP response or WeatherError
+   * @return either entity content of HTTP response or WeatherError (AuthorizationError / HTTPError)
    */
   private def getResponseContent(response: HttpResponse): Either[WeatherError, String] =
     response.status match {
@@ -83,13 +82,7 @@ case class OwmAsyncClient[F[_]: Sync](appId: String, apiHost: String = "api.open
       case _                   => Left(HTTPError(s"Request failed with status ${response.status.code}"))
     }
 
-  /**
-   * Try to parse JSON
-   *
-   * @param content string containing JSON
-   * @return either WeatherError or expected value
-   */
-  private def parseJson(content: String): Either[WeatherError, Json] =
+  private def parseJson(content: String): Either[ParseError, Json] =
     parse(content)
       .leftMap(e =>
         ParseError(
