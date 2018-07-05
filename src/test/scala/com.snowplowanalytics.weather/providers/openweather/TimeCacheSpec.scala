@@ -13,6 +13,9 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// scala
+import scala.concurrent.duration._
+
 // cats
 import cats.effect.IO
 
@@ -22,16 +25,15 @@ import java.util.{Calendar, Date, TimeZone}
 // Joda
 import org.joda.time.DateTime
 
-// circe
-import io.circe.literal._
-
 // Specs2
 import org.specs2.Specification
 import org.specs2.mock.Mockito
+import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2.concurrent.ExecutionEnv
 
 // This library
 import Requests.OwmHistoryRequest
+import Responses.History
 import WeatherCache._
 
 class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
@@ -82,7 +84,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
   }
 
   def e5 = {
-    val emptyHistoryResponse = Right(json"""{"cnt": 0, "cod": "200", "list": []}""")
+    val emptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(
@@ -93,10 +95,10 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
         "end"   -> "1450051200" // "2015-12-14T00:00:00.000+00:00"
       )
     )
-    val transport = mock[HttpTransport[IO]].defaultReturn(IO.pure(emptyHistoryResponse))
-    val client    = OwmCacheClient("KEY", 2, 1, transport, 5)
-    client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk)
-    there.was(1.times(transport).getData(expectedRequest, "KEY"))
+    val asyncClient = mock[OwmAsyncClient[IO]].defaultReturn(emptyHistoryResponse)
+    val client      = OwmCacheClient(2, 1, asyncClient, 5.seconds)
+    client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk).unsafeRunSync()
+    there.was(1.times(asyncClient).receive(eqTo(expectedRequest))(any()))
   }
 
 }

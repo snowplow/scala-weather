@@ -50,15 +50,14 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
       works with https                      $e4
   """
 
-  val host              = "history.openweathermap.org"
-  val transportForCache = new HttpTransport[IO](host)
-  val client            = OwmAsyncClient(owmKey.get, transportForCache)
-  val sslClient         = OwmAsyncClient(owmKey.get, new HttpTransport[IO](host, ssl = true))
+  val host      = "history.openweathermap.org"
+  val client    = OwmAsyncClient[IO](owmKey.get, host)
+  val sslClient = OwmAsyncClient[IO](owmKey.get, host, ssl = true)
 
   def testCities(cities: Vector[Position], client: OwmAsyncClient[IO]) =
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
-      val result  = history.unsafeRunTimed(5 seconds)
+      val result  = history.unsafeRunTimed(5.seconds)
       result must beSome
       result.get must beRight
     }
@@ -68,8 +67,8 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
   def e2 = testCities(TestData.randomCities, client).set(maxSize = 15, minTestsOk = 15)
 
   def e3 = {
-    val client = OwmAsyncClient("INVALID-KEY", transportForCache)
-    val result = client.historyById(1).unsafeRunTimed(5 seconds)
+    val client = OwmAsyncClient[IO]("INVALID-KEY", host)
+    val result = client.historyById(1).unsafeRunTimed(5.seconds)
     result must beSome
     result.get must beLeft.like {
       case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$ Check your API key")
