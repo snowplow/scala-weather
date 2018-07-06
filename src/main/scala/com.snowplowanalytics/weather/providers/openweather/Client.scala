@@ -29,17 +29,16 @@ import Responses._
 import Requests._
 
 /**
- * Base client trait with defined client methods such as `historyById`, `historyByName`
+ * Base client trait with defines client methods such as `historyById`, `forecastByName`
  * common for subclasses
  *
- * @tparam F response wrapper for `Client` subclass, such as cats `IO`
- *                  all `receive` logic should be wrapped in it
+ * @tparam F effect type
  */
 trait Client[F[_]] {
 
   /**
    * Main client logic for Request => Response function,
-   * where Response is wrappeed in tparam `F`
+   * where Response is wrapped in tparam `F`
    *
    * @param owmRequest request built by client method
    * @tparam W type of weather response to extract

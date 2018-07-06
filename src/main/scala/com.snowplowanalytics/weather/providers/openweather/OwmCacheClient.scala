@@ -36,7 +36,7 @@ import WeatherCache.{CacheKey, Position}
 
 /**
  * Blocking OpenWeatherMap client with history (only) cache
- * Uses AsyncOwmClient under the hood, have same method set, but also uses timeouts
+ * Uses AsyncOwmClient under the hood, has the same method set, but also uses timeouts
  *
  * WARNING. This client uses pro.openweathermap.org for data access,
  * It will not work with free OWM licenses.

@@ -12,10 +12,13 @@
  */
 package com.snowplowanalytics.weather.providers.openweather
 
+import cats.data.NonEmptyList
+import hammock.Uri
+
 private[weather] object Requests {
 
   sealed trait WeatherRequest {
-    def constructQuery(appId: String): String
+    def constructQuery(baseUri: Uri, apiKey: String): Uri
   }
 
   sealed trait OwmRequest extends WeatherRequest {
@@ -23,18 +26,14 @@ private[weather] object Requests {
     val resource: String
     val parameters: Map[String, String]
 
-    /**
-     * Construct URI for specific type of request and all other data
-     *
-     * @param appId API key
-     * @return URI string ready to be sent
-     */
-    def constructQuery(appId: String): String = {
-      val end         = endpoint.map(e => s"$e/$resource").getOrElse(s"$resource")
-      val params      = parameters ++ Map("appid" -> appId)
-      val queryString = params.map { case (a, b) => s"$a=$b" }.mkString("&")
-      s"/data/2.5/$end?$queryString"
+    def constructQuery(baseUri: Uri, apiKey: String): Uri = {
+      val versionedBaseUri = baseUri / "data" / "2.5"
+      val uriWithPath      = endpoint.map(e => versionedBaseUri / e / resource).getOrElse(versionedBaseUri / resource)
+      val params           = NonEmptyList.of("appid" -> apiKey) ++ parameters.toList
+
+      uriWithPath ? params
     }
+
   }
 
   final case class OwmHistoryRequest(resource: String, parameters: Map[String, String]) extends OwmRequest {
