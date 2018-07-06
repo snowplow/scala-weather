@@ -42,20 +42,16 @@ case class OwmAsyncClient[F[_]: Sync](appId: String, apiHost: String = "api.open
 
   def receive[W <: OwmResponse: Decoder](request: OwmRequest): F[Either[WeatherError, W]] = {
 
-    val uri    = request.constructQuery(appId)
-    val scheme = if (ssl) "https://" else "http://"
-    val url    = scheme + apiHost + uri
+    val scheme    = if (ssl) "https" else "http"
+    val authority = Uri.Authority(None, Uri.Host.Other(apiHost), None)
+    val baseUri   = Uri(Some(scheme), Some(authority))
 
-    Uri
-      .fromString(url)
-      .leftMap(InternalError)
-      .traverse { uri =>
-        Hammock
-          .request(Method.GET, uri, Map())
-          .map(uri => processResponse(uri))
-          .exec[F]
-      }
-      .map(x => x.joinRight)
+    val uri = request.constructQuery(baseUri, appId)
+
+    Hammock
+      .request(Method.GET, uri, Map())
+      .map(uri => processResponse(uri))
+      .exec[F]
   }
 
   /**

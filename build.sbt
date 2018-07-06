@@ -35,9 +35,9 @@ lazy val root = project
       Dependencies.Libraries.jodaTime,
       Dependencies.Libraries.jodaConvert,
       Dependencies.Libraries.collUtil,
+      Dependencies.Libraries.circeGeneric,
+      Dependencies.Libraries.circeParser,
       Dependencies.Libraries.hammockCore,
-      Dependencies.Libraries.hammockCirce,
-      Dependencies.Libraries.circeLiteral,
       Dependencies.Libraries.specs2,
       Dependencies.Libraries.specs2Mock,
       Dependencies.Libraries.specsScalaCheck
