@@ -27,9 +27,9 @@ import org.specs2.mock.Mockito
 import org.specs2.matcher.DisjunctionMatchers
 
 // This library
+import Errors.{InvalidConfigurationError, TimeoutError}
 import Requests.OwmRequest
 import Responses.History
-import Errors.TimeoutError
 
 // Mock transport which returns predefined responses
 class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito with DisjunctionMatchers {
@@ -44,7 +44,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     check geoPrecision $e5
     make requests again after full cache $e3
     throw exception for invalid precision $e6
-
+    throw exception for invalid cache size $e7
   """
 
   val emptyHistoryResponse: IO[Either[TimeoutError, History]] = IO.pure(History(BigInt(100), "0", List()).asRight)
@@ -117,5 +117,9 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e6 =
-    OwmCacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must throwA[IllegalArgumentException]
+    OwmCacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
+
+  def e7 =
+    OwmCacheClient[IO]("KEY", cacheSize = -1).unsafeRunSync() must throwA[InvalidConfigurationError]
+
 }

@@ -20,6 +20,7 @@ import scala.concurrent.duration._
 // cats
 import cats.syntax.functor._
 import cats.syntax.flatMap._
+import cats.syntax.monadError._
 import cats.effect.{Concurrent, Timer}
 
 // circe
@@ -172,15 +173,10 @@ object OwmCacheClient {
    * @param timeout time after which active request will be considered failed
    */
   def apply[F[_]: Concurrent](cacheSize: Int, geoPrecision: Int, client: OwmClient[F], timeout: FiniteDuration)(
-    implicit executionContext: ExecutionContext): F[OwmCacheClient[F]] = {
-    val effect = if (geoPrecision < 1) {
-      Concurrent[F].raiseError(new IllegalArgumentException("geoPrecision must be greater than zero"))
-    } else {
-      Concurrent[F].unit
-    }
-    for {
-      _     <- effect
-      cache <- LruMap.create[F, CacheKey, Either[WeatherError, History]](cacheSize)
-    } yield new OwmCacheClient(cache, geoPrecision, client, timeout)
-  }
+    implicit executionContext: ExecutionContext): F[OwmCacheClient[F]] =
+    Concurrent[F].unit
+      .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
+      .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)
+      .flatMap(_ => LruMap.create[F, CacheKey, Either[WeatherError, History]](cacheSize))
+      .map(cache => new OwmCacheClient(cache, geoPrecision, client, timeout))
 }
