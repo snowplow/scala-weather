@@ -35,7 +35,7 @@ import Requests._
  *
  * @param appId API key
  */
-case class OwmAsyncClient[F[_]: Sync](appId: String, apiHost: String = "api.openweathermap.org", ssl: Boolean = false)
+case class OwmClient[F[_]: Sync](appId: String, apiHost: String = "api.openweathermap.org", ssl: Boolean = false)
     extends Client[F] {
 
   private implicit val interpreter = Interpreter[F]
