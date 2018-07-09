@@ -16,40 +16,38 @@ package providers.openweather
 // Java
 import java.util.{Calendar, Date, TimeZone}
 
-// LRUCache
-import com.twitter.util.SynchronizedLruMap
+object CacheUtils {
 
-// This library
-import Errors.WeatherError
-import Responses.OwmResponse
+  /**
+   * Cache key for obtaining record
+   *
+   * @param day timestamp for 0:00:00
+   * @param center rounded geo coordinates
+   */
+  case class CacheKey(day: Day, center: Position) {
+    def endOfDay = day + 86400
+  }
 
-/**
- * Defines logic for store records (LRU) and obtaining bucket's key (day, place)
- *
- * @tparam W exact type of weather records to store.
- *           However now it could be used only only for History lookups
- */
-trait WeatherCache[W <: OwmResponse] {
-  import WeatherCache._
-
-  val cacheSize: Int    // Size of LRU cache
-  val geoPrecision: Int // nth part of one to round geo coordinates
-
-  type Cache = SynchronizedLruMap[CacheKey, Either[WeatherError, W]]
-  protected val cache: Cache = new SynchronizedLruMap[CacheKey, Either[WeatherError, W]](cacheSize)
-
-  if (geoPrecision < 1) throw new IllegalArgumentException("OwmCacheClient geoPrecision must be greater than zero")
+  /**
+   * Class to represent geographical coordinates
+   *
+   * @param latitude place's latitude
+   * @param longitude places's longitude
+   */
+  case class Position(latitude: Float, longitude: Float)
 
   /**
    * Round position and timestamp (event) to produce cache key
    *
    * @param timestamp timestamp in seconds
    * @param position latitude & longitude
+   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
    * @return cache key
    */
-  def eventToCacheKey(timestamp: Timestamp, position: Position): CacheKey = {
-    val timeFrame     = getStartOfDay(timestamp)
-    val roundPosition = Position(roundCoordinate(position.latitude), roundCoordinate(position.longitude))
+  def eventToCacheKey(timestamp: Timestamp, position: Position, geoPrecision: Int): CacheKey = {
+    val timeFrame = getStartOfDay(timestamp)
+    val roundPosition =
+      Position(roundCoordinate(position.latitude, geoPrecision), roundCoordinate(position.longitude, geoPrecision))
     CacheKey(timeFrame, roundPosition)
   }
 
@@ -76,30 +74,9 @@ trait WeatherCache[W <: OwmResponse] {
    * @param coordinate latitude or longitude
    * @return rounded coordinate
    */
-  def roundCoordinate(coordinate: Float): Float =
+  def roundCoordinate(coordinate: Float, geoPrecision: Int): Float =
     BigDecimal
       .decimal(Math.round(coordinate * geoPrecision) / geoPrecision.toFloat)
       .setScale(1, BigDecimal.RoundingMode.HALF_UP)
       .toFloat
-}
-
-object WeatherCache {
-
-  /**
-   * Cache key for obtaining record
-   *
-   * @param day timestamp for 0:00:00
-   * @param center rounded geo coordinates
-   */
-  case class CacheKey(day: Day, center: Position) {
-    def endOfDay = day + 86400
-  }
-
-  /**
-   * Class to represent geographical coordinates
-   *
-   * @param latitude place's latitude
-   * @param longitude places's longitude
-   */
-  case class Position(latitude: Float, longitude: Float)
 }

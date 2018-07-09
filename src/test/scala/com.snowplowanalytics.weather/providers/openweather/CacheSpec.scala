@@ -27,6 +27,7 @@ import org.specs2.mock.Mockito
 import org.specs2.matcher.DisjunctionMatchers
 
 // This library
+import Requests.OwmRequest
 import Responses.History
 import Errors.TimeoutError
 
@@ -42,6 +43,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     retry request on timeout error $e2
     check geoPrecision $e5
     make requests again after full cache $e3
+    throw exception for invalid precision $e6
 
   """
 
@@ -51,66 +53,69 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
 
   def e1 = {
     val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
-    val client      = OwmCacheClient(2, 1, asyncClient, 5.seconds)
     val action = for {
-      _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      client <- OwmCacheClient(2, 1, asyncClient, 5.seconds)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(asyncClient).receive(any())(any()))
+    there.was(1.times(asyncClient).receive(any[OwmRequest])(any()))
   }
 
   def e2 = {
     val asyncClient = mock[OwmClient[IO]]
     asyncClient
-      .receive[History](any())(any())
+      .receive[History](any[OwmRequest])(any())
       .returns(timeoutErrorResponse)
       .thenReturn(emptyHistoryResponse)
 
-    val client = OwmCacheClient(2, 1, asyncClient, 5.seconds)
     val action = for {
-      _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      client <- OwmCacheClient(2, 1, asyncClient, 5.seconds)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(asyncClient).receive(any())(any()))
+    there.was(2.times(asyncClient).receive(any[OwmRequest])(any()))
   }
 
   def e3 = {
     val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
-    val client      = OwmCacheClient(2, 1, asyncClient, 5.seconds)
     val action = for {
-      _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _ <- client.getCachedOrRequest(6.44f, 3.33f, 100)
-      _ <- client.getCachedOrRequest(8.44f, 3.33f, 100)
-      _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      client <- OwmCacheClient(2, 1, asyncClient, 5.seconds)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      _      <- client.getCachedOrRequest(6.44f, 3.33f, 100)
+      _      <- client.getCachedOrRequest(8.44f, 3.33f, 100)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(4.times(asyncClient).receive(any())(any()))
+    there.was(4.times(asyncClient).receive(any[OwmRequest])(any()))
   }
 
   def e4 = {
     val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
-    val client      = OwmCacheClient(10, 1, asyncClient, 5.seconds)
     val action = for {
-      _ <- client.getCachedOrRequest(10.4f, 32.1f, 1447070440)   // Nov 9 12:00:40 2015 GMT
-      _ <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _ <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857)   // Nov 9 19:20:57 2015 GMT
+      client <- OwmCacheClient(10, 1, asyncClient, 5.seconds)
+      _      <- client.getCachedOrRequest(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
+      _      <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
+      _      <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(asyncClient).receive(any())(any()))
+    there.was(1.times(asyncClient).receive(any[OwmRequest])(any()))
   }
 
   def e5 = {
     val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
-    val client      = OwmCacheClient(10, 2, asyncClient, 5.seconds)
     val action = for {
-      _ <- client.getCachedOrRequest(10.8f, 32.1f, 1447070440)   // Nov 9 12:00:40 2015 GMT
-      _ <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _ <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857)   // Nov 9 19:20:57 2015 GMT
+      client <- OwmCacheClient(10, 2, asyncClient, 5.seconds)
+      _      <- client.getCachedOrRequest(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
+      _      <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
+      _      <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(asyncClient).receive(any())(any()))
+    there.was(2.times(asyncClient).receive(any[OwmRequest])(any()))
   }
+
+  def e6 =
+    OwmCacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must throwA[IllegalArgumentException]
 }

@@ -34,7 +34,7 @@ import org.specs2.concurrent.ExecutionEnv
 // This library
 import Requests.OwmHistoryRequest
 import Responses.History
-import WeatherCache._
+import CacheUtils._
 
 class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
   def is = s2"""
@@ -49,26 +49,19 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
     Key from next day in other timezone extracted correctly $e5
                                                    """
 
-  // We use here it because of Scala constructor order
-  private[openweather] class CacheWithUnknownSize(
-    val geoPrecision: Int,
-    val cacheSize: Int = 1 // Must be > 0
-  ) extends WeatherCache[Responses.History]
-
-  val rounderChecker1 = new CacheWithUnknownSize(1)
-
+  private val precision          = 1
   private val nov19time          = 1447945977
   private val nov19begin         = 1447891200
   private val newDayInKranoyarsk = DateTime.parse("2015-12-14T00:12:44.000+07:00")
 
-  def e1 = rounderChecker1.getStartOfDay(nov19time) must beEqualTo(nov19begin)
+  def e1 = CacheUtils.getStartOfDay(nov19time) must beEqualTo(nov19begin)
   def e2 =
-    rounderChecker1.eventToCacheKey(1445591292, Position(42.832f, 32.1101f)) must beEqualTo(
+    CacheUtils.eventToCacheKey(1445591292, Position(42.832f, 32.1101f), precision) must beEqualTo(
       CacheKey(1445558400, Position(43.0f, 32.0f)))
 
   def e3 = {
     val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-    calendar.setTime(new Date(rounderChecker1.getStartOfDay(1445151725).toLong * 1000))
+    calendar.setTime(new Date(CacheUtils.getStartOfDay(1445151725).toLong * 1000))
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
     hour must beEqualTo(0)
   }
@@ -76,7 +69,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
   def e4 = {
     val calendarStart = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
     val calendarEnd   = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-    val cacheKey      = rounderChecker1.eventToCacheKey(1445151725, Position(0.0f, 0.0f))
+    val cacheKey      = CacheUtils.eventToCacheKey(1445151725, Position(0.0f, 0.0f), precision)
     calendarStart.setTime(new Date(cacheKey.day.toLong * 1000))
     calendarEnd.setTime(new Date(cacheKey.endOfDay.toLong * 1000))
     val delta = calendarEnd.get(Calendar.DAY_OF_MONTH) - calendarStart.get(Calendar.DAY_OF_MONTH)
@@ -96,8 +89,11 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
       )
     )
     val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
-    val client      = OwmCacheClient(2, 1, asyncClient, 5.seconds)
-    client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk).unsafeRunSync()
+    val action = for {
+      client <- OwmCacheClient(2, 1, asyncClient, 5.seconds)
+      _      <- client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk)
+    } yield ()
+    action.unsafeRunSync()
     there.was(1.times(asyncClient).receive(eqTo(expectedRequest))(any()))
   }
 

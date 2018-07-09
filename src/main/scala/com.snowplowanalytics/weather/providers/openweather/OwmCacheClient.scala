@@ -25,6 +25,9 @@ import cats.effect.{Concurrent, Timer}
 // circe
 import io.circe.Decoder
 
+// LruMap
+import com.snowplowanalytics.lrumap.LruMap
+
 // Joda
 import org.joda.time.DateTime
 
@@ -32,7 +35,7 @@ import org.joda.time.DateTime
 import Errors._
 import Requests._
 import Responses._
-import WeatherCache.{CacheKey, Position}
+import CacheUtils.{CacheKey, Position}
 
 /**
  * Blocking OpenWeatherMap client with history (only) cache
@@ -40,24 +43,13 @@ import WeatherCache.{CacheKey, Position}
  *
  * WARNING. This client uses pro.openweathermap.org for data access,
  * It will not work with free OWM licenses.
- *
- * @param cacheSize amount of history requests storing in cache
- *                  it's better to store whole OWM packet (5000/50000/150000)
- *                  plus some space for errors (~1%)
- * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
- *                     stored in cache. For eg. coordinate 45.678 will be rounded to
- *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
- *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
- * @param client instance of `OwmClient` which will do all underlying work
- * @param requestTimeout timeout after which active request will be considered failed
  */
-class OwmCacheClient[F[_]: Concurrent](
-  val cacheSize: Int,
+class OwmCacheClient[F[_]: Concurrent] private (
+  cache: LruMap[F, CacheKey, Either[WeatherError, History]],
   val geoPrecision: Int,
   client: OwmClient[F],
   val requestTimeout: FiniteDuration)(implicit val executionContext: ExecutionContext)
-    extends Client[F]
-    with WeatherCache[History] {
+    extends Client[F] {
 
   private val timer: Timer[F] = Timer.derive[F]
 
@@ -74,8 +66,8 @@ class OwmCacheClient[F[_]: Concurrent](
    * @return weather stamp immediately taken from cache or requested from server
    */
   def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): F[Either[WeatherError, Weather]] = {
-    val cacheKey = eventToCacheKey(timestamp, Position(latitude, longitude))
-    Concurrent[F].delay(cache.get(cacheKey)).flatMap {
+    val cacheKey = CacheUtils.eventToCacheKey(timestamp, Position(latitude, longitude), geoPrecision)
+    cache.get(cacheKey).flatMap {
       case Some(Right(cached)) =>
         Concurrent[F].delay(cached.pickCloseIn(timestamp)) // Cache hit
       case Some(Left(TimeoutError(_))) =>
@@ -110,10 +102,8 @@ class OwmCacheClient[F[_]: Concurrent](
                           realTimestamp: Timestamp,
                           cacheKey: CacheKey): F[Either[WeatherError, Weather]] =
     historyByCoords(latitude, longitude, cacheKey.day, cacheKey.endOfDay, 24)
-      .map { response =>
-        cache.put(cacheKey, response)
-        getWeatherStamp(response, realTimestamp)
-      }
+      .flatTap(response => cache.put(cacheKey, response))
+      .map(response => getWeatherStamp(response, realTimestamp))
 
   /**
    * Get exact weather stamp from history batch-request (probably failed)
@@ -150,19 +140,47 @@ object OwmCacheClient {
 
   /**
    * Create OwmCacheClient with singleton-placed (in-scala-weather) akka system
+   * @param appId API key from OpenWeatherMap
+   * @param cacheSize amount of history requests storing in cache
+   *                  it's better to store whole OWM packet (5000/50000/150000)
+   *                  plus some space for errors (~1%)
+   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
+   *                     stored in cache. For eg. coordinate 45.678 will be rounded to
+   *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
+   *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
+   * @param host URL to the OpenWeatherMap API endpoints
+   * @param timeout time after which active request will be considered failed
    */
   def apply[F[_]: Concurrent](
     appId: String,
     cacheSize: Int          = 5100,
     geoPrecision: Int       = 1,
     host: String            = "pro.openweathermap.org",
-    timeout: FiniteDuration = 5.seconds)(implicit executionContext: ExecutionContext): OwmCacheClient[F] =
-    new OwmCacheClient(cacheSize, geoPrecision, new OwmClient(appId, host), timeout)
+    timeout: FiniteDuration = 5.seconds)(implicit executionContext: ExecutionContext): F[OwmCacheClient[F]] =
+    apply(cacheSize, geoPrecision, OwmClient(appId, host), timeout)
 
   /**
    * Create OwmCacheClient with underlying client
+   * @param cacheSize amount of history requests storing in cache
+   *                  it's better to store whole OWM packet (5000/50000/150000)
+   *                  plus some space for errors (~1%)
+   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
+   *                     stored in cache. For eg. coordinate 45.678 will be rounded to
+   *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
+   *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
+   * @param client instance of `OwmClient` which will do all underlying work
+   * @param timeout time after which active request will be considered failed
    */
   def apply[F[_]: Concurrent](cacheSize: Int, geoPrecision: Int, client: OwmClient[F], timeout: FiniteDuration)(
-    implicit executionContext: ExecutionContext): OwmCacheClient[F] =
-    new OwmCacheClient(cacheSize, geoPrecision, client, timeout)
+    implicit executionContext: ExecutionContext): F[OwmCacheClient[F]] = {
+    val effect = if (geoPrecision < 1) {
+      Concurrent[F].raiseError(new IllegalArgumentException("geoPrecision must be greater than zero"))
+    } else {
+      Concurrent[F].unit
+    }
+    for {
+      _     <- effect
+      cache <- LruMap.create[F, CacheKey, Either[WeatherError, History]](cacheSize)
+    } yield new OwmCacheClient(cache, geoPrecision, client, timeout)
+  }
 }
