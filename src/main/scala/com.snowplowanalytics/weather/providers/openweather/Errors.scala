@@ -54,4 +54,8 @@ object Errors {
    */
   case class HTTPError(message: String) extends WeatherError(message)
 
+  /**
+   * Error thrown when any argument provided to the clients is invalid
+   */
+  case class InvalidConfigurationError(message: String) extends WeatherError(message)
 }

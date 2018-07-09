@@ -18,6 +18,7 @@ import scala.io.Source
 
 // cats
 import cats.Id
+import cats.syntax.either._
 
 // specs2
 import org.specs2.Specification
