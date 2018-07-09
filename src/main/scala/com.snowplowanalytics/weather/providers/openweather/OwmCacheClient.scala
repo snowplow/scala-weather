@@ -48,13 +48,13 @@ import WeatherCache.{CacheKey, Position}
  *                     stored in cache. For eg. coordinate 45.678 will be rounded to
  *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
  *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
- * @param asyncClient instance of `OwmAsyncClient` which will do all underlying work
+ * @param client instance of `OwmClient` which will do all underlying work
  * @param requestTimeout timeout after which active request will be considered failed
  */
 class OwmCacheClient[F[_]: Concurrent](
   val cacheSize: Int,
   val geoPrecision: Int,
-  asyncClient: OwmAsyncClient[F],
+  client: OwmClient[F],
   val requestTimeout: FiniteDuration)(implicit val executionContext: ExecutionContext)
     extends Client[F]
     with WeatherCache[History] {
@@ -62,7 +62,7 @@ class OwmCacheClient[F[_]: Concurrent](
   private val timer: Timer[F] = Timer.derive[F]
 
   def receive[W <: OwmResponse: Decoder](request: OwmRequest): F[Either[WeatherError, W]] =
-    timeout(asyncClient.receive(request), requestTimeout)
+    timeout(client.receive(request), requestTimeout)
 
   /**
    * Search history in cache and if not found request and await it from server
@@ -157,14 +157,12 @@ object OwmCacheClient {
     geoPrecision: Int       = 1,
     host: String            = "pro.openweathermap.org",
     timeout: FiniteDuration = 5.seconds)(implicit executionContext: ExecutionContext): OwmCacheClient[F] =
-    new OwmCacheClient(cacheSize, geoPrecision, new OwmAsyncClient(appId, host), timeout)
+    new OwmCacheClient(cacheSize, geoPrecision, new OwmClient(appId, host), timeout)
 
   /**
-   * Create OwmCacheClient with underlying async client
+   * Create OwmCacheClient with underlying client
    */
-  def apply[F[_]: Concurrent](cacheSize: Int,
-                              geoPrecision: Int,
-                              asyncClient: OwmAsyncClient[F],
-                              timeout: FiniteDuration)(implicit executionContext: ExecutionContext): OwmCacheClient[F] =
-    new OwmCacheClient(cacheSize, geoPrecision, asyncClient, timeout)
+  def apply[F[_]: Concurrent](cacheSize: Int, geoPrecision: Int, client: OwmClient[F], timeout: FiniteDuration)(
+    implicit executionContext: ExecutionContext): OwmCacheClient[F] =
+    new OwmCacheClient(cacheSize, geoPrecision, client, timeout)
 }

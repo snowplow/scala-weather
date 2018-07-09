@@ -95,7 +95,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
         "end"   -> "1450051200" // "2015-12-14T00:00:00.000+00:00"
       )
     )
-    val asyncClient = mock[OwmAsyncClient[IO]].defaultReturn(emptyHistoryResponse)
+    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
     val client      = OwmCacheClient(2, 1, asyncClient, 5.seconds)
     client.getCachedOrRequest(4.44f, 3.33f, newDayInKranoyarsk).unsafeRunSync()
     there.was(1.times(asyncClient).receive(eqTo(expectedRequest))(any()))

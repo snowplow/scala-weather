@@ -50,7 +50,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     IO.pure(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
 
   def e1 = {
-    val asyncClient = mock[OwmAsyncClient[IO]].defaultReturn(emptyHistoryResponse)
+    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
     val client      = OwmCacheClient(2, 1, asyncClient, 5.seconds)
     val action = for {
       _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
@@ -62,7 +62,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e2 = {
-    val asyncClient = mock[OwmAsyncClient[IO]]
+    val asyncClient = mock[OwmClient[IO]]
     asyncClient
       .receive[History](any())(any())
       .returns(timeoutErrorResponse)
@@ -78,7 +78,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e3 = {
-    val asyncClient = mock[OwmAsyncClient[IO]].defaultReturn(emptyHistoryResponse)
+    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
     val client      = OwmCacheClient(2, 1, asyncClient, 5.seconds)
     val action = for {
       _ <- client.getCachedOrRequest(4.44f, 3.33f, 100)
@@ -91,7 +91,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e4 = {
-    val asyncClient = mock[OwmAsyncClient[IO]].defaultReturn(emptyHistoryResponse)
+    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
     val client      = OwmCacheClient(10, 1, asyncClient, 5.seconds)
     val action = for {
       _ <- client.getCachedOrRequest(10.4f, 32.1f, 1447070440)   // Nov 9 12:00:40 2015 GMT
@@ -103,7 +103,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
   }
 
   def e5 = {
-    val asyncClient = mock[OwmAsyncClient[IO]].defaultReturn(emptyHistoryResponse)
+    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
     val client      = OwmCacheClient(10, 2, asyncClient, 5.seconds)
     val action = for {
       _ <- client.getCachedOrRequest(10.8f, 32.1f, 1447070440)   // Nov 9 12:00:40 2015 GMT

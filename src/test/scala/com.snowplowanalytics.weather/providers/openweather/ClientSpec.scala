@@ -40,7 +40,7 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
   val emptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
 
   def e1 = {
-    val client = spy(new OwmAsyncClient[IO]("KEY"))
+    val client = spy(new OwmClient[IO]("KEY"))
     doReturn(emptyHistoryResponse).when(client).receive(any[OwmHistoryRequest])(any())
     val expectedRequest = OwmHistoryRequest(
       "city",
