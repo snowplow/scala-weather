@@ -38,43 +38,29 @@ class GeoPrecisionSpec extends Specification with ScalaCheck {
     test 1                                         $e8
     test 1/2                                       $e9
     test 1/5                                       $e10
-
-  Illegal state
-    throw exception for zero geoPrecision          $e11
                                                    """
 
-  // We use here it because of Scala constructor order
-  private[openweather] class CacheWithUnknownSize(
-    val geoPrecision: Int,
-    val cacheSize: Int = 1 // Must be > 0
-  ) extends WeatherCache[Responses.History]
-
-  val rounderChecker1 = new CacheWithUnknownSize(1)
-  val rounderChecker2 = new CacheWithUnknownSize(2)
-  val rounderChecker5 = new CacheWithUnknownSize(5)
-
-  def e1  = rounderChecker1.roundCoordinate(1.321f) must beEqualTo(1.0f)
-  def e2  = rounderChecker1.roundCoordinate(1.921f) must beEqualTo(2.0f)
-  def e3  = rounderChecker2.roundCoordinate(1.321f) must beEqualTo(1.5f)
-  def e4  = rounderChecker2.roundCoordinate(2.6f) must beEqualTo(2.5f)
-  def e5  = rounderChecker2.roundCoordinate(2.85321f) must beEqualTo(3.0f)
-  def e6  = rounderChecker5.roundCoordinate(7.312f) must beEqualTo(7.4f)
-  def e7  = rounderChecker5.roundCoordinate(7.8001f) must beEqualTo(7.8f)
-  def e11 = new CacheWithUnknownSize(0) must throwA[IllegalArgumentException]
+  def e1 = CacheUtils.roundCoordinate(1.321f, 1) must beEqualTo(1.0f)
+  def e2 = CacheUtils.roundCoordinate(1.921f, 1) must beEqualTo(2.0f)
+  def e3 = CacheUtils.roundCoordinate(1.321f, 2) must beEqualTo(1.5f)
+  def e4 = CacheUtils.roundCoordinate(2.6f, 2) must beEqualTo(2.5f)
+  def e5 = CacheUtils.roundCoordinate(2.85321f, 2) must beEqualTo(3.0f)
+  def e6 = CacheUtils.roundCoordinate(7.312f, 5) must beEqualTo(7.4f)
+  def e7 = CacheUtils.roundCoordinate(7.8001f, 5) must beEqualTo(7.8f)
 
   // Rounding arbitrary floats
   val sensibleFloat = // we want omit big exponents
     Arbitrary.arbitrary[Float] suchThat (f => (f > -180.0) && (f < 180.0))
 
   def e8 = forAll(sensibleFloat) { f: Float =>
-    rounderChecker1.roundCoordinate(f).toString must endWith(".0")
+    CacheUtils.roundCoordinate(f, 1).toString must endWith(".0")
   }
   def e9 = forAll(sensibleFloat) { f: Float =>
-    rounderChecker2.roundCoordinate(f).toString must endWith(".0") or endWith(".5")
+    CacheUtils.roundCoordinate(f, 2).toString must endWith(".0") or endWith(".5")
   }
   def e10 = forAll(sensibleFloat) { f: Float =>
-    rounderChecker5
-      .roundCoordinate(f)
+    CacheUtils
+      .roundCoordinate(f, 5)
       .toString must endWith(".0") or endWith(".2") or endWith(".4") or endWith(".6") or endWith(".8")
   }
 }

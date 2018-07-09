@@ -13,7 +13,7 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import WeatherCache.Position
+import CacheUtils.Position
 
 /**
  * Contains most-populated cities plus randomly picked city from every country,

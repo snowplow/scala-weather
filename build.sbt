@@ -22,7 +22,6 @@ lazy val root = project
     crossScalaVersions := Seq("2.11.12", "2.12.6"),
     scalacOptions := BuildSettings.compilerOptions,
     javacOptions := BuildSettings.javaCompilerOptions,
-    resolvers ++= Dependencies.resolutionRepos,
     shellPrompt := { _ =>
       name.value + "> "
     },
@@ -33,11 +32,10 @@ lazy val root = project
   .settings(
     libraryDependencies ++= Seq(
       Dependencies.Libraries.jodaTime,
-      Dependencies.Libraries.jodaConvert,
-      Dependencies.Libraries.collUtil,
       Dependencies.Libraries.circeGeneric,
       Dependencies.Libraries.circeParser,
       Dependencies.Libraries.hammockCore,
+      Dependencies.Libraries.lruMap,
       Dependencies.Libraries.specs2,
       Dependencies.Libraries.specs2Mock,
       Dependencies.Libraries.specsScalaCheck

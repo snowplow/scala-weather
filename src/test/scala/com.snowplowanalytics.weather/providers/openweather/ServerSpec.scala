@@ -27,7 +27,7 @@ import org.specs2.specification.ExecutionEnvironment
 import org.scalacheck.Prop.forAll
 
 // This library
-import WeatherCache.Position
+import CacheUtils.Position
 import Errors.WeatherError
 
 object ServerSpec {
