@@ -24,7 +24,7 @@ object CacheUtils {
    * @param day timestamp for 0:00:00
    * @param center rounded geo coordinates
    */
-  case class CacheKey(day: Day, center: Position) {
+  final case class CacheKey(day: Day, center: Position) {
     def endOfDay = day + 86400
   }
 
@@ -34,7 +34,7 @@ object CacheUtils {
    * @param latitude place's latitude
    * @param longitude places's longitude
    */
-  case class Position(latitude: Float, longitude: Float)
+  final case class Position(latitude: Float, longitude: Float)
 
   /**
    * Round position and timestamp (event) to produce cache key

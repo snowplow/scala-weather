@@ -68,30 +68,30 @@ object Responses {
    * Common main information about weather
    */
   @JsonCodec
-  case class MainInfo(grnd_level: Option[BigDecimal],
-                      humidity: BigDecimal,
-                      pressure: BigDecimal,
-                      sea_level: Option[BigDecimal],
-                      temp: BigDecimal,
-                      temp_min: BigDecimal,
-                      temp_max: BigDecimal)
+  final case class MainInfo(grnd_level: Option[BigDecimal],
+                            humidity: BigDecimal,
+                            pressure: BigDecimal,
+                            sea_level: Option[BigDecimal],
+                            temp: BigDecimal,
+                            temp_min: BigDecimal,
+                            temp_max: BigDecimal)
 
   /**
    * Textual description of the weather
    */
   @JsonCodec
-  case class WeatherCondition(main: String, description: String, id: Int, icon: String)
+  final case class WeatherCondition(main: String, description: String, id: Int, icon: String)
 
   @JsonCodec
-  case class Wind(speed: BigDecimal,
-                  deg: BigDecimal,
-                  gust: Option[BigDecimal],
-                  var_end: Option[Int],
-                  var_beg: Option[Int])
-  @JsonCodec case class Coordinates(lon: BigDecimal, lat: BigDecimal)
-  @JsonCodec case class Clouds(all: BigInt)
-  @JsonCodec case class Snow(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
-  @JsonCodec case class Rain(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
+  final case class Wind(speed: BigDecimal,
+                        deg: BigDecimal,
+                        gust: Option[BigDecimal],
+                        var_end: Option[Int],
+                        var_beg: Option[Int])
+  @JsonCodec final case class Coordinates(lon: BigDecimal, lat: BigDecimal)
+  @JsonCodec final case class Clouds(all: BigInt)
+  @JsonCodec final case class Snow(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
+  @JsonCodec final case class Rain(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
 
   /**
    * Pick an Integer from `list` which is close-in to `item`
