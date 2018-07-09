@@ -27,8 +27,8 @@ import org.specs2.specification.ExecutionEnvironment
 import org.scalacheck.Prop.forAll
 
 // This library
+import Errors.AuthorizationError
 import CacheUtils.Position
-import Errors.WeatherError
 
 object ServerSpec {
   val owmKey = sys.env.get("OWM_KEY")
@@ -70,9 +70,7 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
     val client = OwmClient[IO]("INVALID-KEY", host)
     val result = client.historyById(1).unsafeRunTimed(5.seconds)
     result must beSome
-    result.get must beLeft.like {
-      case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$: Check your API key")
-    }
+    result.get must beLeft(AuthorizationError)
   }
 
   def e4 = testCities(TestData.randomCities, sslClient).set(maxSize = 15, minTestsOk = 15)
