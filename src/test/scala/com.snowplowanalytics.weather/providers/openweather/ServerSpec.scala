@@ -71,7 +71,7 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
     val result = client.historyById(1).unsafeRunTimed(5.seconds)
     result must beSome
     result.get must beLeft.like {
-      case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$ Check your API key")
+      case e: WeatherError => e.toString must beEqualTo("OpenWeatherMap AuthorizationError$: Check your API key")
     }
   }
 
