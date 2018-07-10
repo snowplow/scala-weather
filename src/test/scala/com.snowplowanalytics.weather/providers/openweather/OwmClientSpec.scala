@@ -18,6 +18,10 @@ import org.joda.time.DateTime
 
 // cats
 import cats.effect.IO
+import cats.syntax.either._
+
+// circe
+import io.circe.Decoder
 
 // tests
 import org.specs2.concurrent.ExecutionEnv
@@ -26,10 +30,11 @@ import org.specs2.mock.Mockito
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 
 // this library
+import Errors.WeatherError
 import Requests.OwmHistoryRequest
 import Responses.History
 
-class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
+class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
   def is = s2"""
 
   OWM Client API test
@@ -37,11 +42,12 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
     Implicits for DateTime work as expected (without imports)   $e1
   """
 
-  val emptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
+  val emptyHistoryResponse = IO.pure(History(BigInt(100), "0", List()).asRight[WeatherError])
 
   def e1 = {
-    val client = spy(new OwmClient[IO]("KEY"))
-    doReturn(emptyHistoryResponse).when(client).receive(any[OwmHistoryRequest])(any())
+    val transport = mock[Transport[IO]]
+    transport.receive(any[WeatherRequest])(any[Decoder[WeatherResponse]]).returns(emptyHistoryResponse)
+    val client = OpenWeatherMap.basicClient[IO](transport)
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(
@@ -51,7 +57,7 @@ class ClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mocki
       )
     )
     client.historyByCoords(0.00f, 0.00f, DateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(1.times(client).receive(eqTo(expectedRequest))(any()))
+    there.was(1.times(transport).receive(eqTo(expectedRequest))(any()))
   }
 
 }

@@ -10,27 +10,21 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
-package com.snowplowanalytics.weather
-package providers.openweather
+package com.snowplowanalytics.weather.providers.openweather
 
 // Scala
 import scala.io.Source
-
-// cats
-import cats.Id
-import cats.syntax.either._
 
 // specs2
 import org.specs2.Specification
 
 // circe
-import io.circe.Decoder
 import io.circe.parser.parse
 
 // This library
-import Errors._
+import com.snowplowanalytics.weather.Errors._
+import com.snowplowanalytics.weather.HttpTransport
 import Responses._
-import Requests.OwmRequest
 
 class ExtractSpec extends Specification {
   def is = s2"""
@@ -49,43 +43,39 @@ class ExtractSpec extends Specification {
     extract history from error JSON                $e6
                                                    """
 
-  private val dummyClient = new Client[Id] {
-    def receive[W <: OwmResponse: Decoder](owmRequest: OwmRequest) = ???
-  }
-
   def e1 = {
     val weather = parse(Source.fromURL(getClass.getResource("/history.json")).mkString)
-      .flatMap(dummyClient.extractWeather[History])
+      .flatMap(HttpTransport.extractWeather[History])
     weather must beRight
   }
 
   def e2 = {
     val weather = parse(Source.fromURL(getClass.getResource("/history-empty.json")).mkString)
-      .flatMap(dummyClient.extractWeather[History])
+      .flatMap(HttpTransport.extractWeather[History])
     weather.map(_.list.length) must beRight(0)
   }
 
   def e3 = {
     val weather = parse(Source.fromURL(getClass.getResource("/current.json")).mkString)
-      .flatMap(dummyClient.extractWeather[Current])
+      .flatMap(HttpTransport.extractWeather[Current])
     weather.map(_.main.humidity) must beRight(62)
   }
 
   def e4 = {
     val weather = parse(Source.fromURL(getClass.getResource("/forecast.json")).mkString)
-      .flatMap(dummyClient.extractWeather[Forecast])
+      .flatMap(HttpTransport.extractWeather[Forecast])
     weather.map(_.cod) must beRight("200")
   }
 
   def e5 = {
     val weather = parse(Source.fromURL(getClass.getResource("/empty.json")).mkString)
-      .flatMap(dummyClient.extractWeather[History])
+      .flatMap(HttpTransport.extractWeather[History])
     weather.map(_.cod) must beLeft
   }
 
   def e6 = {
     val weather = parse(Source.fromURL(getClass.getResource("/nodata.json")).mkString)
-      .flatMap(dummyClient.extractWeather[History])
+      .flatMap(HttpTransport.extractWeather[History])
     weather.map(_.cod) must beLeft(ErrorResponse(Some("404"), "no data"))
   }
 }

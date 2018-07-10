@@ -13,75 +13,171 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// cats
-import cats.effect.Sync
-import cats.implicits._
-
-// circe
-import io.circe.parser.parse
-import io.circe.{Decoder, Json}
-
-// hammock
-import hammock.{Hammock, HttpResponse, Method, Status, Uri}
-import hammock.jvm.Interpreter
-
 // This library
 import Errors._
+import Implicits._
 import Responses._
 import Requests._
 
 /**
- * Asynchronous OpenWeatherMap client
+ * Non-caching OpenWeatherMap client
  *
- * @param appId API key
+ * @tparam F effect type
  */
-case class OwmClient[F[_]: Sync](appId: String, apiHost: String = "api.openweathermap.org", ssl: Boolean = false)
-    extends Client[F] {
+class OwmClient[F[_]] private[openweather] (transport: Transport[F]) {
 
-  private implicit val interpreter = Interpreter[F]
-
-  def receive[W <: OwmResponse: Decoder](request: OwmRequest): F[Either[WeatherError, W]] = {
-
-    val scheme    = if (ssl) "https" else "http"
-    val authority = Uri.Authority(None, Uri.Host.Other(apiHost), None)
-    val baseUri   = Uri(Some(scheme), Some(authority))
-
-    val uri = request.constructQuery(baseUri, appId)
-
-    Hammock
-      .request(Method.GET, uri, Map())
-      .map(uri => processResponse(uri))
-      .exec[F]
+  /**
+   * Get historical data by city id
+   * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_history#By-city-id
+   *
+   * @param id id of the city
+   * @param start start (unix time, UTC)
+   * @param end end (unix time, UTC)
+   * @param cnt count of returned data
+   * @param measure one of predefined `Api.Measures` to constrain accuracy
+   * @return either error or history wrapped in `F`
+   */
+  def historyById(id: Int,
+                  start: OptArg[Int]                  = None,
+                  end: OptArg[Int]                    = None,
+                  cnt: OptArg[Int]                    = None,
+                  measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
+    val request = OwmHistoryRequest("city",
+                                    Map("id" -> id.toString)
+                                      ++ ("start" -> start)
+                                      ++ ("end"   -> end)
+                                      ++ ("cnt"   -> cnt)
+                                      ++ ("type"  -> measure.map(_.toString)))
+    transport.receive(request)
   }
 
   /**
-   * Decode response case class from HttpResponse body
+   * Get historical data by city name
+   * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_history#By-city-name
    *
-   * @param response full HTTP response
-   * @return either error or decoded case class
+   * @param name name of the city
+   * @param country optional two-letter code
+   * @param start start (unix time, UTC)
+   * @param end end (unix time, UTC)
+   * @param cnt count of returned data
+   * @param measure one of predefined `Api.Measures` to constrain accuracy
+   * @return either error or history wrapped in `F`
    */
-  private def processResponse[A: Decoder](response: HttpResponse): Either[WeatherError, A] =
-    getResponseContent(response)
-      .flatMap(parseJson)
-      .flatMap(json => extractWeather(json))
+  def historyByName(name: String,
+                    country: OptArg[String]             = None,
+                    start: OptArg[Int]                  = None,
+                    end: OptArg[Int]                    = None,
+                    cnt: OptArg[Int]                    = None,
+                    measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
+    val query = name + country.map("," + _).getOrElse("")
+    val request = OwmHistoryRequest("city",
+                                    Map("q" -> query)
+                                      ++ ("start" -> start)
+                                      ++ ("end"   -> end)
+                                      ++ ("cnt"   -> cnt)
+                                      ++ ("type"  -> measure.map(_.toString)))
+    transport.receive(request)
+  }
 
   /**
-   * Convert the response to string
+   * Get historical data by city name
+   * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_history#By-city-name
    *
-   * @param response full HTTP response
-   * @return either entity content of HTTP response or WeatherError (AuthorizationError / HTTPError)
+   * @param lat lattitude
+   * @param lon longitude
+   * @param start start (unix time, UTC)
+   * @param end end (unix time, UTC)
+   * @param cnt count of returned data
+   * @param measure one of predefined `Api.Measures` to constrain accuracy
+   * @return either error or history wrapped in `F`
    */
-  private def getResponseContent(response: HttpResponse): Either[WeatherError, String] =
-    response.status match {
-      case Status.OK           => Right(response.entity.content.toString)
-      case Status.Unauthorized => Left(AuthorizationError)
-      case _                   => Left(HTTPError(s"Request failed with status ${response.status.code}"))
-    }
+  def historyByCoords(lat: Float,
+                      lon: Float,
+                      start: OptArg[Int]                  = None,
+                      end: OptArg[Int]                    = None,
+                      cnt: OptArg[Int]                    = None,
+                      measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
+    val request = OwmHistoryRequest("city",
+                                    Map("lat" -> lat.toString, "lon" -> lon.toString)
+                                      ++ ("start" -> start)
+                                      ++ ("end"   -> end)
+                                      ++ ("cnt"   -> cnt)
+                                      ++ ("type"  -> measure.map(_.toString)))
+    transport.receive(request)
+  }
 
-  private def parseJson(content: String): Either[ParseError, Json] =
-    parse(content)
-      .leftMap(e =>
-        ParseError(
-          s"OpenWeatherMap Error when trying to parse following json: \n$content\n\nMessage from the parser:\n ${e.message}"))
+  /**
+   * Get forecast data by city id
+   * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_forecast#Get-forecast-by-city-id
+   *
+   * @param id id of the city
+   * @return either error or forecast wrapped in `F`
+   */
+  def forecastById(id: Int, cnt: OptArg[Int] = None): F[Either[WeatherError, Forecast]] =
+    transport.receive(OwmForecastRequest("city", Map("id" -> id.toString, "cnt" -> cnt.toString)))
+
+  /**
+   * Get 5 day/3 hour forecast data by city name
+   * Docs: http://openweathermap.org/forecast#5days
+   *
+   * @param name name of the city
+   * @param country optional two-letter code
+   * @param cnt count of returned data
+   * @return either error or forecast wrapped in `F`
+   */
+  def forecastByName(name: String,
+                     country: OptArg[String],
+                     cnt: OptArg[Int] = None): F[Either[WeatherError, Forecast]] = {
+    val query = name + country.map("," + _).getOrElse("")
+    transport.receive(OwmForecastRequest("city", Map("q" -> query, "cnt" -> cnt.toString)))
+  }
+
+  /**
+   * Get forecast data for coordinates
+   *
+   * @param lat latitude
+   * @param lon longitude
+   * @return either error or forecast wrapped in `F`
+   */
+  def forecastByCoords(lat: Float, lon: Float, cnt: OptArg[Int] = None): F[Either[WeatherError, Weather]] =
+    transport.receive(
+      OwmForecastRequest("weather", Map("lat" -> lat.toString, "lon" -> lon.toString, "cnt" -> cnt.toString)))
+
+  /**
+   * Get current weather data by city id
+   * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_weather#3-By-city-ID
+   *
+   * @param id id of the city
+   * @return either error or current weather wrapped in `F`
+   */
+  def currentById(id: Int): F[Either[WeatherError, Current]] =
+    transport.receive(OwmCurrentRequest("weather", Map("id" -> id.toString)))
+
+  /**
+   * Get 5 day/3 hour forecast data by city name
+   * Docs: http://openweathermap.org/forecast#5days
+   *
+   * @param name name of the city
+   * @param country optional two-letter code
+   * @param cnt count of returned data
+   * @return either error or forecast wrapped in `F`
+   */
+  def currentByName(name: String,
+                    country: OptArg[String],
+                    cnt: OptArg[Int] = None): F[Either[WeatherError, Current]] = {
+    val query = name + country.map("," + _).getOrElse("")
+    transport.receive(OwmCurrentRequest("weather", Map("q" -> query, "cnt" -> cnt.toString)))
+  }
+
+  /**
+   * Get current weather data by city coordinates
+   * Docs: http://bugs.openweathermap.org/projects/api/wiki/Api_2_5_weather#2-By-geographic-coordinate
+   *
+   * @param lat latitude
+   * @param lon longitude
+   * @return either error or current weather wrapped in `F`
+   */
+  def currentByCoords(lat: Float, lon: Float): F[Either[WeatherError, Current]] =
+    transport.receive(OwmCurrentRequest("weather", Map("lat" -> lat.toString, "lon" -> lon.toString)))
 
 }

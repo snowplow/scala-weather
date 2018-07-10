@@ -10,18 +10,24 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
-package com.snowplowanalytics
+package com.snowplowanalytics.weather
 
-import hammock.Uri
+// circe
+import io.circe.Decoder
 
-package object weather {
+// This library
+import Errors.WeatherError
 
-  type Timestamp = Int
-  type Day       = Int // 0:00:00 timestamp of day
+trait Transport[F[_]] {
 
-  trait WeatherRequest {
-    def constructQuery(baseUri: Uri, apiKey: String): Uri
-  }
-  trait WeatherResponse
+  /**
+   * Main client logic for Request => Response function,
+   * where Response is wrapped in tparam `F`
+   *
+   * @param request request built by client method
+   * @tparam W type of weather response to extract
+   * @return extracted either error or weather wrapped in `F`
+   */
+  def receive[W <: WeatherResponse: Decoder](request: WeatherRequest): F[Either[WeatherError, W]]
 
 }

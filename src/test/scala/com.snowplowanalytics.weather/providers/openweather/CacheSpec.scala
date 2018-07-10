@@ -13,9 +13,6 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// scala
-import scala.concurrent.duration._
-
 // cats
 import cats.effect.IO
 import cats.syntax.either._
@@ -52,74 +49,74 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     IO.pure(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
 
   def e1 = {
-    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
+    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
-      client <- OwmCacheClient(2, 1, asyncClient, 5.seconds)
+      client <- OpenWeatherMap.cacheClient(2, 1, transport)
       _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
       _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
       _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(asyncClient).receive(any[OwmRequest])(any()))
+    there.was(1.times(transport).receive(any[OwmRequest])(any()))
   }
 
   def e2 = {
-    val asyncClient = mock[OwmClient[IO]]
-    asyncClient
+    val transport = mock[TimeoutHttpTransport[IO]]
+    transport
       .receive[History](any[OwmRequest])(any())
       .returns(timeoutErrorResponse)
       .thenReturn(emptyHistoryResponse)
 
     val action = for {
-      client <- OwmCacheClient(2, 1, asyncClient, 5.seconds)
+      client <- OpenWeatherMap.cacheClient(2, 1, transport)
       _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
       _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(asyncClient).receive(any[OwmRequest])(any()))
+    there.was(2.times(transport).receive(any[OwmRequest])(any()))
   }
 
   def e3 = {
-    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
+    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
-      client <- OwmCacheClient(2, 1, asyncClient, 5.seconds)
+      client <- OpenWeatherMap.cacheClient(2, 1, transport)
       _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
       _      <- client.getCachedOrRequest(6.44f, 3.33f, 100)
       _      <- client.getCachedOrRequest(8.44f, 3.33f, 100)
       _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(4.times(asyncClient).receive(any[OwmRequest])(any()))
+    there.was(4.times(transport).receive(any[OwmRequest])(any()))
   }
 
   def e4 = {
-    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
+    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
-      client <- OwmCacheClient(10, 1, asyncClient, 5.seconds)
+      client <- OpenWeatherMap.cacheClient(10, 1, transport)
       _      <- client.getCachedOrRequest(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(asyncClient).receive(any[OwmRequest])(any()))
+    there.was(1.times(transport).receive(any[OwmRequest])(any()))
   }
 
   def e5 = {
-    val asyncClient = mock[OwmClient[IO]].defaultReturn(emptyHistoryResponse)
+    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
-      client <- OwmCacheClient(10, 2, asyncClient, 5.seconds)
+      client <- OpenWeatherMap.cacheClient(10, 2, transport)
       _      <- client.getCachedOrRequest(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(asyncClient).receive(any[OwmRequest])(any()))
+    there.was(2.times(transport).receive(any[OwmRequest])(any()))
   }
 
   def e6 =
-    OwmCacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
+    OpenWeatherMap.cacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
 
   def e7 =
-    OwmCacheClient[IO]("KEY", cacheSize = -1).unsafeRunSync() must throwA[InvalidConfigurationError]
+    OpenWeatherMap.cacheClient[IO]("KEY", cacheSize = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
 
 }
