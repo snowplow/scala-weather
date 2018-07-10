@@ -15,11 +15,10 @@ package com.snowplowanalytics.weather.providers.openweather
 import cats.data.NonEmptyList
 import hammock.Uri
 
-private[weather] object Requests {
+// This library
+import com.snowplowanalytics.weather.WeatherRequest
 
-  sealed trait WeatherRequest {
-    def constructQuery(baseUri: Uri, apiKey: String): Uri
-  }
+private[weather] object Requests {
 
   sealed trait OwmRequest extends WeatherRequest {
     val endpoint: Option[String]

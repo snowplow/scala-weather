@@ -23,7 +23,7 @@ import Errors._
  * Case classes used for extracting data from JSON
  */
 object Responses {
-  sealed abstract trait OwmResponse
+  sealed trait OwmResponse extends WeatherResponse
 
   // RESPONSES
 

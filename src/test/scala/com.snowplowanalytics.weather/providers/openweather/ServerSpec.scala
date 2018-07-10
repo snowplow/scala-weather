@@ -51,8 +51,8 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
   """
 
   val host      = "history.openweathermap.org"
-  val client    = OwmClient[IO](owmKey.get, host)
-  val sslClient = OwmClient[IO](owmKey.get, host, ssl = true)
+  val client    = OpenWeatherMap.basicClient[IO](owmKey.get, host)
+  val sslClient = OpenWeatherMap.basicClient[IO](owmKey.get, host, ssl = true)
 
   def testCities(cities: Vector[Position], client: OwmClient[IO]) =
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
@@ -67,7 +67,7 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
   def e2 = testCities(TestData.randomCities, client).set(maxSize = 15, minTestsOk = 15)
 
   def e3 = {
-    val client = OwmClient[IO]("INVALID-KEY", host)
+    val client = OpenWeatherMap.basicClient[IO]("INVALID-KEY", host)
     val result = client.historyById(1).unsafeRunTimed(5.seconds)
     result must beSome
     result.get must beLeft(AuthorizationError)
