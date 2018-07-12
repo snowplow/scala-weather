@@ -37,7 +37,7 @@ object Implicits {
      * @param d joda time containing all information
      * @return Unix epoch timestamp
      */
-    implicit def optDateToInt(d: DateTime): OptArg[Int] = Some((d.getMillis / 1000).toInt)
+    implicit def optDateToLong(d: DateTime): OptArg[Long] = Some(d.getMillis / 1000)
   }
 
   /**
@@ -56,5 +56,14 @@ object Implicits {
    * @return empty Map if v is None, Map(k -> v) otherwise
    */
   implicit def pairIntToMap(pair: (String, OptArg[Int])): Map[String, String] =
+    pair._2.map(v => Map(pair._1 -> v.toString)).getOrElse(Map.empty)
+
+  /**
+   * Addition to `pairToMap` specified on Integers
+   *
+   * @param pair tuple with optional second element
+   * @return empty Map if v is None, Map(k -> v) otherwise
+   */
+  implicit def pairLongToMap(pair: (String, OptArg[Long])): Map[String, String] =
     pair._2.map(v => Map(pair._1 -> v.toString)).getOrElse(Map.empty)
 }

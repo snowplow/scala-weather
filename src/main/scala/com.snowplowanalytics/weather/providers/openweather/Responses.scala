@@ -38,13 +38,13 @@ object Responses {
 
   @JsonCodec
   final case class Forecast(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
-    def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
+    def pickCloseIn(timestamp: Long): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
   }
 
   @JsonCodec
   final case class History(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
-    def pickCloseIn(timestamp: Int): Either[WeatherError, Weather] =
+    def pickCloseIn(timestamp: Long): Either[WeatherError, Weather] =
       pickClosestWeather(list, timestamp)
   }
 
@@ -99,7 +99,7 @@ object Responses {
    * @param timestamp original integer
    * @return close neighbour
    */
-  private[openweather] def pickClosestWeather(list: List[Weather], timestamp: Int): Either[WeatherError, Weather] =
+  private[openweather] def pickClosestWeather(list: List[Weather], timestamp: Long): Either[WeatherError, Weather] =
     if (timestamp < 1) Left(InternalError("Timestamp should be greater than 0"))
     else
       pickClosest(list, timestamp, (st: Weather) => (st.dt.toInt, st))
@@ -114,7 +114,7 @@ object Responses {
    * @param transform function to derive index (timestamp) out of object (weather stamp)
    * @return closest object for some index
    */
-  private[openweather] def pickClosest[A](list: List[A], index: Int, transform: A => (Int, A)): Option[A] =
+  private[openweather] def pickClosest[A](list: List[A], index: Long, transform: A => (Int, A)): Option[A] =
     list
       .map(transform)
       .sortBy(x => Math.abs(index - x._1))

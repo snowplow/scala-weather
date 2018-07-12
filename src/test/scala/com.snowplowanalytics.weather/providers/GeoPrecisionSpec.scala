@@ -10,11 +10,12 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
-package com.snowplowanalytics.weather.providers.openweather
+package com.snowplowanalytics.weather
+package providers
 
-import org.specs2.{ScalaCheck, Specification}
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop.forAll
+import org.specs2.{ScalaCheck, Specification}
 
 class GeoPrecisionSpec extends Specification with ScalaCheck {
   def is = s2"""
@@ -40,26 +41,26 @@ class GeoPrecisionSpec extends Specification with ScalaCheck {
     test 1/5                                       $e10
                                                    """
 
-  def e1 = CacheUtils.roundCoordinate(1.321f, 1) must beEqualTo(1.0f)
-  def e2 = CacheUtils.roundCoordinate(1.921f, 1) must beEqualTo(2.0f)
-  def e3 = CacheUtils.roundCoordinate(1.321f, 2) must beEqualTo(1.5f)
-  def e4 = CacheUtils.roundCoordinate(2.6f, 2) must beEqualTo(2.5f)
-  def e5 = CacheUtils.roundCoordinate(2.85321f, 2) must beEqualTo(3.0f)
-  def e6 = CacheUtils.roundCoordinate(7.312f, 5) must beEqualTo(7.4f)
-  def e7 = CacheUtils.roundCoordinate(7.8001f, 5) must beEqualTo(7.8f)
+  def e1 = Cache.roundCoordinate(1.321f, 1) must beEqualTo(1.0f)
+  def e2 = Cache.roundCoordinate(1.921f, 1) must beEqualTo(2.0f)
+  def e3 = Cache.roundCoordinate(1.321f, 2) must beEqualTo(1.5f)
+  def e4 = Cache.roundCoordinate(2.6f, 2) must beEqualTo(2.5f)
+  def e5 = Cache.roundCoordinate(2.85321f, 2) must beEqualTo(3.0f)
+  def e6 = Cache.roundCoordinate(7.312f, 5) must beEqualTo(7.4f)
+  def e7 = Cache.roundCoordinate(7.8001f, 5) must beEqualTo(7.8f)
 
   // Rounding arbitrary floats
   val sensibleFloat = // we want omit big exponents
     Arbitrary.arbitrary[Float] suchThat (f => (f > -180.0) && (f < 180.0))
 
   def e8 = forAll(sensibleFloat) { f: Float =>
-    CacheUtils.roundCoordinate(f, 1).toString must endWith(".0")
+    Cache.roundCoordinate(f, 1).toString must endWith(".0")
   }
   def e9 = forAll(sensibleFloat) { f: Float =>
-    CacheUtils.roundCoordinate(f, 2).toString must endWith(".0") or endWith(".5")
+    Cache.roundCoordinate(f, 2).toString must endWith(".0") or endWith(".5")
   }
   def e10 = forAll(sensibleFloat) { f: Float =>
-    CacheUtils
+    Cache
       .roundCoordinate(f, 5)
       .toString must endWith(".0") or endWith(".2") or endWith(".4") or endWith(".6") or endWith(".8")
   }
