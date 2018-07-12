@@ -27,15 +27,16 @@ object Dependencies {
 
   object Libraries {
     // Java
-    val jodaTime        = "joda-time"             %  "joda-time"         % V.jodaTime
+    val jodaTime        = "joda-time"             %  "joda-time"            % V.jodaTime
     // Scala
-    val circeGeneric    = "io.circe"              %% "circe-generic"     % V.circe
-    val circeParser     = "io.circe"              %% "circe-parser"      % V.circe
-    val hammockCore     = "com.pepegar"           %% "hammock-core"      % V.hammock
-    val lruMap          = "com.snowplowanalytics" %% "scala-lru-map"     % V.lruMap
+    val circeGeneric    = "io.circe"              %% "circe-generic"        % V.circe
+    val circeParser     = "io.circe"              %% "circe-parser"         % V.circe
+    val circeExtras     = "io.circe"              %% "circe-generic-extras" % V.circe
+    val hammockCore     = "com.pepegar"           %% "hammock-core"         % V.hammock
+    val lruMap          = "com.snowplowanalytics" %% "scala-lru-map"        % V.lruMap
     // Tests
-    val specs2          = "org.specs2"            %% "specs2-core"       % V.specs2 % "test"
-    val specs2Mock      = "org.specs2"            %% "specs2-mock"       % V.specs2 % "test"
-    val specsScalaCheck = "org.specs2"            %% "specs2-scalacheck" % V.specs2 % "test"
+    val specs2          = "org.specs2"            %% "specs2-core"          % V.specs2 % "test"
+    val specs2Mock      = "org.specs2"            %% "specs2-mock"          % V.specs2 % "test"
+    val specsScalaCheck = "org.specs2"            %% "specs2-scalacheck"    % V.specs2 % "test"
   }
 }

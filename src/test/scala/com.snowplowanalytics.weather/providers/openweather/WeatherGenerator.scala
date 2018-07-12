@@ -16,9 +16,9 @@ package providers.openweather
 import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen._
-
 import Responses._
 import CacheUtils._
+import com.snowplowanalytics.weather.providers.TestData
 
 /**
  * Trait with methods for random weather generation
@@ -68,10 +68,10 @@ trait WeatherGenerator {
 
   def genWeatherDescription: Gen[List[WeatherCondition]] =
     for {
-      main        <- Gen.oneOf(TestData.weatherConditions)
-      description <- Gen.oneOf(TestData.weatherDescriptions.filter(_.contains(main.toLowerCase)))
-      icon        <- Gen.oneOf(TestData.icons)
-      id          <- Gen.oneOf(TestData.descriptionIds)
+      main        <- Gen.oneOf(TestData.owmWeatherConditions)
+      description <- Gen.oneOf(TestData.owmWeatherDescriptions.filter(_.contains(main.toLowerCase)))
+      icon        <- Gen.oneOf(TestData.owmIcons)
+      id          <- Gen.oneOf(TestData.owmDescriptionIds)
       size        <- Gen.oneOf(List(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3))
       result      <- Gen.listOfN(size, WeatherCondition(main, description, id, icon))
     } yield result
@@ -111,13 +111,14 @@ trait WeatherGenerator {
   /**
    * Pick random position predefined in `TestData` and distort it with <30km
    */
-  def genPredefinedPosition(positions: Vector[Position]): Gen[Position] =
+  def genPredefinedPosition(positions: Vector[(Float, Float)]): Gen[Position] =
     for {
       seedLat <- Gen.choose(-0.4f, 0.4f) // Distort lat and lon little bit
       seedLon <- Gen.choose(-0.8f, 0.8f)
       pos     <- Gen.choose(0, positions.length - 1)
     } yield {
-      val position = positions(pos)
+      val (lat, long) = positions(pos)
+      val position    = Position(lat, long)
       position.copy(latitude = position.latitude + seedLat, longitude = position.longitude + seedLon)
     }
 

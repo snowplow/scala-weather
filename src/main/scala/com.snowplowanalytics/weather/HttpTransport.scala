@@ -67,9 +67,9 @@ object HttpTransport {
    */
   private def getResponseContent(response: HttpResponse): Either[WeatherError, String] =
     response.status match {
-      case Status.OK           => Right(response.entity.content.toString)
-      case Status.Unauthorized => Left(AuthorizationError)
-      case _                   => Left(HTTPError(s"Request failed with status ${response.status.code}"))
+      case Status.OK => Right(response.entity.content.toString)
+      case Status.Unauthorized | Status.Forbidden => Left(AuthorizationError)
+      case _ => Left(HTTPError(s"Request failed with status ${response.status.code}"))
     }
 
   private def parseJson(content: String): Either[ParseError, Json] =
@@ -82,8 +82,7 @@ object HttpTransport {
    * Transform JSON into parseable format and try to extract specified response
    *
    * @param response response json
-   * @tparam W specific response case class from
-   *           `com.snowplowanalytics.weather.providers.openweather.Responses`
+   * @tparam W provider-specific response case class
    * @return either weather error or response case class
    */
   private[weather] def extractWeather[W: Decoder](response: Json): Either[WeatherError, W] =
