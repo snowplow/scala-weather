@@ -23,10 +23,10 @@ import cats.effect.IO
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.specification.ExecutionEnvironment
-
 import org.scalacheck.Prop.forAll
 
 // This library
+import providers.TestData
 import Errors.AuthorizationError
 import CacheUtils.Position
 
@@ -54,7 +54,7 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
   val client    = OpenWeatherMap.basicClient[IO](owmKey.get, host)
   val sslClient = OpenWeatherMap.basicClient[IO](owmKey.get, host, ssl = true)
 
-  def testCities(cities: Vector[Position], client: OwmClient[IO]) =
+  def testCities(cities: Vector[(Float, Float)], client: OwmClient[IO]) =
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
       val result  = history.unsafeRunTimed(5.seconds)
