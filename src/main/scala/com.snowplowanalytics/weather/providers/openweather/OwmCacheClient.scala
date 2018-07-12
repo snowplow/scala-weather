@@ -15,11 +15,7 @@ package providers.openweather
 
 // cats
 import cats.syntax.functor._
-import cats.syntax.flatMap._
 import cats.effect.Concurrent
-
-// LruMap
-import com.snowplowanalytics.lrumap.LruMap
 
 // Joda
 import org.joda.time.DateTime
@@ -27,7 +23,6 @@ import org.joda.time.DateTime
 // This library
 import Errors._
 import Responses._
-import CacheUtils.{CacheKey, Position}
 
 /**
  * Blocking OpenWeatherMap client with history (only) cache
@@ -35,10 +30,10 @@ import CacheUtils.{CacheKey, Position}
  *
  * WARNING. Caching will not work with free OWM licenses - history plan is required
  */
-class OwmCacheClient[F[_]: Concurrent] private[openweather] (cache: LruMap[F, CacheKey, Either[WeatherError, History]],
-                                                             val geoPrecision: Int,
-                                                             transport: Transport[F])
+class OwmCacheClient[F[_]: Concurrent] private[openweather] (cache: Cache[F, History], transport: Transport[F])
     extends OwmClient[F](transport) {
+
+  val geoPrecision: Int = cache.geoPrecision
 
   /**
    * Search history in cache and if not found request and await it from server
@@ -49,45 +44,34 @@ class OwmCacheClient[F[_]: Concurrent] private[openweather] (cache: LruMap[F, Ca
    * @param timestamp event's timestamp
    * @return weather stamp immediately taken from cache or requested from server
    */
-  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: Int): F[Either[WeatherError, Weather]] = {
-    val cacheKey = CacheUtils.eventToCacheKey(timestamp, Position(latitude, longitude), geoPrecision)
-    cache.get(cacheKey).flatMap {
-      case Some(Right(cached)) =>
-        Concurrent[F].delay(cached.pickCloseIn(timestamp)) // Cache hit
-      case Some(Left(TimeoutError(_))) =>
-        getAndCache(latitude, longitude, timestamp, cacheKey)
-      case Some(Left(error)) =>
-        Concurrent[F].point(Left(error))
-      case None =>
-        getAndCache(latitude, longitude, timestamp, cacheKey)
-    }
-  }
+  def cachingHistoryByCoords(latitude: Float,
+                             longitude: Float,
+                             timestamp: Timestamp): F[Either[WeatherError, Weather]] =
+    cache
+      .getCachedOrRequest(latitude, longitude, timestamp)(doRequest)
+      .map(historyResult => getWeatherStamp(historyResult, timestamp))
 
   /**
-   * Overloaded `getCachedOrRequest` method with Joda DateTime instead of Unix epoch timestamp
+   * Overloaded `cachingHistoryByCoords` method with Joda DateTime instead of Unix epoch timestamp
    */
-  def getCachedOrRequest(latitude: Float, longitude: Float, timestamp: DateTime): F[Either[WeatherError, Weather]] = {
-    val unixTime: Int = (timestamp.getMillis / 1000).toInt
-    getCachedOrRequest(latitude, longitude, unixTime)
+  def cachingHistoryByCoords(latitude: Float,
+                             longitude: Float,
+                             timestamp: DateTime): F[Either[WeatherError, Weather]] = {
+    val unixTime = timestamp.getMillis / 1000
+    cachingHistoryByCoords(latitude, longitude, unixTime)
   }
 
   /**
-   * Retry request to the server, put whole batch result to client's GLOBAL cache
-   * and pick near to realTimestamp weather stamp
+   * Retry request to the server, put whole batch result to client's cache
+   * and pick near to `timestamp` weather stamp
    *
    * @param latitude real event's latitude
    * @param longitude real event's longitude
-   * @param realTimestamp real event's timestamp
-   * @param cacheKey cache key to use for bucket
+   * @param timestamp real event's timestamp
    * @return near weather stamp
    */
-  private def getAndCache(latitude: Float,
-                          longitude: Float,
-                          realTimestamp: Timestamp,
-                          cacheKey: CacheKey): F[Either[WeatherError, Weather]] =
-    historyByCoords(latitude, longitude, cacheKey.day, cacheKey.endOfDay, 24)
-      .flatTap(response => cache.put(cacheKey, response))
-      .map(response => getWeatherStamp(response, realTimestamp))
+  private def doRequest(latitude: Float, longitude: Float, timestamp: Timestamp): F[Either[WeatherError, History]] =
+    historyByCoords(latitude, longitude, Cache.getStartOfDay(timestamp), Cache.getStartOfDay(timestamp) + 86400, 24)
 
   /**
    * Get exact weather stamp from history batch-request (probably failed)
@@ -98,7 +82,7 @@ class OwmCacheClient[F[_]: Concurrent] private[openweather] (cache: LruMap[F, Ca
    * @return either error or weather stamp
    */
   private[openweather] def getWeatherStamp(history: Either[WeatherError, History],
-                                           timestamp: Int): Either[WeatherError, Weather] =
+                                           timestamp: Timestamp): Either[WeatherError, Weather] =
     history.right.flatMap(_.pickCloseIn(timestamp))
 
 }

@@ -27,7 +27,7 @@ import cats.syntax.monadError._
 import com.snowplowanalytics.lrumap.LruMap
 
 // This library
-import CacheUtils.CacheKey
+import Cache.CacheKey
 import Errors.{InvalidConfigurationError, WeatherError}
 import Responses.History
 
@@ -92,6 +92,7 @@ object OpenWeatherMap {
       .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
       .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)
       .flatMap(_ => LruMap.create[F, CacheKey, Either[WeatherError, History]](cacheSize))
-      .map(cache => new OwmCacheClient(cache, geoPrecision, transport))
+      .map(lruMap => new Cache(lruMap, geoPrecision))
+      .map(cache => new OwmCacheClient(cache, transport))
 
 }

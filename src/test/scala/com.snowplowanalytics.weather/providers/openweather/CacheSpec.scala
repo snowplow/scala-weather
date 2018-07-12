@@ -52,9 +52,9 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
       client <- OpenWeatherMap.cacheClient(2, 1, transport)
-      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
     there.was(1.times(transport).receive(any[OwmRequest])(any()))
@@ -69,8 +69,8 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
 
     val action = for {
       client <- OpenWeatherMap.cacheClient(2, 1, transport)
-      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
     there.was(2.times(transport).receive(any[OwmRequest])(any()))
@@ -80,10 +80,10 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
       client <- OpenWeatherMap.cacheClient(2, 1, transport)
-      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
-      _      <- client.getCachedOrRequest(6.44f, 3.33f, 100)
-      _      <- client.getCachedOrRequest(8.44f, 3.33f, 100)
-      _      <- client.getCachedOrRequest(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(6.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(8.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
     there.was(4.times(transport).receive(any[OwmRequest])(any()))
@@ -93,9 +93,9 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
       client <- OpenWeatherMap.cacheClient(10, 1, transport)
-      _      <- client.getCachedOrRequest(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
-      _      <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _      <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
     there.was(1.times(transport).receive(any[OwmRequest])(any()))
@@ -105,9 +105,9 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
     val action = for {
       client <- OpenWeatherMap.cacheClient(10, 2, transport)
-      _      <- client.getCachedOrRequest(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
-      _      <- client.getCachedOrRequest(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _      <- client.getCachedOrRequest(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
     there.was(2.times(transport).receive(any[OwmRequest])(any()))

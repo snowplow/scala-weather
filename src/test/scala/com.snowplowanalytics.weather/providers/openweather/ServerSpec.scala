@@ -28,7 +28,7 @@ import org.scalacheck.Prop.forAll
 // This library
 import providers.TestData
 import Errors.AuthorizationError
-import CacheUtils.Position
+import Cache.Position
 
 object ServerSpec {
   val owmKey = sys.env.get("OWM_KEY")

@@ -17,7 +17,7 @@ import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen._
 import Responses._
-import CacheUtils._
+import Cache._
 import com.snowplowanalytics.weather.providers.TestData
 
 /**
@@ -127,8 +127,8 @@ trait WeatherGenerator {
    *
    * @return timestamp in seconds
    */
-  def genLastWeekTimeStamp: Gen[Int] = {
-    val now: Int = (System.currentTimeMillis() / 1000).toInt
+  def genLastWeekTimeStamp: Gen[Long] = {
+    val now = System.currentTimeMillis() / 1000
     for {
       seed <- Gen.choose(86400 * 2, 1209600) // Between yesterday and two weeks back
     } yield now - seed

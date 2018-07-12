@@ -11,22 +11,59 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather
-package providers.openweather
 
 // Java
-import java.util.{Calendar, Date, TimeZone}
+import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
 
-object CacheUtils {
+// cats
+import cats.effect.Sync
+import cats.syntax.flatMap._
+
+// LruMap
+import com.snowplowanalytics.lrumap.LruMap
+
+// This library
+import Errors.{TimeoutError, WeatherError}
+
+class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
+  cache: LruMap[F, Cache.CacheKey, Either[WeatherError, W]],
+  val geoPrecision: Int) {
+
+  import Cache._
+
+  def getCachedOrRequest(latitude: Float, longitude: Float, dateTime: ZonedDateTime)(
+    f: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]]): F[Either[WeatherError, W]] = {
+
+    val cacheKey = eventToCacheKey(dateTime, Position(latitude, longitude), geoPrecision)
+    cache.get(cacheKey).flatMap {
+      case Some(Right(cached)) =>
+        Sync[F].delay(Right(cached)) // Cache hit
+      case Some(Left(TimeoutError(_))) =>
+        f(latitude, longitude, dateTime)
+          .flatTap(cache.put(cacheKey, _))
+      case Some(Left(error)) =>
+        Sync[F].point(Left(error))
+      case None =>
+        f(latitude, longitude, dateTime)
+          .flatTap(cache.put(cacheKey, _))
+    }
+
+  }
+
+}
+
+object Cache {
 
   /**
    * Cache key for obtaining record
    *
-   * @param day timestamp for 0:00:00
+   * @param date timestamp for 0:00:00
    * @param center rounded geo coordinates
    */
-  final case class CacheKey(day: Day, center: Position) {
-    def endOfDay = day + 86400
-  }
+  final case class CacheKey(date: LocalDate, center: Position)
+
+  def dayStartEpoch(date: LocalDate): Timestamp = date.atStartOfDay().toEpochSecond(ZoneOffset.UTC)
+  def dayEndEpoch(date: LocalDate): Timestamp   = dayStartEpoch(date.plusDays(1))
 
   /**
    * Class to represent geographical coordinates
@@ -39,32 +76,15 @@ object CacheUtils {
   /**
    * Round position and timestamp (event) to produce cache key
    *
-   * @param timestamp timestamp in seconds
+   * @param dateTime zoned datetime
    * @param position latitude & longitude
    * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
    * @return cache key
    */
-  def eventToCacheKey(timestamp: Timestamp, position: Position, geoPrecision: Int): CacheKey = {
-    val timeFrame = getStartOfDay(timestamp)
+  def eventToCacheKey(dateTime: ZonedDateTime, position: Position, geoPrecision: Int): CacheKey = {
     val roundPosition =
       Position(roundCoordinate(position.latitude, geoPrecision), roundCoordinate(position.longitude, geoPrecision))
-    CacheKey(timeFrame, roundPosition)
-  }
-
-  /**
-   * Get timestamp for beginning of the day
-   *
-   * @param timestamp event's timestamp
-   * @return timestamp for beginning of day of this event
-   */
-  def getStartOfDay(timestamp: Timestamp): Day = {
-    val calendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-    calendar.setTime(new Date(timestamp.toLong * 1000))
-    calendar.set(Calendar.HOUR_OF_DAY, 0)
-    calendar.set(Calendar.MINUTE, 0)
-    calendar.set(Calendar.SECOND, 0)
-    calendar.set(Calendar.MILLISECOND, 0)
-    (calendar.getTimeInMillis / 1000).toInt
+    CacheKey(dateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDate, roundPosition)
   }
 
   /**

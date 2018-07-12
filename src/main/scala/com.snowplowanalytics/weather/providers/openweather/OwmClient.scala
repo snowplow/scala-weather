@@ -38,8 +38,8 @@ class OwmClient[F[_]] private[openweather] (transport: Transport[F]) {
    * @return either error or history wrapped in `F`
    */
   def historyById(id: Int,
-                  start: OptArg[Int]                  = None,
-                  end: OptArg[Int]                    = None,
+                  start: OptArg[Long]                 = None,
+                  end: OptArg[Long]                   = None,
                   cnt: OptArg[Int]                    = None,
                   measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
     val request = OwmHistoryRequest("city",
@@ -65,8 +65,8 @@ class OwmClient[F[_]] private[openweather] (transport: Transport[F]) {
    */
   def historyByName(name: String,
                     country: OptArg[String]             = None,
-                    start: OptArg[Int]                  = None,
-                    end: OptArg[Int]                    = None,
+                    start: OptArg[Long]                 = None,
+                    end: OptArg[Long]                   = None,
                     cnt: OptArg[Int]                    = None,
                     measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
     val query = name + country.map("," + _).getOrElse("")
@@ -93,8 +93,8 @@ class OwmClient[F[_]] private[openweather] (transport: Transport[F]) {
    */
   def historyByCoords(lat: Float,
                       lon: Float,
-                      start: OptArg[Int]                  = None,
-                      end: OptArg[Int]                    = None,
+                      start: OptArg[Long]                 = None,
+                      end: OptArg[Long]                   = None,
                       cnt: OptArg[Int]                    = None,
                       measure: OptArg[Api.Measures.Value] = None): F[Either[WeatherError, History]] = {
     val request = OwmHistoryRequest("city",
