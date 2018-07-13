@@ -31,20 +31,29 @@ class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
 
   import Cache._
 
+  /**
+   * Gets the response from cache; if not found, then calls the provided function `doRequest`,
+   * returns its result and put it in the cache
+   * @param latitude latitude of the event
+   * @param longitude longitude of the event
+   * @param dateTime datetime with zone
+   * @param doRequest function which will be called after a cache miss
+   * @return value stored in the cache or the result of the provided function
+   */
   def getCachedOrRequest(latitude: Float, longitude: Float, dateTime: ZonedDateTime)(
-    f: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]]): F[Either[WeatherError, W]] = {
+    doRequest: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]]): F[Either[WeatherError, W]] = {
 
     val cacheKey = eventToCacheKey(dateTime, Position(latitude, longitude), geoPrecision)
     cache.get(cacheKey).flatMap {
       case Some(Right(cached)) =>
-        Sync[F].delay(Right(cached)) // Cache hit
+        Sync[F].pure(Right(cached)) // Cache hit
       case Some(Left(TimeoutError(_))) =>
-        f(latitude, longitude, dateTime)
+        doRequest(latitude, longitude, dateTime)
           .flatTap(cache.put(cacheKey, _))
       case Some(Left(error)) =>
-        Sync[F].point(Left(error))
+        Sync[F].pure(Left(error))
       case None =>
-        f(latitude, longitude, dateTime)
+        doRequest(latitude, longitude, dateTime)
           .flatTap(cache.put(cacheKey, _))
     }
 
@@ -57,13 +66,20 @@ object Cache {
   /**
    * Cache key for obtaining record
    *
-   * @param date timestamp for 0:00:00
+   * @param date local date for UTC
    * @param center rounded geo coordinates
    */
   final case class CacheKey(date: LocalDate, center: Position)
 
+  /** @param date local date for UTC
+   * @return unix timestamp of the provided day's start
+   */
   def dayStartEpoch(date: LocalDate): Timestamp = date.atStartOfDay().toEpochSecond(ZoneOffset.UTC)
-  def dayEndEpoch(date: LocalDate): Timestamp   = dayStartEpoch(date.plusDays(1))
+
+  /** @param date local date for UTC
+   * @return unix timestamp of the provided day's end
+   */
+  def dayEndEpoch(date: LocalDate): Timestamp = dayStartEpoch(date.plusDays(1))
 
   /**
    * Class to represent geographical coordinates

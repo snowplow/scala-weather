@@ -31,7 +31,6 @@ lazy val root = project
   .settings(BuildSettings.formatting)
   .settings(
     libraryDependencies ++= Seq(
-      Dependencies.Libraries.jodaTime,
       Dependencies.Libraries.circeGeneric,
       Dependencies.Libraries.circeParser,
       Dependencies.Libraries.circeExtras,

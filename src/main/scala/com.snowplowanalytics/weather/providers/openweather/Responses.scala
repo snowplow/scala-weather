@@ -14,6 +14,8 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 // circe
+import java.time.ZonedDateTime
+
 import io.circe.generic.JsonCodec
 
 // This library
@@ -38,14 +40,14 @@ object Responses {
 
   @JsonCodec
   final case class Forecast(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
-    def pickCloseIn(timestamp: Long): Either[WeatherError, Weather] =
-      pickClosestWeather(list, timestamp)
+    def pickCloseIn(dateTime: ZonedDateTime): Either[WeatherError, Weather] =
+      pickClosestWeather(list, dateTime.toEpochSecond)
   }
 
   @JsonCodec
   final case class History(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
-    def pickCloseIn(timestamp: Long): Either[WeatherError, Weather] =
-      pickClosestWeather(list, timestamp)
+    def pickCloseIn(dateTime: ZonedDateTime): Either[WeatherError, Weather] =
+      pickClosestWeather(list, dateTime.toEpochSecond)
   }
 
   // DETAILS

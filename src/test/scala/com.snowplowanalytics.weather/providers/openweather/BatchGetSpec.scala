@@ -13,11 +13,10 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+import java.time.{Instant, ZoneOffset, ZonedDateTime}
+
 import org.specs2.{ScalaCheck, Specification}
-
 import org.scalacheck.Prop.forAll
-import org.scalacheck.Gen
-
 import Errors._
 import Responses._
 
@@ -37,7 +36,6 @@ class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
     take closest weather from history response     $e6
     always pick stamp from non-empty response      $e7
     never pick stamp from empty response           $e8
-    fail on invalid timestamp                      $e9
                                                    """
 
   // Make a pair of same value
@@ -84,15 +82,16 @@ class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
           dt      = 1447941171
         )
       )
-    ).pickCloseIn(1447941101).right.map(_.dt) must beRight(1447941171)
+    ).pickCloseIn(ZonedDateTime.ofInstant(Instant.ofEpochSecond(1447941101), ZoneOffset.UTC))
+      .right
+      .map(_.dt) must beRight(1447941171)
 
-  def e7 = forAll(genNonEmptyHistoryBatch, genTimestamp) { (h: History, t: Int) =>
-    h.pickCloseIn(t) must beRight
+  def e7 = forAll(genNonEmptyHistoryBatch, genTimestamp) { (h: History, t: Long) =>
+    val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)
+    h.pickCloseIn(dateTime) must beRight
   }
-  def e8 = forAll(genEmptyHistoryBatch, genTimestamp) { (h: History, t: Int) =>
-    h.pickCloseIn(t) must beLeft(InternalError("Server response has no weather stamps"))
-  }
-  def e9 = forAll(genNonEmptyHistoryBatch, Gen.oneOf(0, -1, -2)) { (h: History, t: Int) =>
-    h.pickCloseIn(t) must beLeft(InternalError("Timestamp should be greater than 0"))
+  def e8 = forAll(genEmptyHistoryBatch, genTimestamp) { (h: History, t: Long) =>
+    val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)
+    h.pickCloseIn(dateTime) must beLeft(InternalError("Server response has no weather stamps"))
   }
 }

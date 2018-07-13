@@ -13,12 +13,12 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// cats
-import cats.syntax.functor._
-import cats.effect.Concurrent
+// java
+import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
-// Joda
-import org.joda.time.DateTime
+// cats
+import cats.Functor
+import cats.syntax.functor._
 
 // This library
 import Errors._
@@ -26,13 +26,14 @@ import Responses._
 
 /**
  * Blocking OpenWeatherMap client with history (only) cache
- * Uses AsyncOwmClient under the hood, has the same method set, but also uses timeouts
+ * Extends `OwmClient`, but uses timeouts for requests
  *
  * WARNING. Caching will not work with free OWM licenses - history plan is required
  */
-class OwmCacheClient[F[_]: Concurrent] private[openweather] (cache: Cache[F, History], transport: Transport[F])
+class OwmCacheClient[F[_]: Functor] private[openweather] (cache: Cache[F, History], transport: Transport[F])
     extends OwmClient[F](transport) {
 
+  /** nth part of 1 to which latitude and longitude will be rounded */
   val geoPrecision: Int = cache.geoPrecision
 
   /**
@@ -47,19 +48,19 @@ class OwmCacheClient[F[_]: Concurrent] private[openweather] (cache: Cache[F, His
   def cachingHistoryByCoords(latitude: Float,
                              longitude: Float,
                              timestamp: Timestamp): F[Either[WeatherError, Weather]] =
-    cache
-      .getCachedOrRequest(latitude, longitude, timestamp)(doRequest)
-      .map(historyResult => getWeatherStamp(historyResult, timestamp))
+    cachingHistoryByCoords(latitude,
+                           longitude,
+                           ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC))
 
   /**
-   * Overloaded `cachingHistoryByCoords` method with Joda DateTime instead of Unix epoch timestamp
+   * Overloaded `cachingHistoryByCoords` method with `ZonedDateTime` instead of Unix epoch timestamp
    */
   def cachingHistoryByCoords(latitude: Float,
                              longitude: Float,
-                             timestamp: DateTime): F[Either[WeatherError, Weather]] = {
-    val unixTime = timestamp.getMillis / 1000
-    cachingHistoryByCoords(latitude, longitude, unixTime)
-  }
+                             dateTime: ZonedDateTime): F[Either[WeatherError, Weather]] =
+    cache
+      .getCachedOrRequest(latitude, longitude, dateTime)(doRequest)
+      .map(historyResult => getWeatherStamp(historyResult, dateTime))
 
   /**
    * Retry request to the server, put whole batch result to client's cache
@@ -67,22 +68,28 @@ class OwmCacheClient[F[_]: Concurrent] private[openweather] (cache: Cache[F, His
    *
    * @param latitude real event's latitude
    * @param longitude real event's longitude
-   * @param timestamp real event's timestamp
+   * @param dateTime real event's zoned datetime
    * @return near weather stamp
    */
-  private def doRequest(latitude: Float, longitude: Float, timestamp: Timestamp): F[Either[WeatherError, History]] =
-    historyByCoords(latitude, longitude, Cache.getStartOfDay(timestamp), Cache.getStartOfDay(timestamp) + 86400, 24)
+  private def doRequest(latitude: Float, longitude: Float, dateTime: ZonedDateTime): F[Either[WeatherError, History]] =
+    historyByCoords(
+      latitude,
+      longitude,
+      Cache.dayStartEpoch(dateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDate),
+      Cache.dayEndEpoch(dateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDate),
+      24
+    )
 
   /**
    * Get exact weather stamp from history batch-request (probably failed)
    * nearest to specified `timestamp`
    *
    * @param history history request with 0 or more weather stamps
-   * @param timestamp timestamp
+   * @param dateTime zoned date time
    * @return either error or weather stamp
    */
   private[openweather] def getWeatherStamp(history: Either[WeatherError, History],
-                                           timestamp: Timestamp): Either[WeatherError, Weather] =
-    history.right.flatMap(_.pickCloseIn(timestamp))
+                                           dateTime: ZonedDateTime): Either[WeatherError, Weather] =
+    history.right.flatMap(_.pickCloseIn(dateTime))
 
 }
