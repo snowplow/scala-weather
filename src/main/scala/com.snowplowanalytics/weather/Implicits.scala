@@ -12,11 +12,11 @@
  */
 package com.snowplowanalytics.weather
 
+// Java
+import java.time.ZonedDateTime
+
 // Scala
 import scala.language.implicitConversions
-
-// Joda
-import org.joda.time.DateTime
 
 object Implicits {
 
@@ -37,7 +37,7 @@ object Implicits {
      * @param d joda time containing all information
      * @return Unix epoch timestamp
      */
-    implicit def optDateToLong(d: DateTime): OptArg[Long] = Some(d.getMillis / 1000)
+    implicit def optDateToLong(d: ZonedDateTime): OptArg[Long] = Some(d.toEpochSecond)
   }
 
   /**
@@ -59,7 +59,7 @@ object Implicits {
     pair._2.map(v => Map(pair._1 -> v.toString)).getOrElse(Map.empty)
 
   /**
-   * Addition to `pairToMap` specified on Integers
+   * Addition to `pairToMap` specified on Longs
    *
    * @param pair tuple with optional second element
    * @return empty Map if v is None, Map(k -> v) otherwise

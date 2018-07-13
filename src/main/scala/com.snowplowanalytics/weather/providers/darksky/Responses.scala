@@ -13,6 +13,8 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
+import cats.syntax.either._ // 2.11.x
+
 import io.circe.Decoder
 import io.circe.generic.JsonCodec
 import io.circe.generic.extras.semiauto.deriveUnwrappedDecoder

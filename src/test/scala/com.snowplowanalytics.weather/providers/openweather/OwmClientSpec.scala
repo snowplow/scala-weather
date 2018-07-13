@@ -13,8 +13,8 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// joda
-import org.joda.time.DateTime
+// java
+import java.time.ZonedDateTime
 
 // cats
 import cats.effect.IO
@@ -56,7 +56,7 @@ class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
         "start" -> "1449774761" // "2015-12-10T19:12:41+00:00"
       )
     )
-    client.historyByCoords(0.00f, 0.00f, DateTime.parse("2015-12-11T02:12:41.000+07:00"))
+    client.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
     there.was(1.times(transport).receive(eqTo(expectedRequest))(any()))
   }
 

@@ -64,7 +64,7 @@ trait WeatherGenerator {
     } yield MainInfo(grndLevel, humidity, pressure, seaLevel, temp, tempMin, tempMax)
 
   // 12 Feb 2015 - 01 Dec 2016
-  def genTimestamp: Gen[Int] = Gen.choose(1423729852, 1480582792)
+  def genTimestamp: Gen[Long] = Gen.choose(1423729852, 1480582792)
 
   def genWeatherDescription: Gen[List[WeatherCondition]] =
     for {

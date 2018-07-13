@@ -15,9 +15,6 @@ import sbt._
 object Dependencies {
 
   object V {
-    // Java
-    val jodaTime    = "2.10"
-    // Scala
     val circe       = "0.9.3"
     val hammock     = "0.8.5"
     val lruMap      = "0.1.0"
@@ -26,9 +23,6 @@ object Dependencies {
   }
 
   object Libraries {
-    // Java
-    val jodaTime        = "joda-time"             %  "joda-time"            % V.jodaTime
-    // Scala
     val circeGeneric    = "io.circe"              %% "circe-generic"        % V.circe
     val circeParser     = "io.circe"              %% "circe-parser"         % V.circe
     val circeExtras     = "io.circe"              %% "circe-generic-extras" % V.circe

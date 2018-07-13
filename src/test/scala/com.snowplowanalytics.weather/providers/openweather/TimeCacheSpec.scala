@@ -13,14 +13,11 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
+// Java
+import java.time._
+
 // cats
 import cats.effect.IO
-
-// Java
-import java.util.{Calendar, Date, TimeZone}
-
-// Joda
-import org.joda.time.DateTime
 
 // Specs2
 import org.specs2.Specification
@@ -40,40 +37,30 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
 
   Start day
     Day of 1447945977 is 19 Nov 2015                        $e1
-    Key for 1445591292, 42.832, 32.1101                     $e2
-    getStartOfDay ends with 0                               $e3
-    Still 86400 seconds in day                              $e4
-    Key from next day in other timezone extracted correctly $e5
+    Key for 2018-06-01, 42.832, 32.1101                     $e2
+    dayStartEpoch produces correct time                     $e3
+    Key from next day in other timezone extracted correctly $e4
                                                    """
 
   private val precision          = 1
-  private val nov19time          = 1447945977
+  private val nov19time          = Instant.ofEpochSecond(1447945977).atZone(ZoneOffset.UTC).toLocalDate
   private val nov19begin         = 1447891200
-  private val newDayInKranoyarsk = DateTime.parse("2015-12-14T00:12:44.000+07:00")
+  private val newDayInKranoyarsk = ZonedDateTime.parse("2015-12-14T00:12:44.000+07:00")
+  private val sunsetInKranoyarsk = ZonedDateTime.parse("2018-07-13T21:28:44.000+07:00")
 
-  def e1 = Cache.getStartOfDay(nov19time) must beEqualTo(nov19begin)
+  def e1 = Cache.dayStartEpoch(nov19time) must beEqualTo(nov19begin)
   def e2 =
-    Cache.eventToCacheKey(1445591292, Position(42.832f, 32.1101f), precision) must beEqualTo(
-      CacheKey(1445558400, Position(43.0f, 32.0f)))
+    Cache.eventToCacheKey(ZonedDateTime.parse("2018-06-02T02:23:12+05:00"), Position(42.832f, 32.1101f), precision) must beEqualTo(
+      CacheKey(LocalDate.of(2018, 6, 1), Position(43.0f, 32.0f)))
 
   def e3 = {
-    val calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-    calendar.setTime(new Date(Cache.getStartOfDay(1445151725).toLong * 1000))
-    val hour = calendar.get(Calendar.HOUR_OF_DAY)
-    hour must beEqualTo(0)
+    val dateTime =
+      LocalDateTime.ofEpochSecond(Cache.dayStartEpoch(sunsetInKranoyarsk.toLocalDate), 0, ZoneOffset.ofHours(0))
+    dateTime.getHour must beEqualTo(0)
+    dateTime.getMinute must beEqualTo(0)
   }
 
   def e4 = {
-    val calendarStart = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-    val calendarEnd   = Calendar.getInstance(TimeZone.getTimeZone("GMT"))
-    val cacheKey      = Cache.eventToCacheKey(1445151725, Position(0.0f, 0.0f), precision)
-    calendarStart.setTime(new Date(cacheKey.day.toLong * 1000))
-    calendarEnd.setTime(new Date(cacheKey.endOfDay.toLong * 1000))
-    val delta = calendarEnd.get(Calendar.DAY_OF_MONTH) - calendarStart.get(Calendar.DAY_OF_MONTH)
-    delta must beEqualTo(1)
-  }
-
-  def e5 = {
     val emptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
     val expectedRequest = OwmHistoryRequest(
       "city",
