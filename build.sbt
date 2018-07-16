@@ -13,6 +13,7 @@
 
 lazy val root = project
   .in(file("."))
+  .enablePlugins(ScalaUnidocPlugin, GhpagesPlugin)
   .settings(
     name := "scala-weather",
     organization := "com.snowplowanalytics",
@@ -29,6 +30,7 @@ lazy val root = project
   )
   .settings(BuildSettings.publishSettings)
   .settings(BuildSettings.formatting)
+  .settings(BuildSettings.docsSettings)
   .settings(
     libraryDependencies ++= Seq(
       Dependencies.Libraries.circeGeneric,
