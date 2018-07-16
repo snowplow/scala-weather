@@ -19,12 +19,12 @@ We provide caching and basic clients for both providers - `OwmClient` and `OwmCa
 
 ## Installation
 
-The latest version of Scala Weather is 0.3.0, which is cross-built against Scala 2.11.x and 2.12.x.
+The latest version of Scala Weather is 0.4.0, which is cross-built against Scala 2.11.x and 2.12.x.
 
 If you're using SBT, add the following lines to your build file:
 
 ```scala
-val scalaWeather = "com.snowplowanalytics" %% "scala-weather" % "0.3.0"
+libraryDependencies += "com.snowplowanalytics" %% "scala-weather" % "0.4.0"
 ```
 
 ## Guide
@@ -215,8 +215,6 @@ limitations under the License.
 [lru]: https://en.wikipedia.org/wiki/Cache_algorithms#LRU
 [history-plan]: http://openweathermap.org/price
 [owm-signup]: http://home.openweathermap.org/users/sign_up
-[scalaz]: https://github.com/scalaz/scalaz
-[scalaz-disjunction]: http://docs.typelevel.org/api/scalaz/stable/7.0.0/doc/scalaz/$bslash$div$minus.html
 
 [snowplow]: http://snowplowanalytics.com
 [snowplow-repo]: https://github.com/snowplow/snowplow
