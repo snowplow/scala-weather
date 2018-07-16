@@ -1,6 +1,6 @@
 # Scala Weather
 
-[![Build Status][travis-image]][travis] [![Release][release-image]][releases] [![License][license-image]][license]
+[![Build Status][travis-image]][travis] [![Maven Central][maven-badge]][maven-link] [![License][license-image]][license]
 [![Join the chat at https://gitter.im/snowplow/scala-weather](https://badges.gitter.im/snowplow/scala-weather.svg)](https://gitter.im/snowplow/scala-weather?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![codecov](https://codecov.io/gh/snowplow/scala-weather/branch/master/graph/badge.svg)](https://codecov.io/gh/snowplow/scala-weather)
 
@@ -225,8 +225,8 @@ limitations under the License.
 [travis]: https://travis-ci.org/snowplow/scala-weather
 [travis-image]: https://travis-ci.org/snowplow/scala-weather.png?branch=master
 
-[release-image]: http://img.shields.io/badge/release-0.3.0-blue.svg?style=flat
-[releases]: https://github.com/snowplow/scala-weather/releases
+[maven-badge]: https://maven-badges.herokuapp.com/maven-central/com.snowplowanalytics/scala-weather_2.12/badge.svg
+[maven-link]: https://maven-badges.herokuapp.com/maven-central/com.snowplowanalytics/scala-weather_2.12
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
 [license]: http://www.apache.org/licenses/LICENSE-2.0
