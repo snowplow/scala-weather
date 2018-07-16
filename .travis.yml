@@ -13,7 +13,7 @@ env:
   - secure: L7GOi+ZrnZww7uig8IJ0kFVuB3aRoXG6aQ04IdngWsarrZiZV7nL9UeRbOeCP2xv+Ni6nT9NrYr8ziGCD29181Jlt6DFQIKZQYXABYoNqypa+7icMb+zGwBQNKwc+uEHWKnVZpWzPvCkT2tMe1ovyGvyXOeupRLg7c+c+Ew84I0=
   - secure: hn8ACjETG7dJNU6sTpIXUN6AntT5p9ht1c4Bvccig+jF9riIyfX1pldVKCfqcSzmLsnfBZTVh5HoSApMq3uCuF6QrKP7oeg2cFnNBlNaOoIIwQlezgBhjTSv+UlCZ3wotrSWaqI6+DKDX4acNErt+BoXa+tt7BzY5mwNX9eQC1c=
 script:
-- sbt coverage test coverageReport
+- sbt ++$TRAVIS_SCALA_VERSION coverage test coverageReport
 deploy:
   skip_cleanup: true
   provider: script
