@@ -77,7 +77,7 @@ object BuildSettings {
 
   lazy val docsSettings = Seq(
     addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), siteSubdirName in ScalaUnidoc),
-    gitRemoteRepo := "https://github.com/snowplow/scala-maxmind-iplookups.git",
+    gitRemoteRepo := "https://github.com/snowplow/scala-weather.git",
     siteSubdirName := ""
   )
 }
