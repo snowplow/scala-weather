@@ -19,7 +19,7 @@ object Dependencies {
     val hammock     = "0.8.5"
     val lruMap      = "0.1.0"
     // Tests
-    val specs2      = "3.9.4"
+    val specs2      = "4.3.4"
   }
 
   object Libraries {
