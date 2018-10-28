@@ -25,8 +25,7 @@ import cats.effect.IO
 // tests
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.specification.ExecutionEnvironment
+import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.specs2.{ScalaCheck, Specification}
 
 // This library
@@ -39,10 +38,10 @@ import com.snowplowanalytics.weather.providers.TestData
  * Define environment variable called DARKSKY_KEY with DarkSky API Key in it,
  * otherwise these tests are skipped.
  */
-class DarkSkyServerSpec extends Specification with ScalaCheck with ExecutionEnvironment {
+class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExecutionEnv {
   private val key = sys.env.get("DARKSKY_KEY")
 
-  def is(implicit ee: ExecutionEnv) = skipAllIf(key.isEmpty) ^ s2"""
+  def is = skipAllIf(key.isEmpty) ^ s2"""
 
     Test server responses (it can take several minutes)
 

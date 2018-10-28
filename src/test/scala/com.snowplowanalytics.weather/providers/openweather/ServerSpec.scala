@@ -21,8 +21,7 @@ import cats.effect.IO
 
 // tests
 import org.specs2.{ScalaCheck, Specification}
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.specification.ExecutionEnvironment
+import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.scalacheck.Prop.forAll
 
 // This library
@@ -42,8 +41,8 @@ import ServerSpec._
  * Define environment variable called OWM_KEY with OpenWeatherMap API Key in it,
  * otherwise these tests are skipped.
  */
-class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment with WeatherGenerator {
-  def is(implicit ee: ExecutionEnv) = skipAllIf(owmKey.isEmpty) ^ s2"""
+class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExecutionEnv with WeatherGenerator {
+  def is = skipAllIf(owmKey.isEmpty) ^ s2"""
 
     Test server responses for history requests by coordinates (it can take several minutes)
 
