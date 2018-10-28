@@ -19,7 +19,7 @@ object Dependencies {
     val hammock     = "0.8.5"
     val lruMap      = "0.1.0"
     // Tests
-    val specs2      = "3.9.4"
+    val specs2      = "4.3.5"
   }
 
   object Libraries {
@@ -30,6 +30,7 @@ object Dependencies {
     val lruMap          = "com.snowplowanalytics" %% "scala-lru-map"        % V.lruMap
     // Tests
     val specs2          = "org.specs2"            %% "specs2-core"          % V.specs2 % "test"
+    val specs2Scalaz    = "org.specs2"            %% "specs2-scalaz"        % V.specs2 % "test"
     val specs2Mock      = "org.specs2"            %% "specs2-mock"          % V.specs2 % "test"
     val specsScalaCheck = "org.specs2"            %% "specs2-scalacheck"    % V.specs2 % "test"
   }
