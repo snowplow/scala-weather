@@ -35,8 +35,13 @@ import com.snowplowanalytics.weather.providers.TestData
 
 /**
  * Test case classes extraction from real server responses
+ *
+ * Define environment variable called DARKSKY_KEY with DarkSky API Key in it,
+ * otherwise these tests are skipped.
  */
 class DarkSkyServerSpec extends Specification with ScalaCheck with ExecutionEnvironment {
+  private val key = sys.env.get("DARKSKY_KEY")
+
   def is(implicit ee: ExecutionEnv) = skipAllIf(key.isEmpty) ^ s2"""
 
     Test server responses (it can take several minutes)
@@ -48,11 +53,6 @@ class DarkSkyServerSpec extends Specification with ScalaCheck with ExecutionEnvi
       sane error message for unauthorized   $e5
   """
 
-  private val key = sys.env.get("DARKSKY_KEY")
-  if (key.isEmpty) {
-    throw new RuntimeException("Define environment variable called DARKSKY_KEY with DarkSky API Key in it")
-  }
-
   def zonedDateTimeGenerator: Gen[ZonedDateTime] = {
     val rangeStart = ZonedDateTime.now().minusYears(1).toEpochSecond
     val rangeEnd   = ZonedDateTime.now().plusDays(13).toEpochSecond
@@ -63,7 +63,7 @@ class DarkSkyServerSpec extends Specification with ScalaCheck with ExecutionEnvi
     }
   }
 
-  val client = DarkSky.basicClient[IO](key.get)
+  private lazy val client = DarkSky.basicClient[IO](key.get)
 
   def testCitiesForecast(cities: Vector[(Float, Float)]) =
     forAll(Gen.oneOf(cities)) {
