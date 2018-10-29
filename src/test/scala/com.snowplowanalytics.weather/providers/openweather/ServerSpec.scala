@@ -38,6 +38,9 @@ import ServerSpec._
 
 /**
  * Test case classes extraction from real server responses
+ *
+ * Define environment variable called OWM_KEY with OpenWeatherMap API Key in it,
+ * otherwise these tests are skipped.
  */
 class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment with WeatherGenerator {
   def is(implicit ee: ExecutionEnv) = skipAllIf(owmKey.isEmpty) ^ s2"""
@@ -50,9 +53,9 @@ class ServerSpec extends Specification with ScalaCheck with ExecutionEnvironment
       works with https                      $e4
   """
 
-  val host      = "history.openweathermap.org"
-  val client    = OpenWeatherMap.basicClient[IO](owmKey.get, host)
-  val sslClient = OpenWeatherMap.basicClient[IO](owmKey.get, host, ssl = true)
+  private val host           = "history.openweathermap.org"
+  private lazy val client    = OpenWeatherMap.basicClient[IO](owmKey.get, host)
+  private lazy val sslClient = OpenWeatherMap.basicClient[IO](owmKey.get, host, ssl = true)
 
   def testCities(cities: Vector[(Float, Float)], client: OwmClient[IO]) =
     forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
