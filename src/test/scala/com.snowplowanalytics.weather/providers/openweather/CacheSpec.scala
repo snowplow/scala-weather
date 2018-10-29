@@ -21,7 +21,6 @@ import cats.syntax.either._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
-import org.specs2.matcher.DisjunctionMatchers
 
 // This library
 import Errors.{InvalidConfigurationError, TimeoutError}
@@ -29,7 +28,7 @@ import Requests.OwmRequest
 import Responses.History
 
 // Mock transport which returns predefined responses
-class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito with DisjunctionMatchers {
+class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
   def is =
     s2"""
 
