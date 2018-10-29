@@ -39,7 +39,6 @@ lazy val root = project
       Dependencies.Libraries.hammockCore,
       Dependencies.Libraries.lruMap,
       Dependencies.Libraries.specs2,
-      Dependencies.Libraries.specs2Scalaz,
       Dependencies.Libraries.specs2Mock,
       Dependencies.Libraries.specsScalaCheck
     )
