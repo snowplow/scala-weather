@@ -16,11 +16,11 @@ package providers.darksky
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-import cats.effect.{Concurrent, Sync}
+import cats.effect.{Concurrent, Sync, Timer}
 import cats.syntax.functor._
 import cats.syntax.monadError._
 import cats.syntax.flatMap._
-import com.snowplowanalytics.lrumap.LruMap
+import com.snowplowanalytics.lrumap.CreateLruMap
 
 import Cache.CacheKey
 import errors.{InvalidConfigurationError, WeatherError}
@@ -46,12 +46,13 @@ object DarkSky {
     cacheSize: Int,
     geoPrecision: Int,
     transport: Transport[F]
+  )(
+    implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]]
   ): F[DarkSkyCacheClient[F]] =
     Concurrent[F].unit
       .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
       .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)
-      .flatMap(_ => LruMap.create[F, CacheKey, Either[WeatherError, DarkSkyResponse]](cacheSize))
-      .map(lruMap => new Cache(lruMap, geoPrecision))
+      .flatMap(_ => Cache.init(cacheSize, geoPrecision))
       .map(cache => new DarkSkyCacheClient(cache, transport))
 
   /**
@@ -65,7 +66,7 @@ object DarkSky {
    * @param host URL to the Dark Sky API endpoints
    * @param timeout time after which active request will be considered failed
    */
-  def cacheClient[F[_]: Concurrent](
+  def cacheClient[F[_]: Concurrent: Timer](
     appId: String,
     cacheSize: Int          = 5100,
     geoPrecision: Int       = 1,

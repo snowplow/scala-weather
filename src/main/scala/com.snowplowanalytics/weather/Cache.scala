@@ -14,14 +14,15 @@ package com.snowplowanalytics.weather
 
 import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
 
-import cats.effect.Sync
+import cats.{Functor, Monad}
+import cats.syntax.functor._
 import cats.syntax.flatMap._
-import com.snowplowanalytics.lrumap.LruMap
+import com.snowplowanalytics.lrumap.{CreateLruMap, LruMap}
 
 import errors.{TimeoutError, WeatherError}
 import model.WeatherResponse
 
-class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
+class Cache[F[_], W <: WeatherResponse] private (
   cache: LruMap[F, Cache.CacheKey, Either[WeatherError, W]],
   val geoPrecision: Int
 ) {
@@ -38,17 +39,18 @@ class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
    * @return value stored in the cache or the result of the provided function
    */
   def getCachedOrRequest(latitude: Float, longitude: Float, dateTime: ZonedDateTime)(
-    doRequest: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]]
+    doRequest: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]])(
+    implicit M: Monad[F]
   ): F[Either[WeatherError, W]] = {
     val cacheKey = eventToCacheKey(dateTime, Position(latitude, longitude), geoPrecision)
     cache.get(cacheKey).flatMap {
       case Some(Right(cached)) =>
-        Sync[F].pure(Right(cached)) // Cache hit
+        M.pure(Right(cached)) // Cache hit
       case Some(Left(TimeoutError(_))) =>
         doRequest(latitude, longitude, dateTime)
           .flatTap(cache.put(cacheKey, _))
       case Some(Left(error)) =>
-        Sync[F].pure(Left(error))
+        M.pure(Left(error))
       case None =>
         doRequest(latitude, longitude, dateTime)
           .flatTap(cache.put(cacheKey, _))
@@ -57,6 +59,15 @@ class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
 }
 
 object Cache {
+
+  def init[F[_]: Functor, W <: WeatherResponse](
+    size: Int,
+    geoPrecision: Int
+  )(implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, W]]): F[Cache[F, W]] =
+    for {
+      lru <- CreateLruMap[F, CacheKey, Either[WeatherError, W]].create(size)
+      cache = new Cache[F, W](lru, geoPrecision)
+    } yield cache
 
   /**
    * Cache key for obtaining record

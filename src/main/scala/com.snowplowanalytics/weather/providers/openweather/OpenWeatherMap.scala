@@ -16,11 +16,11 @@ package providers.openweather
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-import cats.effect.{Concurrent, Sync}
+import cats.effect.{Concurrent, Sync, Timer}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.monadError._
-import com.snowplowanalytics.lrumap.LruMap
+import com.snowplowanalytics.lrumap.CreateLruMap
 
 import Cache.CacheKey
 import errors.{InvalidConfigurationError, WeatherError}
@@ -61,7 +61,7 @@ object OpenWeatherMap {
    * @param timeout time after which active request will be considered failed
    * @param ssl whether to use https
    */
-  def cacheClient[F[_]: Concurrent](
+  def cacheClient[F[_]: Concurrent: Timer](
     appId: String,
     cacheSize: Int          = 5100,
     geoPrecision: Int       = 1,
@@ -86,12 +86,13 @@ object OpenWeatherMap {
     cacheSize: Int,
     geoPrecision: Int,
     transport: Transport[F]
+  )(
+    implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]]
   ): F[OwmCacheClient[F]] =
     Concurrent[F].unit
       .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
       .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)
-      .flatMap(_ => LruMap.create[F, CacheKey, Either[WeatherError, History]](cacheSize))
-      .map(lruMap => new Cache(lruMap, geoPrecision))
+      .flatMap(_ => Cache.init(cacheSize, geoPrecision))
       .map(cache => new OwmCacheClient(cache, transport))
 
 }
