@@ -14,7 +14,7 @@ package com.snowplowanalytics.weather
 
 import io.circe.generic.JsonCodec
 
-object Errors {
+object errors {
 
   /**
    * Superclass for exceptions that can happen for weather fetching/processing

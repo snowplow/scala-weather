@@ -13,23 +13,18 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Scala
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 
-// cats
 import cats.effect.{Concurrent, Sync}
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.monadError._
-
-// LruMap
 import com.snowplowanalytics.lrumap.LruMap
 
-// This library
 import Cache.CacheKey
-import Errors.{InvalidConfigurationError, WeatherError}
-import Responses.History
+import errors.{InvalidConfigurationError, WeatherError}
+import responses.History
 
 object OpenWeatherMap {
 
@@ -46,10 +41,11 @@ object OpenWeatherMap {
    * @param apiHost URL to the OpenWeatherMap API endpoints
    * @param ssl whether to use https
    */
-  def basicClient[F[_]: Sync](appId: String,
-                              apiHost: String = "api.openweathermap.org",
-                              ssl: Boolean    = true): OwmClient[F] =
-    basicClient(new HttpTransport[F](apiHost, appId, ssl))
+  def basicClient[F[_]: Sync](
+    appId: String,
+    apiHost: String = "api.openweathermap.org",
+    ssl: Boolean    = true
+  ): OwmClient[F] = basicClient(new HttpTransport[F](apiHost, appId, ssl))
 
   /**
    * Create `OwmCacheClient` with `TimeoutHttpTransport` instance
@@ -71,7 +67,8 @@ object OpenWeatherMap {
     geoPrecision: Int       = 1,
     host: String            = "history.openweathermap.org",
     timeout: FiniteDuration = 5.seconds,
-    ssl: Boolean            = true)(implicit executionContext: ExecutionContext): F[OwmCacheClient[F]] =
+    ssl: Boolean            = true
+  )(implicit executionContext: ExecutionContext): F[OwmCacheClient[F]] =
     cacheClient(cacheSize, geoPrecision, new TimeoutHttpTransport[F](host, appId, timeout, ssl))
 
   /**
@@ -85,9 +82,11 @@ object OpenWeatherMap {
    *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
    * @param transport instance of `Transport` which will do the actual sending of data
    */
-  private[openweather] def cacheClient[F[_]: Concurrent](cacheSize: Int,
-                                                         geoPrecision: Int,
-                                                         transport: Transport[F]): F[OwmCacheClient[F]] =
+  private[openweather] def cacheClient[F[_]: Concurrent](
+    cacheSize: Int,
+    geoPrecision: Int,
+    transport: Transport[F]
+  ): F[OwmCacheClient[F]] =
     Concurrent[F].unit
       .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
       .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)

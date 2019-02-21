@@ -12,11 +12,10 @@
  */
 package com.snowplowanalytics.weather
 
-// circe
 import io.circe.Decoder
 
-// This library
-import Errors.WeatherError
+import errors.WeatherError
+import model._
 
 trait Transport[F[_]] {
 

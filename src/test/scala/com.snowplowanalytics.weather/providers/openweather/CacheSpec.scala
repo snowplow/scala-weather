@@ -13,19 +13,17 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// cats
 import cats.effect.IO
 import cats.syntax.either._
-
-// tests
+import io.circe.Decoder
+import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 
-// This library
-import Errors.{InvalidConfigurationError, TimeoutError}
-import Requests.OwmRequest
-import Responses.History
+import errors.{InvalidConfigurationError, TimeoutError}
+import requests.OwmRequest
+import responses.History
 
 // Mock transport which returns predefined responses
 class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
@@ -56,13 +54,13 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(transport).receive(any[OwmRequest])(any()))
+    there.was(1.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e2 = {
     val transport = mock[TimeoutHttpTransport[IO]]
     transport
-      .receive[History](any[OwmRequest])(any())
+      .receive[History](any[OwmRequest])(any[Decoder[History]])
       .returns(timeoutErrorResponse)
       .thenReturn(emptyHistoryResponse)
 
@@ -72,7 +70,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(transport).receive(any[OwmRequest])(any()))
+    there.was(2.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e3 = {
@@ -85,7 +83,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
     action.unsafeRunSync()
-    there.was(4.times(transport).receive(any[OwmRequest])(any()))
+    there.was(4.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e4 = {
@@ -97,7 +95,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(transport).receive(any[OwmRequest])(any()))
+    there.was(1.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e5 = {
@@ -109,7 +107,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(transport).receive(any[OwmRequest])(any()))
+    there.was(2.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e6 =

@@ -12,20 +12,15 @@
  */
 package com.snowplowanalytics.weather
 
-// cats
 import cats.effect.Sync
 import cats.syntax.either._
-
-// circe
+import hammock.{Hammock, HttpResponse, Method, Status, Uri}
+import hammock.jvm.Interpreter
 import io.circe.{Decoder, Json}
 import io.circe.parser.parse
 
-// hammock
-import hammock.{Hammock, HttpResponse, Method, Status, Uri}
-import hammock.jvm.Interpreter
-
-// This library
-import Errors._
+import errors._
+import model._
 
 class HttpTransport[F[_]: Sync](apiHost: String, apiKey: String, ssl: Boolean = true) extends Transport[F] {
   import HttpTransport._

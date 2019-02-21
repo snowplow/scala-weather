@@ -12,16 +12,9 @@
  */
 package com.snowplowanalytics
 
-import hammock.Uri
-
 package object weather {
 
   type Timestamp = Long
   type Day       = Long // 0:00:00 timestamp of day
-
-  trait WeatherRequest {
-    def constructQuery(baseUri: Uri, apiKey: String): Uri
-  }
-  trait WeatherResponse
 
 }

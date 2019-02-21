@@ -21,7 +21,6 @@ lazy val root = project
     description := "High-performance Scala library for performing current and historical weather lookups",
     scalaVersion := "2.12.6",
     crossScalaVersions := Seq("2.11.12", "2.12.6"),
-    scalacOptions := BuildSettings.compilerOptions,
     javacOptions := BuildSettings.javaCompilerOptions,
     shellPrompt := { _ =>
       name.value + "> "

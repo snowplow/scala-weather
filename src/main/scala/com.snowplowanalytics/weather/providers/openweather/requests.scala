@@ -10,15 +10,15 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
-package com.snowplowanalytics.weather.providers.openweather
+package com.snowplowanalytics.weather
+package providers.openweather
 
 import cats.data.NonEmptyList
 import hammock.Uri
 
-// This library
-import com.snowplowanalytics.weather.WeatherRequest
+import model.WeatherRequest
 
-private[weather] object Requests {
+private[weather] object requests {
 
   sealed trait OwmRequest extends WeatherRequest {
     val endpoint: Option[String]
@@ -27,12 +27,11 @@ private[weather] object Requests {
 
     def constructQuery(baseUri: Uri, apiKey: String): Uri = {
       val versionedBaseUri = baseUri / "data" / "2.5"
-      val uriWithPath      = endpoint.map(e => versionedBaseUri / e / resource).getOrElse(versionedBaseUri / resource)
-      val params           = NonEmptyList.of("appid" -> apiKey) ++ parameters.toList
-
+      val uriWithPath =
+        endpoint.map(e => versionedBaseUri / e / resource).getOrElse(versionedBaseUri / resource)
+      val params = NonEmptyList.of("appid" -> apiKey) ++ parameters.toList
       uriWithPath ? params
     }
-
   }
 
   final case class OwmHistoryRequest(resource: String, parameters: Map[String, String]) extends OwmRequest {

@@ -17,8 +17,9 @@ import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
 import org.specs2.{ScalaCheck, Specification}
 import org.scalacheck.Prop.forAll
-import Errors._
-import Responses._
+
+import errors._
+import responses._
 
 class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
   def is = s2"""

@@ -13,23 +13,18 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
-// Scala
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
-// cats
 import cats.effect.{Concurrent, Sync}
 import cats.syntax.functor._
 import cats.syntax.monadError._
 import cats.syntax.flatMap._
-
-// LruMap
 import com.snowplowanalytics.lrumap.LruMap
 
-// This library
 import Cache.CacheKey
-import Errors.{InvalidConfigurationError, WeatherError}
-import Responses.DarkSkyResponse
+import errors.{InvalidConfigurationError, WeatherError}
+import responses.DarkSkyResponse
 
 object DarkSky {
 
@@ -41,12 +36,17 @@ object DarkSky {
    * @param apiKey API key from Dark Sky
    * @param apiHost URL to the Dark Sky API endpoints
    */
-  def basicClient[F[_]: Sync](apiKey: String, apiHost: String = "api.darksky.net/forecast"): DarkSkyClient[F] =
+  def basicClient[F[_]: Sync](
+    apiKey: String,
+    apiHost: String = "api.darksky.net/forecast"
+  ): DarkSkyClient[F] =
     basicClient(new HttpTransport[F](apiHost, apiKey, ssl = true))
 
-  private[darksky] def cacheClient[F[_]: Concurrent](cacheSize: Int,
-                                                     geoPrecision: Int,
-                                                     transport: Transport[F]): F[DarkSkyCacheClient[F]] =
+  private[darksky] def cacheClient[F[_]: Concurrent](
+    cacheSize: Int,
+    geoPrecision: Int,
+    transport: Transport[F]
+  ): F[DarkSkyCacheClient[F]] =
     Concurrent[F].unit
       .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
       .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)
@@ -70,7 +70,8 @@ object DarkSky {
     cacheSize: Int          = 5100,
     geoPrecision: Int       = 1,
     host: String            = "api.darksky.net/forecast",
-    timeout: FiniteDuration = 5.seconds)(implicit executionContext: ExecutionContext): F[DarkSkyCacheClient[F]] =
+    timeout: FiniteDuration = 5.seconds
+  )(implicit executionContext: ExecutionContext): F[DarkSkyCacheClient[F]] =
     cacheClient(cacheSize, geoPrecision, new TimeoutHttpTransport[F](host, appId, timeout, ssl = true))
 
 }

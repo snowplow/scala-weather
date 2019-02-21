@@ -13,26 +13,20 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// java
 import java.time.ZonedDateTime
 
-// cats
 import cats.effect.IO
 import cats.syntax.either._
-
-// circe
 import io.circe.Decoder
-
-// tests
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 
-// this library
-import Errors.WeatherError
-import Requests.OwmHistoryRequest
-import Responses.History
+import errors.WeatherError
+import model._
+import requests.OwmHistoryRequest
+import responses.History
 
 class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
   def is = s2"""
@@ -46,7 +40,9 @@ class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
 
   def e1 = {
     val transport = mock[Transport[IO]]
-    transport.receive(any[WeatherRequest])(any[Decoder[WeatherResponse]]).returns(emptyHistoryResponse)
+    transport
+      .receive(any[WeatherRequest])(any[Decoder[WeatherResponse]])
+      .returns(emptyHistoryResponse)
     val client = OpenWeatherMap.basicClient[IO](transport)
     val expectedRequest = OwmHistoryRequest(
       "city",
@@ -57,7 +53,7 @@ class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
       )
     )
     client.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(1.times(transport).receive(eqTo(expectedRequest))(any()))
+    there.was(1.times(transport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
   }
 
 }

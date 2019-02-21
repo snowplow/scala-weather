@@ -13,24 +13,16 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
-// java
 import java.time.ZonedDateTime
 
-// cats
 import cats.effect.IO
-
-// circe
-import io.circe.Decoder
-
-// tests
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2._
 import org.specs2.mock.Mockito
 
-// This library
-import com.snowplowanalytics.weather.Errors.WeatherError
-import com.snowplowanalytics.weather.providers.darksky.Requests.DarkSkyRequest
-import com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse
+import errors.WeatherError
+import requests.DarkSkyRequest
+import responses.DarkSkyResponse
 
 class DarkSkyClientSpec extends Specification with Mockito {
   def is = s2"""
@@ -41,18 +33,22 @@ class DarkSkyClientSpec extends Specification with Mockito {
 
   """
 
-  val exampleResponse: IO[Right[WeatherError, DarkSkyResponse]] =
+  val exampleResponse: IO[Either[WeatherError, DarkSkyResponse]] =
     IO.pure(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
 
   def e1 = {
-    val transportMock =
-      mock[Transport[IO]].receive(any[WeatherRequest])(any[Decoder[WeatherResponse]]).returns(exampleResponse)
+    val transportMock: Transport[IO] = mock[Transport[IO]]
+    transportMock
+      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)))(eqTo(implicitly))
+      .returns(exampleResponse)
     val client = DarkSky.basicClient[IO](transportMock)
 
     val expectedRequest = DarkSkyRequest(32.12f, 15.2f, Some(1449774761)) // "2015-12-10T19:12:41+00:00"
     client.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
 
-    there.was(1.times(client.transport).receive(eqTo(expectedRequest))(any()))
+    there.was(
+      1.times(client.transport)
+        .receive[DarkSkyResponse](eqTo(expectedRequest))(eqTo(implicitly)))
   }
 
 }

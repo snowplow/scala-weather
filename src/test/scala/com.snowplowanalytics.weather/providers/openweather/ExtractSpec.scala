@@ -10,24 +10,16 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
-package com.snowplowanalytics.weather.providers.openweather
+package com.snowplowanalytics.weather
+package providers.openweather
 
-// Scala
 import scala.io.Source
 
-// cats
-import cats.syntax.either._ // 2.11.x
-
-// circe
 import io.circe.parser.parse
-
-// tests
 import org.specs2.Specification
 
-// This library
-import com.snowplowanalytics.weather.Errors._
-import com.snowplowanalytics.weather.HttpTransport
-import Responses._
+import errors._
+import responses._
 
 class ExtractSpec extends Specification {
   def is = s2"""

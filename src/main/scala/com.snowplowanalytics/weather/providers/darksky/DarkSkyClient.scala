@@ -13,13 +13,11 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
-// joda
 import java.time.ZonedDateTime
 
-// This library
-import Errors.WeatherError
-import Responses.DarkSkyResponse
-import Requests.DarkSkyRequest
+import errors.WeatherError
+import responses.DarkSkyResponse
+import requests.DarkSkyRequest
 
 /**
  * Non-caching Dark Sky client
@@ -44,12 +42,14 @@ class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Tran
    * @param units return weather conditions in the specified units
    * @return either error or response, wrapped in effect type `F`
    */
-  def forecast(latitude: Float,
-               longitude: Float,
-               exclude: List[BlockType] = List.empty[BlockType],
-               extend: Boolean          = false,
-               lang: Option[String]     = None,
-               units: Option[Units]     = None): F[Either[WeatherError, DarkSkyResponse]] = {
+  def forecast(
+    latitude: Float,
+    longitude: Float,
+    exclude: List[BlockType] = List.empty[BlockType],
+    extend: Boolean          = false,
+    lang: Option[String]     = None,
+    units: Option[Units]     = None
+  ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, None, exclude, extend, lang, units)
     transport.receive(request)
   }
@@ -67,13 +67,15 @@ class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Tran
    * @param units return weather conditions in the specified units
    * @return either error or response, wrapped in effect type `F`
    */
-  def timeMachine(latitude: Float,
-                  longitude: Float,
-                  dateTime: ZonedDateTime,
-                  exclude: List[BlockType] = List.empty[BlockType],
-                  extend: Boolean          = false,
-                  lang: Option[String]     = None,
-                  units: Option[Units]     = None): F[Either[WeatherError, DarkSkyResponse]] = {
+  def timeMachine(
+    latitude: Float,
+    longitude: Float,
+    dateTime: ZonedDateTime,
+    exclude: List[BlockType] = List.empty[BlockType],
+    extend: Boolean          = false,
+    lang: Option[String]     = None,
+    units: Option[Units]     = None
+  ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, Some(dateTime.toEpochSecond), exclude, extend, lang, units)
     transport.receive(request)
   }
