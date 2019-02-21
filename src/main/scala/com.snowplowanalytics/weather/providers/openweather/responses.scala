@@ -13,30 +13,30 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// circe
 import java.time.ZonedDateTime
 
 import io.circe.generic.JsonCodec
 
-// This library
-import Errors._
+import errors._
+import model.WeatherResponse
 
 /**
  * Case classes used for extracting data from JSON
  */
-object Responses {
+object responses {
   sealed trait OwmResponse extends WeatherResponse
 
   // RESPONSES
 
   // Very similar to Weather
   @JsonCodec
-  final case class Current(main: MainInfo,
-                           wind: Wind,
-                           clouds: Clouds,
-                           coord: Option[Coordinates],
-                           visibility: Option[BigInt])
-      extends OwmResponse
+  final case class Current(
+    main: MainInfo,
+    wind: Wind,
+    clouds: Clouds,
+    coord: Option[Coordinates],
+    visibility: Option[BigInt]
+  ) extends OwmResponse
 
   @JsonCodec
   final case class Forecast(cnt: BigInt, cod: String, list: List[Weather]) extends OwmResponse {
@@ -57,26 +57,29 @@ object Responses {
    * Core data type
    */
   @JsonCodec
-  final case class Weather(main: MainInfo,
-                           wind: Wind,
-                           clouds: Clouds,
-                           rain: Option[Rain],
-                           snow: Option[Snow],
-                           weather: List[WeatherCondition],
-                           dt: BigInt)
-      extends OwmResponse
+  final case class Weather(
+    main: MainInfo,
+    wind: Wind,
+    clouds: Clouds,
+    rain: Option[Rain],
+    snow: Option[Snow],
+    weather: List[WeatherCondition],
+    dt: BigInt
+  ) extends OwmResponse
 
   /**
    * Common main information about weather
    */
   @JsonCodec
-  final case class MainInfo(grnd_level: Option[BigDecimal],
-                            humidity: BigDecimal,
-                            pressure: BigDecimal,
-                            sea_level: Option[BigDecimal],
-                            temp: BigDecimal,
-                            temp_min: BigDecimal,
-                            temp_max: BigDecimal)
+  final case class MainInfo(
+    grnd_level: Option[BigDecimal],
+    humidity: BigDecimal,
+    pressure: BigDecimal,
+    sea_level: Option[BigDecimal],
+    temp: BigDecimal,
+    temp_min: BigDecimal,
+    temp_max: BigDecimal
+  )
 
   /**
    * Textual description of the weather
@@ -85,11 +88,13 @@ object Responses {
   final case class WeatherCondition(main: String, description: String, id: Int, icon: String)
 
   @JsonCodec
-  final case class Wind(speed: BigDecimal,
-                        deg: BigDecimal,
-                        gust: Option[BigDecimal],
-                        var_end: Option[Int],
-                        var_beg: Option[Int])
+  final case class Wind(
+    speed: BigDecimal,
+    deg: BigDecimal,
+    gust: Option[BigDecimal],
+    var_end: Option[Int],
+    var_beg: Option[Int]
+  )
   @JsonCodec final case class Coordinates(lon: BigDecimal, lat: BigDecimal)
   @JsonCodec final case class Clouds(all: BigInt)
   @JsonCodec final case class Snow(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
@@ -101,7 +106,10 @@ object Responses {
    * @param timestamp original integer
    * @return close neighbour
    */
-  private[openweather] def pickClosestWeather(list: List[Weather], timestamp: Long): Either[WeatherError, Weather] =
+  private[openweather] def pickClosestWeather(
+    list: List[Weather],
+    timestamp: Long
+  ): Either[WeatherError, Weather] =
     if (timestamp < 1) Left(InternalError("Timestamp should be greater than 0"))
     else
       pickClosest(list, timestamp, (st: Weather) => (st.dt.toInt, st))
@@ -116,7 +124,11 @@ object Responses {
    * @param transform function to derive index (timestamp) out of object (weather stamp)
    * @return closest object for some index
    */
-  private[openweather] def pickClosest[A](list: List[A], index: Long, transform: A => (Int, A)): Option[A] =
+  private[openweather] def pickClosest[A](
+    list: List[A],
+    index: Long,
+    transform: A => (Int, A)
+  ): Option[A] =
     list
       .map(transform)
       .sortBy(x => Math.abs(index - x._1))

@@ -11,14 +11,15 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather
-package providers.openweather
+package providers
+package openweather
 
 import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen._
-import Responses._
+
+import responses._
 import Cache._
-import com.snowplowanalytics.weather.providers.TestData
 
 /**
  * Trait with methods for random weather generation

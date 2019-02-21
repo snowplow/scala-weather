@@ -17,6 +17,8 @@ import java.text.DecimalFormat
 
 import hammock.Uri
 
+import model.WeatherRequest
+
 final case class BlockType private (name: String) extends AnyVal
 
 object BlockType {
@@ -38,16 +40,17 @@ object Units {
   val si   = Units("si")
 }
 
-object Requests {
+object requests {
 
-  final case class DarkSkyRequest(latitude: Float,
-                                  longitude: Float,
-                                  time: Option[Long]       = None,
-                                  exclude: List[BlockType] = List.empty[BlockType],
-                                  extend: Boolean          = false,
-                                  lang: Option[String]     = None,
-                                  units: Option[Units]     = None)
-      extends WeatherRequest {
+  final case class DarkSkyRequest(
+    latitude: Float,
+    longitude: Float,
+    time: Option[Long]       = None,
+    exclude: List[BlockType] = List.empty[BlockType],
+    extend: Boolean          = false,
+    lang: Option[String]     = None,
+    units: Option[Units]     = None
+  ) extends WeatherRequest {
 
     override def constructQuery(baseUri: Uri, apiKey: String): Uri = {
       val pathParams = List(latitude, longitude).map(floatToString) ++ time.map(_.toString).toList
@@ -64,11 +67,12 @@ object Requests {
     }
   }
 
-  /** Dark Sky seems to not consume numbers in scientific notation, which are sometimes produced by toString */
+  /** Dark Sky seems to not consume numbers in scientific notation,
+   * which are sometimes produced by toString */
   private def floatToString(value: Float): String = {
     val decimalFormat = new DecimalFormat("0.0000")
     decimalFormat.setMinimumFractionDigits(0)
-    decimalFormat.format(value)
+    decimalFormat.format(value.toDouble)
   }
 
 }

@@ -11,16 +11,14 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather
-package providers.openweather
 
-/** Module for various predefined values in OWM specification */
-object Api {
+import hammock.Uri
 
-  /** Enums for measurements for history requests */
-  object Measures extends Enumeration {
-    val Tick = Value("tick")
-    val Hour = Value("hour")
-    val Day  = Value("day")
+object model {
+
+  trait WeatherRequest {
+    def constructQuery(baseUri: Uri, apiKey: String): Uri
   }
+  trait WeatherResponse
 
 }

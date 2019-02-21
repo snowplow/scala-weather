@@ -13,21 +13,18 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
-// cats
 import java.time.ZonedDateTime
 
 import cats.effect.IO
 import cats.syntax.either._
-
-// tests
+import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 
-// This library
-import Errors.{InvalidConfigurationError, TimeoutError}
-import Requests.DarkSkyRequest
-import Responses.DarkSkyResponse
+import errors.{InvalidConfigurationError, TimeoutError}
+import requests.DarkSkyRequest
+import responses.DarkSkyResponse
 
 // Mock transport which returns predefined responses
 class DarkSkyCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
@@ -59,13 +56,13 @@ class DarkSkyCacheSpec(implicit val ec: ExecutionEnv) extends Specification with
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(transport).receive(any[DarkSkyRequest])(any()))
+    there.was(1.times(transport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
   }
 
   def e2 = {
     val transport = mock[TimeoutHttpTransport[IO]]
     transport
-      .receive[DarkSkyResponse](any[DarkSkyRequest])(any())
+      .receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly))
       .returns(timeoutErrorResponse)
       .thenReturn(exampleResponse)
 
@@ -75,7 +72,7 @@ class DarkSkyCacheSpec(implicit val ec: ExecutionEnv) extends Specification with
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(transport).receive(any[DarkSkyRequest])(any()))
+    there.was(2.times(transport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
   }
 
   def e3 = {
@@ -88,7 +85,7 @@ class DarkSkyCacheSpec(implicit val ec: ExecutionEnv) extends Specification with
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     action.unsafeRunSync()
-    there.was(4.times(transport).receive(any[DarkSkyRequest])(any()))
+    there.was(4.times(transport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
   }
 
   def e4 = {
@@ -100,7 +97,7 @@ class DarkSkyCacheSpec(implicit val ec: ExecutionEnv) extends Specification with
       _      <- client.cachingTimeMachine(10.2f, 32.4f, ZonedDateTime.parse("2015-11-09T23:06:47Z"))
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(transport).receive(any[DarkSkyRequest])(any()))
+    there.was(1.times(transport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
   }
 
   def e5 = {
@@ -112,7 +109,7 @@ class DarkSkyCacheSpec(implicit val ec: ExecutionEnv) extends Specification with
       _      <- client.cachingTimeMachine(10.2f, 32.4f, ZonedDateTime.parse("2015-11-09T23:06:47Z"))
     } yield ()
     action.unsafeRunSync()
-    there.was(2.times(transport).receive(any[DarkSkyRequest])(any()))
+    there.was(2.times(transport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
   }
 
   def e6 =

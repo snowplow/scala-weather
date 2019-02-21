@@ -13,21 +13,16 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Java
 import java.time._
 
-// cats
 import cats.effect.IO
-
-// Specs2
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2.concurrent.ExecutionEnv
 
-// This library
-import Requests.OwmHistoryRequest
-import Responses.History
+import requests.OwmHistoryRequest
+import responses.History
 import Cache._
 
 class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
@@ -78,7 +73,7 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
     } yield ()
     action.unsafeRunSync()
-    there.was(1.times(transport).receive(eqTo(expectedRequest))(any()))
+    there.was(1.times(transport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
   }
 
 }

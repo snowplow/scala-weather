@@ -13,20 +13,15 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// Scala
 import scala.concurrent.duration._
 
-// cats
 import cats.effect.IO
-
-// tests
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.scalacheck.Prop.forAll
 
-// This library
 import providers.TestData
-import Errors.AuthorizationError
+import errors.AuthorizationError
 import Cache.Position
 
 object ServerSpec {

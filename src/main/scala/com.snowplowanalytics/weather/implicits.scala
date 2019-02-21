@@ -12,13 +12,11 @@
  */
 package com.snowplowanalytics.weather
 
-// Java
 import java.time.ZonedDateTime
 
-// Scala
 import scala.language.implicitConversions
 
-object Implicits {
+object implicits {
 
   /**
    * Options as optional arguments

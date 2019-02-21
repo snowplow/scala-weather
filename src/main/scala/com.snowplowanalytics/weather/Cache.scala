@@ -12,22 +12,19 @@
  */
 package com.snowplowanalytics.weather
 
-// Java
 import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
 
-// cats
 import cats.effect.Sync
 import cats.syntax.flatMap._
-
-// LruMap
 import com.snowplowanalytics.lrumap.LruMap
 
-// This library
-import Errors.{TimeoutError, WeatherError}
+import errors.{TimeoutError, WeatherError}
+import model.WeatherResponse
 
 class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
   cache: LruMap[F, Cache.CacheKey, Either[WeatherError, W]],
-  val geoPrecision: Int) {
+  val geoPrecision: Int
+) {
 
   import Cache._
 
@@ -41,8 +38,8 @@ class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
    * @return value stored in the cache or the result of the provided function
    */
   def getCachedOrRequest(latitude: Float, longitude: Float, dateTime: ZonedDateTime)(
-    doRequest: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]]): F[Either[WeatherError, W]] = {
-
+    doRequest: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]]
+  ): F[Either[WeatherError, W]] = {
     val cacheKey = eventToCacheKey(dateTime, Position(latitude, longitude), geoPrecision)
     cache.get(cacheKey).flatMap {
       case Some(Right(cached)) =>
@@ -56,9 +53,7 @@ class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
         doRequest(latitude, longitude, dateTime)
           .flatTap(cache.put(cacheKey, _))
     }
-
   }
-
 }
 
 object Cache {
@@ -98,8 +93,9 @@ object Cache {
    * @return cache key
    */
   def eventToCacheKey(dateTime: ZonedDateTime, position: Position, geoPrecision: Int): CacheKey = {
-    val roundPosition =
-      Position(roundCoordinate(position.latitude, geoPrecision), roundCoordinate(position.longitude, geoPrecision))
+    val lat           = roundCoordinate(position.latitude, geoPrecision)
+    val lng           = roundCoordinate(position.longitude, geoPrecision)
+    val roundPosition = Position(lat, lng)
     CacheKey(dateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDate, roundPosition)
   }
 

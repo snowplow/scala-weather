@@ -11,26 +11,20 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather
-package providers.darksky
+package providers
+package darksky
 
-// Java
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
-// Scala
 import scala.concurrent.duration._
 
-// cats
 import cats.effect.IO
-
-// tests
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
 import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.specs2.{ScalaCheck, Specification}
 
-// This library
-import com.snowplowanalytics.weather.Errors.AuthorizationError
-import com.snowplowanalytics.weather.providers.TestData
+import errors.AuthorizationError
 
 /**
  * Test case classes extraction from real server responses
