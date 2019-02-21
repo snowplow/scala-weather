@@ -90,17 +90,13 @@ trait WeatherGenerator {
 
   def genEmptyHistoryBatch: Gen[History] =
     for {
-      cnt   <- Gen.choose(1, 23)
-      wind  <- genWind
-      count <- cnt
+      cnt <- Gen.choose(1, 23)
     } yield History(cnt, "200", Nil)
 
   def genNonEmptyHistoryBatch: Gen[History] =
     for {
       cnt    <- Gen.choose(2, 20)
-      wind   <- genWind
       seed   <- Gen.choose(-1, 3)
-      count  <- cnt
       stamps <- arbitrary[Weather]
     } yield History(cnt, "200", List.fill(cnt + seed)(stamps))
 
