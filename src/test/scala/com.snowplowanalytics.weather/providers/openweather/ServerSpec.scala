@@ -15,14 +15,16 @@ package providers.openweather
 
 import scala.concurrent.duration._
 
+import cats.Eval
 import cats.effect.IO
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.specification.core.{Env, OwnExecutionEnv}
-import org.scalacheck.Prop.forAll
+import org.scalacheck.Prop
 
-import providers.TestData
-import errors.AuthorizationError
 import Cache.Position
+import errors._
+import providers.TestData
+import responses._
 
 object ServerSpec {
   val owmKey = sys.env.get("OWM_KEY")
@@ -47,28 +49,54 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
       works with https                      $e4
   """
 
-  private val host           = "history.openweathermap.org"
-  private lazy val client    = OpenWeatherMap.basicClient[IO](owmKey.get, host)
-  private lazy val sslClient = OpenWeatherMap.basicClient[IO](owmKey.get, host, ssl = true)
+  val host               = "history.openweathermap.org"
+  lazy val ioClient      = OpenWeatherMap.basicClient[IO](owmKey.get, host, false)
+  lazy val ioSslClient   = OpenWeatherMap.basicClient[IO](owmKey.get, host, true)
+  val ioRun              = (a: IO[Either[WeatherError, History]]) => a.unsafeRunSync()
+  lazy val evalClient    = OpenWeatherMap.unsafeBasicClient(owmKey.get, host, false)
+  lazy val evalSslClient = OpenWeatherMap.unsafeBasicClient(owmKey.get, host, true)
+  val evalRun            = (a: Eval[Either[WeatherError, History]]) => a.value
 
-  def testCities(cities: Vector[(Float, Float)], client: OwmClient[IO]) =
-    forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
+  def testCities[F[_]](
+    cities: Vector[(Float, Float)],
+    client: OwmClient[F],
+    f: F[Either[WeatherError, History]] => Either[WeatherError, History]
+  ): Prop =
+    Prop.forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
       val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
-      val result  = history.unsafeRunTimed(5.seconds)
-      result must beSome
-      result.get must beRight
+      val result  = f(history)
+      result must beRight
     }
 
-  def e1 = testCities(TestData.bigAndAbnormalCities, client).set(maxSize = 5, minTestsOk = 5)
-
-  def e2 = testCities(TestData.randomCities, client).set(maxSize = 15, minTestsOk = 15)
-
-  def e3 = {
-    val client = OpenWeatherMap.basicClient[IO]("INVALID-KEY", host)
-    val result = client.historyById(1).unsafeRunTimed(5.seconds)
-    result must beSome
-    result.get must beLeft(AuthorizationError)
+  def e1 = {
+    testCities(TestData.bigAndAbnormalCities, ioClient, ioRun)
+      .set(maxSize = 5, minTestsOk = 5)
+    testCities(TestData.bigAndAbnormalCities, evalClient, evalRun)
+      .set(maxSize = 5, minTestsOk = 5)
   }
 
-  def e4 = testCities(TestData.randomCities, sslClient).set(maxSize = 15, minTestsOk = 15)
+  def e2 = {
+    testCities(TestData.randomCities, ioClient, ioRun)
+      .set(maxSize = 10, minTestsOk = 10)
+    testCities(TestData.randomCities, evalClient, evalRun)
+      .set(maxSize = 10, minTestsOk = 10)
+  }
+
+  def e3 = {
+    val ioClient = OpenWeatherMap.basicClient[IO]("INVALID-KEY", host, true)
+    val ioResult = ioClient.historyById(1).unsafeRunTimed(5.seconds)
+    ioResult must beSome
+    ioResult.get must beLeft(AuthorizationError)
+
+    val evalClient = OpenWeatherMap.unsafeBasicClient("INVALID-KEY", host, true)
+    val evalResult = evalClient.historyById(1).value
+    evalResult must beLeft(AuthorizationError)
+  }
+
+  def e4 = {
+    testCities(TestData.randomCities, ioSslClient, ioRun)
+      .set(maxSize = 10, minTestsOk = 10)
+    testCities(TestData.randomCities, evalSslClient, evalRun)
+      .set(maxSize = 10, minTestsOk = 10)
+  }
 }

@@ -15,6 +15,7 @@ package providers.openweather
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import cats.Eval
 import cats.effect.{ContextShift, IO}
 import cats.syntax.either._
 import io.circe.Decoder
@@ -38,86 +39,156 @@ class CacheSpec extends Specification with Mockito {
     retry request on timeout error $e2
     check geoPrecision $e5
     make requests again after full cache $e3
-    throw exception for invalid precision $e6
-    throw exception for invalid cache size $e7
+    be left for invalid precision $e6
+    be left for invalid cache size $e7
   """
 
   implicit val timer                = IO.timer(global)
   implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
-  val emptyHistoryResponse: IO[Either[TimeoutError, History]] = IO.pure(History(BigInt(100), "0", List()).asRight)
-  val timeoutErrorResponse: IO[Either[TimeoutError, History]] =
+  val ioEmptyHistoryResponse: IO[Either[TimeoutError, History]] =
+    IO.pure(History(BigInt(100), "0", List()).asRight)
+  val ioTimeoutErrorResponse: IO[Either[TimeoutError, History]] =
     IO.pure(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
+  val evalEmptyHistoryResponse: Eval[Either[TimeoutError, History]] =
+    Eval.later(History(BigInt(100), "0", List()).asRight)
+  val evalTimeoutErrorResponse: Eval[Either[TimeoutError, History]] =
+    Eval.later(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
 
   def e1 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(2, 1, transport)
+    val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
+    val ioAction = for {
+      client <- OpenWeatherMap.cacheClient[IO](2, 1, ioTransport).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
-    action.unsafeRunSync()
-    there.was(1.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+    ioAction.unsafeRunSync()
+    there.was(1.times(ioTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+
+    val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
+    val evalAction = for {
+      client <- OpenWeatherMap.cacheClient[Eval](2, 1, evalTransport).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+    } yield ()
+    evalAction.value
+    there.was(1.times(evalTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e2 = {
-    val transport = mock[TimeoutHttpTransport[IO]]
-    transport
+    val ioTransport = mock[Transport[IO]]
+    ioTransport
       .receive[History](any[OwmRequest])(any[Decoder[History]])
-      .returns(timeoutErrorResponse)
-      .thenReturn(emptyHistoryResponse)
-
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(2, 1, transport)
+      .returns(ioTimeoutErrorResponse)
+      .thenReturn(ioEmptyHistoryResponse)
+    val ioAction = for {
+      client <- OpenWeatherMap.cacheClient(2, 1, ioTransport).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
-    action.unsafeRunSync()
-    there.was(2.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+    ioAction.unsafeRunSync()
+    there.was(2.times(ioTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+
+    val evalTransport = mock[Transport[Eval]]
+    evalTransport
+      .receive[History](any[OwmRequest])(any[Decoder[History]])
+      .returns(evalTimeoutErrorResponse)
+      .thenReturn(evalEmptyHistoryResponse)
+    val evalAction = for {
+      client <- OpenWeatherMap.cacheClient(2, 1, evalTransport).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+    } yield ()
+    evalAction.value
+    there.was(2.times(evalTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e3 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(2, 1, transport)
+    val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
+    val ioAction = for {
+      client <- OpenWeatherMap.cacheClient(2, 1, ioTransport).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(6.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(8.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
-    action.unsafeRunSync()
-    there.was(4.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+    ioAction.unsafeRunSync()
+    there.was(4.times(ioTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+
+    val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
+    val evalAction = for {
+      client <- OpenWeatherMap.cacheClient(2, 1, evalTransport).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(6.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(8.44f, 3.33f, 100)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
+    } yield ()
+    evalAction.value
+    there.was(4.times(evalTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e4 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(10, 1, transport)
+    val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
+    val ioAction = for {
+      client <- OpenWeatherMap.cacheClient(10, 1, ioTransport).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
-    action.unsafeRunSync()
-    there.was(1.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+    ioAction.unsafeRunSync()
+    there.was(1.times(ioTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+
+    val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
+    val evalAction = for {
+      client <- OpenWeatherMap.cacheClient(10, 1, evalTransport).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
+    } yield ()
+    evalAction.value
+    there.was(1.times(evalTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
   def e5 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(10, 2, transport)
+    val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
+    val ioAction = for {
+      client <- OpenWeatherMap.cacheClient(10, 2, ioTransport).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
     } yield ()
-    action.unsafeRunSync()
-    there.was(2.times(transport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+    ioAction.unsafeRunSync()
+    there.was(2.times(ioTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
+
+    val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
+    val evalAction = for {
+      client <- OpenWeatherMap.cacheClient(10, 2, evalTransport).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
+      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
+    } yield ()
+    evalAction.value
+    there.was(2.times(evalTransport).receive[History](any[OwmRequest])(eqTo(implicitly)))
   }
 
-  def e6 =
-    OpenWeatherMap.cacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
+  def e6 = {
+    OpenWeatherMap.cacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must beLeft.like {
+      case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
+    }
+    OpenWeatherMap.unsafeCacheClient("KEY", geoPrecision = 0).value must beLeft.like {
+      case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
+    }
+  }
 
-  def e7 =
-    OpenWeatherMap.cacheClient[IO]("KEY", cacheSize = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
+  def e7 = {
+    OpenWeatherMap.cacheClient[IO]("KEY", cacheSize = 0).unsafeRunSync() must beLeft.like {
+      case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
+    }
+    OpenWeatherMap.unsafeCacheClient("KEY", cacheSize = 0).value must beLeft.like {
+      case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
+    }
+  }
 
 }

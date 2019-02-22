@@ -15,6 +15,7 @@ package providers.darksky
 
 import java.time.ZonedDateTime
 
+import cats.Eval
 import cats.effect.IO
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2._
@@ -33,21 +34,30 @@ class DarkSkyClientSpec extends Specification with Mockito {
 
   """
 
-  val exampleResponse: IO[Either[WeatherError, DarkSkyResponse]] =
+  val ioExampleResponse: IO[Either[WeatherError, DarkSkyResponse]] =
     IO.pure(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
+  val evalExampleResponse: Eval[Either[WeatherError, DarkSkyResponse]] =
+    Eval.now(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
 
   def e1 = {
-    val transportMock: Transport[IO] = mock[Transport[IO]]
-    transportMock
-      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)))(eqTo(implicitly))
-      .returns(exampleResponse)
-    val client = DarkSky.basicClient[IO](transportMock)
-
     val expectedRequest = DarkSkyRequest(32.12f, 15.2f, Some(1449774761)) // "2015-12-10T19:12:41+00:00"
-    client.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
 
+    val ioTransport: Transport[IO] = mock[Transport[IO]]
+    ioTransport
+      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)))(eqTo(implicitly))
+      .returns(ioExampleResponse)
+    val ioClient = DarkSky.basicClient[IO](ioTransport)
+    ioClient.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
+    there.was(1.times(ioClient.transport).receive[DarkSkyResponse](eqTo(expectedRequest))(eqTo(implicitly)))
+
+    val evalTransport: Transport[Eval] = mock[Transport[Eval]]
+    evalTransport
+      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)))(eqTo(implicitly))
+      .returns(evalExampleResponse)
+    val evalClient = DarkSky.basicClient[Eval](evalTransport)
+    evalClient.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
     there.was(
-      1.times(client.transport)
+      1.times(evalClient.transport)
         .receive[DarkSkyResponse](eqTo(expectedRequest))(eqTo(implicitly)))
   }
 

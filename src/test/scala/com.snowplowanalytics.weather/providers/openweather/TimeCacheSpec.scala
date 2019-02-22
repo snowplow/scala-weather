@@ -17,6 +17,7 @@ import java.time._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import cats.Eval
 import cats.effect.{ContextShift, IO}
 import org.specs2.Specification
 import org.specs2.mock.Mockito
@@ -61,7 +62,6 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
   }
 
   def e4 = {
-    val emptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
     val expectedRequest = OwmHistoryRequest(
       "city",
       Map(
@@ -72,13 +72,24 @@ class TimeCacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
         "end"   -> "1450051200" // "2015-12-14T00:00:00.000+00:00"
       )
     )
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(2, 1, transport)
+
+    val ioEmptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
+    val ioTransport            = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
+    val ioAction = for {
+      client <- OpenWeatherMap.cacheClient(2, 1, ioTransport).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
     } yield ()
-    action.unsafeRunSync()
-    there.was(1.times(transport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
+    ioAction.unsafeRunSync()
+    there.was(1.times(ioTransport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
+
+    val evalEmptyHistoryResponse = Eval.now(Right(History(BigInt(100), "0", List())))
+    val evalTransport            = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
+    val evalAction = for {
+      client <- OpenWeatherMap.cacheClient(2, 1, evalTransport).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
+    } yield ()
+    evalAction.value
+    there.was(1.times(evalTransport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
   }
 
 }

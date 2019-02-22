@@ -13,13 +13,12 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
+import cats.{Eval, Monad}
+import cats.data.EitherT
 import cats.effect.{Concurrent, Sync, Timer}
-import cats.syntax.functor._
-import cats.syntax.monadError._
-import cats.syntax.flatMap._
+import cats.syntax.either._
 import com.snowplowanalytics.lrumap.CreateLruMap
 
 import Cache.CacheKey
@@ -28,43 +27,44 @@ import responses.DarkSkyResponse
 
 object DarkSky {
 
-  private[darksky] def basicClient[F[_]: Sync](transport: Transport[F]): DarkSkyClient[F] =
-    new DarkSkyClient(transport)
-
   /**
-   * Create `DarkSkyClient` with underlying `HttpTransport` instance
+   * Create a `DarkSkyClient` with an underlying `Transport` instance
    * @param apiKey API key from Dark Sky
    * @param apiHost URL to the Dark Sky API endpoints
+   * @return a Sync DarkSkyClient
    */
   def basicClient[F[_]: Sync](
     apiKey: String,
     apiHost: String = "api.darksky.net/forecast"
   ): DarkSkyClient[F] =
-    basicClient(new HttpTransport[F](apiHost, apiKey, ssl = true))
-
-  private[darksky] def cacheClient[F[_]: Concurrent](
-    cacheSize: Int,
-    geoPrecision: Int,
-    transport: Transport[F]
-  )(
-    implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]]
-  ): F[DarkSkyCacheClient[F]] =
-    Concurrent[F].unit
-      .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
-      .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)
-      .flatMap(_ => Cache.init(cacheSize, geoPrecision))
-      .map(cache => new DarkSkyCacheClient(cache, transport))
+    basicClient(Transport.httpTransport[F](apiHost, apiKey, ssl = true))
 
   /**
-   * Create `DarkSkyCacheClient` with `TimeoutHttpTransport` instance
+   * Create an unsafe `DarkSkyClient` with an underlying `Transport` instance
+   * @param apiKey API key from Dark Sky
+   * @param apiHost URL to the Dark Sky API endpoints
+   * @return an Eval DarkSkyClient
+   */
+  def unsafeBasicClient(
+    apiKey: String,
+    apiHost: String = "api.darksky.net/forecast"
+  ): DarkSkyClient[Eval] =
+    basicClient(Transport.unsafeHttpTransport(apiHost, apiKey, ssl = true))
+
+  private[darksky] def basicClient[F[_]](transport: Transport[F]): DarkSkyClient[F] =
+    new DarkSkyClient(transport)
+
+  /**
+   * Create a `DarkSkyCacheClient` with a `Transport` instance capable of timeouts
    * @param appId API key from Dark Sky
    * @param cacheSize amount of responses stored in the cache
    * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
-   *                     stored in cache. For eg. coordinate 45.678 will be rounded to
-   *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
-   *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
+   * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
+   * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km accuracy in the worst
+   * case; 2 ~30km etc
    * @param host URL to the Dark Sky API endpoints
    * @param timeout time after which active request will be considered failed
+   * @return either an InvalidConfigurationError or a DarkSkyCacheClient in a Sync
    */
   def cacheClient[F[_]: Concurrent: Timer](
     appId: String,
@@ -72,7 +72,59 @@ object DarkSky {
     geoPrecision: Int       = 1,
     host: String            = "api.darksky.net/forecast",
     timeout: FiniteDuration = 5.seconds
-  )(implicit executionContext: ExecutionContext): F[DarkSkyCacheClient[F]] =
-    cacheClient(cacheSize, geoPrecision, new TimeoutHttpTransport[F](host, appId, timeout, ssl = true))
+  ): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
+    cacheClient(
+      cacheSize,
+      geoPrecision,
+      Transport.timeoutHttpTransport[F](host, appId, timeout, ssl = true)
+    )
+
+  /**
+   * Create an unsafe `DarkSkyCacheClient` with a `Transport` instance capable of timeouts
+   * @param appId API key from Dark Sky
+   * @param cacheSize amount of responses stored in the cache
+   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
+   * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
+   * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km accuracy in the worst
+   * case; 2 ~30km etc
+   * @param host URL to the Dark Sky API endpoints
+   * @param timeout time after which active request will be considered failed
+   * @return either an InvalidConfigurationError or a DarkSkyCacheClient in an Eval
+   */
+  def unsafeCacheClient(
+    appId: String,
+    cacheSize: Int          = 5100,
+    geoPrecision: Int       = 1,
+    host: String            = "api.darksky.net/forecast",
+    timeout: FiniteDuration = 5.seconds
+  ): Eval[Either[InvalidConfigurationError, DarkSkyCacheClient[Eval]]] =
+    cacheClient(
+      cacheSize,
+      geoPrecision,
+      Transport.unsafeTimeoutHttpTransport(host, appId, timeout, ssl = true)
+    )
+
+  private[darksky] def cacheClient[F[_]: Monad](
+    cacheSize: Int,
+    geoPrecision: Int,
+    transport: Transport[F]
+  )(
+    implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]]
+  ): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
+    (for {
+      _ <- EitherT.fromEither[F] {
+        ().asRight
+          .filterOrElse(
+            _ => geoPrecision > 0,
+            InvalidConfigurationError("geoPrecision must be greater than 0")
+          )
+          .filterOrElse(
+            _ => cacheSize > 0,
+            InvalidConfigurationError("cacheSize must be greater than 0")
+          )
+      }
+      cache <- EitherT.right[InvalidConfigurationError](Cache.init(cacheSize, geoPrecision))
+      client = new DarkSkyCacheClient[F](cache, transport)
+    } yield client).value
 
 }

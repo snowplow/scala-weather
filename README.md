@@ -12,7 +12,7 @@ Used in **[Snowplow][snowplow-repo]** to power the **[Weather Enrichment][weathe
 
 ## Introduction
 
-Scala Weather contains APIs to 2 weather providers: **[OpenWeatherMap][openweathermap]** and **[Dark Sky][darksky]**. 
+Scala Weather contains APIs to 2 weather providers: **[OpenWeatherMap][openweathermap]** and **[Dark Sky][darksky]**.
 It allows you to fetch the current weather, historical weather and weather forecasts for any city (OWM only) or geo coordinates.
 
 We provide caching and basic clients for both providers - `OwmClient` and `OwmCacheClient` for OpenWeatherMap, `DarkSkyClient` and `DarkSkyCacheClient` for Dark Sky.
@@ -29,7 +29,10 @@ libraryDependencies += "com.snowplowanalytics" %% "scala-weather" % "0.4.0"
 
 ## Guide
 
-**Note:** All of the clients take `F` as a type parameter. It can be any type that has an instance of `cats.effect.Sync` in case of basic clients and `cats.effect.Concurrent` in case of caching clients. In the following guide we will be using `cats.effect.IO`. 
+**Note:** All of the clients take `F` as a type parameter. It can be any type that has an instance
+of `cats.effect.Sync` in case of basic clients and `cats.effect.Concurrent` in case of caching
+clients. In the following guide we will be using `cats.effect.IO`. We also provide instances for
+`cats.Eval` in cases side-effects are needed (e.g. Spark or Beam)
 
 ### OpenWeatherMap
 
@@ -75,8 +78,8 @@ Both clients offer the same set of public methods:
 These methods were designed to follow OpenWeatherMap's own API calls as closely as possible. All of these calls receive similar arguments to those described in **[OpenWeatherMap API documentation][owm-api-docs]**. For example, to receive a response equivalent to this API call: ``api.openweathermap.org/data/2.5/weather?lat=35&lon=139&appid=YOURKEY``, run the following code:
 
 ```scala
-import com.snowplowanalytics.weather.Errors.WeatherError
-import com.snowplowanalytics.weather.providers.openweather.Responses.Current
+import com.snowplowanalytics.weather.errors.WeatherError
+import com.snowplowanalytics.weather.providers.openweather.responses.Current
 val weatherInLondon: IO[Either[WeatherError, Current]] = client.currentByCoords(35.0f, 139.0f)
 ```
 
@@ -120,16 +123,15 @@ Example:
 
 ```scala
 import java.time.ZonedDateTime
-import com.snowplowanalytics.weather.Errors.WeatherError
-import com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse
+import com.snowplowanalytics.weather.errors.WeatherError
+import com.snowplowanalytics.weather.providers.darksky.responses.DarkSkyResponse
 // Fetches weather a year ago in New York
-val response: IO[Either[WeatherError, DarkSkyResponse]] = 
+val response: IO[Either[WeatherError, DarkSkyResponse]] =
   client.timeMachine(40.71f, 74.0f, ZonedDateTime.now().minusYears(1))
 ```
 
 Contrary to OpenWeatherMap, Dark Sky does not provide geocoding features,
 meaning you must know the latitude and longitude of the location.
-
 
 ## Understanding the cache
 
@@ -140,7 +142,7 @@ It uses an **[LRU cache][lru]** under the hood and only works for historical loo
 
 Note that the results of common methods like `historyById`, `currentByCoords` etc are not cached.
 To employ the cache, you need to use:
- 
+
  - for OWM `cachingHistoryByCoords`
  - for Dark Sky `cachingTimeMachine`
 
@@ -149,7 +151,7 @@ The following client factory arguments help to tune the cache:
 * `cacheSize` determines how many daily weather reports for a location can be stored in the cache before entries start getting evicted
 * `geoPrecision` determines how precise your cache will be from geospatial perspective
 
-### Understanding the `geoPrecision` 
+### Understanding the `geoPrecision`
 
 This essentially rounds the decimal places part of the geo coordinate to the specified part of 1. Some example settings:
 
@@ -166,7 +168,7 @@ So, you can consider 1 as a good default value; it's strongly discouraged to set
 `OwmCacheClient` and `DarkSkyCacheClient`'s internal cache stores responses in a map, which key is
 computed roughly as:
 
-`round(latitude), round(longitude), beginningOfDay` 
+`round(latitude), round(longitude), beginningOfDay`
 
 After the first request, it will try to fetch information for this exact place (round(latitude), round(longitude)) for the given day.
 The OWM cache value usually consists of several (8-24) `Weather` objects, each with its own timestamps.

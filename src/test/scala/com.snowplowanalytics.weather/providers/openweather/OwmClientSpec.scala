@@ -15,6 +15,7 @@ package providers.openweather
 
 import java.time.ZonedDateTime
 
+import cats.Eval
 import cats.effect.IO
 import cats.syntax.either._
 import io.circe.Decoder
@@ -36,24 +37,33 @@ class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
     Implicits for DateTime work as expected (without imports)   $e1
   """
 
-  val emptyHistoryResponse = IO.pure(History(BigInt(100), "0", List()).asRight[WeatherError])
+  val ioEmptyHistoryResponse   = IO.pure(History(BigInt(100), "0", List()).asRight[WeatherError])
+  val evalEmptyHistoryResponse = Eval.now(History(BigInt(100), "0", List()).asRight[WeatherError])
+  val expectedRequest = OwmHistoryRequest(
+    "city",
+    Map(
+      "lat"   -> "0.0",
+      "lon"   -> "0.0",
+      "start" -> "1449774761" // "2015-12-10T19:12:41+00:00"
+    )
+  )
 
   def e1 = {
-    val transport = mock[Transport[IO]]
-    transport
+    val ioTransport = mock[Transport[IO]]
+    ioTransport
       .receive(any[WeatherRequest])(any[Decoder[WeatherResponse]])
-      .returns(emptyHistoryResponse)
-    val client = OpenWeatherMap.basicClient[IO](transport)
-    val expectedRequest = OwmHistoryRequest(
-      "city",
-      Map(
-        "lat"   -> "0.0",
-        "lon"   -> "0.0",
-        "start" -> "1449774761" // "2015-12-10T19:12:41+00:00"
-      )
-    )
-    client.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(1.times(transport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
+      .returns(ioEmptyHistoryResponse)
+    val ioClient = OpenWeatherMap.basicClient[IO](ioTransport)
+    ioClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
+    there.was(1.times(ioTransport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
+
+    val evalTransport = mock[Transport[Eval]]
+    evalTransport
+      .receive(any[WeatherRequest])(any[Decoder[WeatherResponse]])
+      .returns(evalEmptyHistoryResponse)
+    val evalClient = OpenWeatherMap.basicClient[Eval](evalTransport)
+    evalClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
+    there.was(1.times(evalTransport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
   }
 
 }

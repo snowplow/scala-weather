@@ -14,12 +14,11 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
 
+import cats.{Eval, Monad}
+import cats.data.EitherT
 import cats.effect.{Concurrent, Sync, Timer}
-import cats.syntax.flatMap._
-import cats.syntax.functor._
-import cats.syntax.monadError._
+import cats.syntax.either._
 import com.snowplowanalytics.lrumap.CreateLruMap
 
 import Cache.CacheKey
@@ -29,37 +28,47 @@ import responses.History
 object OpenWeatherMap {
 
   /**
-   * Create `OwmClient` with specified underlying `Transport`
-   * @param transport instance of `Transport` which will do the actual sending of data
-   */
-  private[openweather] def basicClient[F[_]: Sync](transport: Transport[F]): OwmClient[F] =
-    new OwmClient[F](transport)
-
-  /**
-   * Create `OwmClient` with `HttpTransport` instance
+   * Create a `OwmClient` with an underlying `Transport` instance
    * @param appId API key from OpenWeatherMap
    * @param apiHost URL to the OpenWeatherMap API endpoints
    * @param ssl whether to use https
+   * @return a Sync DarkSkyClient
    */
   def basicClient[F[_]: Sync](
     appId: String,
     apiHost: String = "api.openweathermap.org",
-    ssl: Boolean    = true
-  ): OwmClient[F] = basicClient(new HttpTransport[F](apiHost, appId, ssl))
+    ssl: Boolean
+  ): OwmClient[F] = basicClient(Transport.httpTransport[F](apiHost, appId, ssl))
 
   /**
-   * Create `OwmCacheClient` with `TimeoutHttpTransport` instance
+   * Create an unsafe `OwmClient` with an underlying `Transport` instance
+   * @param appId API key from OpenWeatherMap
+   * @param apiHost URL to the OpenWeatherMap API endpoints
+   * @param ssl whether to use https
+   * @return an Eval DarkSkyClient
+   */
+  def unsafeBasicClient(
+    appId: String,
+    apiHost: String = "api.openweathermap.org",
+    ssl: Boolean
+  ): OwmClient[Eval] = basicClient(Transport.unsafeHttpTransport(apiHost, appId, ssl))
+
+  private[openweather] def basicClient[F[_]](transport: Transport[F]): OwmClient[F] =
+    new OwmClient(transport)
+
+  /**
+   * Create a `OwmCacheClient` with a `Transport` instance capable of timeouts
    * @param appId API key from OpenWeatherMap
    * @param cacheSize amount of history requests storing in cache
-   *                  it's better to store whole OWM packet (5000/50000/150000)
-   *                  plus some space for errors (~1%)
+   * it's better to store whole OWM packet (5000/50000/150000) plus some space for errors (~1%)
    * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
-   *                     stored in cache. For eg. coordinate 45.678 will be rounded to
-   *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
-   *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
+   * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
+   * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km infelicity in the worst
+   * case; 2 ~30km etc
    * @param host URL to the OpenWeatherMap API endpoints
    * @param timeout time after which active request will be considered failed
    * @param ssl whether to use https
+   * @return either an InvalidConfigurationError or a OwmCacheClient in a Sync
    */
   def cacheClient[F[_]: Concurrent: Timer](
     appId: String,
@@ -68,31 +77,62 @@ object OpenWeatherMap {
     host: String            = "history.openweathermap.org",
     timeout: FiniteDuration = 5.seconds,
     ssl: Boolean            = true
-  )(implicit executionContext: ExecutionContext): F[OwmCacheClient[F]] =
-    cacheClient(cacheSize, geoPrecision, new TimeoutHttpTransport[F](host, appId, timeout, ssl))
+  ): F[Either[InvalidConfigurationError, OwmCacheClient[F]]] =
+    cacheClient(
+      cacheSize,
+      geoPrecision,
+      Transport.timeoutHttpTransport[F](host, appId, timeout, ssl)
+    )
 
   /**
-   * Create `OwmCacheClient` with specified underlying `Transport`
+   * Create an unsafe `OwmCacheClient` with a `Transport` instance capable of timeouts
+   * @param appId API key from OpenWeatherMap
    * @param cacheSize amount of history requests storing in cache
-   *                  it's better to store whole OWM packet (5000/50000/150000)
-   *                  plus some space for errors (~1%)
+   * it's better to store whole OWM packet (5000/50000/150000) plus some space for errors (~1%)
    * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
-   *                     stored in cache. For eg. coordinate 45.678 will be rounded to
-   *                     values 46.0, 45.5, 45.7, 45.78 by geoPrecision 1,2,10,100 respectively
-   *                     geoPrecision 1 will give ~60km infelicity if worst case; 2 ~30km etc
-   * @param transport instance of `Transport` which will do the actual sending of data
+   * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
+   * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km infelicity in the worst
+   * case; 2 ~30km etc
+   * @param host URL to the OpenWeatherMap API endpoints
+   * @param timeout time after which active request will be considered failed
+   * @param ssl whether to use https
+   * @return either an InvalidConfigurationError or a OwmCacheClient in an Eval
    */
-  private[openweather] def cacheClient[F[_]: Concurrent](
+  def unsafeCacheClient(
+    appId: String,
+    cacheSize: Int          = 5100,
+    geoPrecision: Int       = 1,
+    host: String            = "history.openweathermap.org",
+    timeout: FiniteDuration = 5.seconds,
+    ssl: Boolean            = true
+  ): Eval[Either[InvalidConfigurationError, OwmCacheClient[Eval]]] =
+    cacheClient(
+      cacheSize,
+      geoPrecision,
+      Transport.unsafeTimeoutHttpTransport(host, appId, timeout, ssl)
+    )
+
+  private[openweather] def cacheClient[F[_]: Monad](
     cacheSize: Int,
     geoPrecision: Int,
     transport: Transport[F]
   )(
     implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]]
-  ): F[OwmCacheClient[F]] =
-    Concurrent[F].unit
-      .ensure(InvalidConfigurationError("geoPrecision must be greater than 0"))(_ => geoPrecision > 0)
-      .ensure(InvalidConfigurationError("cacheSize must be greater than 0"))(_ => cacheSize > 0)
-      .flatMap(_ => Cache.init(cacheSize, geoPrecision))
-      .map(cache => new OwmCacheClient(cache, transport))
+  ): F[Either[InvalidConfigurationError, OwmCacheClient[F]]] =
+    (for {
+      _ <- EitherT.fromEither[F] {
+        ().asRight
+          .filterOrElse(
+            _ => geoPrecision > 0,
+            InvalidConfigurationError("geoPrecision must be greater than 0")
+          )
+          .filterOrElse(
+            _ => cacheSize > 0,
+            InvalidConfigurationError("cacheSize must be greater than 0")
+          )
+      }
+      cache <- EitherT.right[InvalidConfigurationError](Cache.init(cacheSize, geoPrecision))
+      client = new OwmCacheClient[F](cache, transport)
+    } yield client).value
 
 }

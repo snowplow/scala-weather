@@ -60,6 +60,13 @@ class Cache[F[_], W <: WeatherResponse] private (
 
 object Cache {
 
+  /**
+   * Factory method to create a cache.
+   * @param size resulting cache's size
+   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded when making
+   * requests to the cache
+   * @return a cache of WeatherResponse wrapped in a F
+   */
   def init[F[_]: Functor, W <: WeatherResponse](
     size: Int,
     geoPrecision: Int
