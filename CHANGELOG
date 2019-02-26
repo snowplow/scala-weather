@@ -1,3 +1,20 @@
+Version 0.5.0 (2019-03-XX)
+--------------------------
+Introduce tagless final encoding (#102)
+Bump circe to 0.11.1 (#103)
+Bump circe to 0.10.0 (#89)
+Bump scala-lru-map to 0.3.0 (#90)
+Bump specs2 to 4.3.4 (#91)
+Remove DisjunctionMatchers (#100)
+Bump Scala to 2.12.8 (#108)
+Remove Scala 2.11 (#106)
+Bump SBT to 1.2.8 (#109)
+Use sbt-tpolecat (#105)
+Skip unit tests if API key is missing (#98)
+Fix repository url for gh-pages (#86)
+Fix artifact version detection (#83)
+Extend copyright to 2019 (#110)
+
 Version 0.4.0 (2018-07-16)
 --------------------------
 Publish scaladoc (#38)
