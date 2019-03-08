@@ -17,7 +17,7 @@ lazy val root = project
   .settings(
     name := "scala-weather",
     organization := "com.snowplowanalytics",
-    version := "0.5.0",
+    version := "0.5.0-M1",
     description := "High-performance Scala library for performing current and historical weather lookups",
     scalaVersion := "2.12.8",
     javacOptions := BuildSettings.javaCompilerOptions,
