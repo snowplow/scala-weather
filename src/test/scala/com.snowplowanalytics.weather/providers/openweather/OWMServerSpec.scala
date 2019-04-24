@@ -50,9 +50,9 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
   """
 
   val host            = "history.openweathermap.org"
-  lazy val ioClient   = CreateOWM[IO].create(host, owmKey.get, 1.seconds)
+  lazy val ioClient   = CreateOWM[IO].create(host, owmKey.get, 1.seconds, true)
   val ioRun           = (a: IO[Either[WeatherError, History]]) => a.unsafeRunSync()
-  lazy val evalClient = CreateOWM[Eval].create(host, owmKey.get, 1.seconds)
+  lazy val evalClient = CreateOWM[Eval].create(host, owmKey.get, 1.seconds, true)
   val evalRun         = (a: Eval[Either[WeatherError, History]]) => a.value
 
   def testCities[F[_]](
@@ -81,12 +81,12 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
   }
 
   def e3 = {
-    val ioClient = CreateOWM[IO].create(host, "INVALID-KEY", 1.seconds)
+    val ioClient = CreateOWM[IO].create(host, "INVALID-KEY", 1.seconds, true)
     val ioResult = ioClient.historyById(1).unsafeRunTimed(5.seconds)
     ioResult must beSome
     ioResult.get must beLeft(AuthorizationError)
 
-    val evalClient = CreateOWM[Eval].create(host, "INVALID-KEY", 1.seconds)
+    val evalClient = CreateOWM[Eval].create(host, "INVALID-KEY", 1.seconds, true)
     val evalResult = evalClient.historyById(1).value
     evalResult must beLeft(AuthorizationError)
   }
