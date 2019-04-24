@@ -15,7 +15,7 @@ package providers.darksky
 
 import scala.concurrent.duration._
 
-import cats.{Eval, Monad}
+import cats.{Eval, Id, Monad}
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.syntax.either._
@@ -90,6 +90,23 @@ object CreateDarkSky {
         geoPrecision: Int
       ): Eval[Either[InvalidConfigurationError, DarkSkyCacheClient[Eval]]] =
         cacheClient[Eval](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
+    }
+
+  implicit def idCreateDarkSky(implicit T: Transport[Id]): CreateDarkSky[Id] =
+    new CreateDarkSky[Id] {
+      override def create(
+        apiHost: String,
+        apiKey: String,
+        timeout: FiniteDuration
+      ): DarkSkyClient[Id] = new DarkSkyClient[Id](apiHost, apiKey, timeout, ssl = true)
+      override def create(
+        apiHost: String,
+        apiKey: String,
+        timeout: FiniteDuration,
+        cacheSize: Int,
+        geoPrecision: Int
+      ): Id[Either[InvalidConfigurationError, DarkSkyCacheClient[Id]]] =
+        cacheClient[Id](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
     }
 
   private[darksky] def cacheClient[F[_]: Monad](

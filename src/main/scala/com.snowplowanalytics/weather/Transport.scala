@@ -14,7 +14,7 @@ package com.snowplowanalytics.weather
 
 import scala.concurrent.duration.FiniteDuration
 
-import cats.Eval
+import cats.{Eval, Id}
 import cats.effect.Sync
 import cats.syntax.either._
 import io.circe.{Decoder, Json}
@@ -32,7 +32,7 @@ trait Transport[F[_]] {
    * @param request request built by client method
    * @param apiHost address of the API to interrogate
    * @param apiKey credentials to interrogate the API
-   * @param requestTimeout duration after which the request will be timed out
+   * @param timeout duration after which the request will be timed out
    * @param ssl whether to use https or http
    * @tparam W type of weather response to extract
    * @return extracted either error or weather wrapped in `F`
@@ -41,7 +41,7 @@ trait Transport[F[_]] {
     request: WeatherRequest,
     apiHost: String,
     apiKey: String,
-    requestTimeout: FiniteDuration,
+    timeout: FiniteDuration,
     ssl: Boolean
   ): F[Either[WeatherError, W]]
 }
@@ -54,10 +54,10 @@ object Transport {
       request: WeatherRequest,
       apiHost: String,
       apiKey: String,
-      requestTimeout: FiniteDuration,
+      timeout: FiniteDuration,
       ssl: Boolean
     ): F[Either[WeatherError, W]] =
-      Sync[F].delay(buildRequest(apiHost, apiKey, ssl, request))
+      Sync[F].delay(getResponse(apiHost, apiKey, ssl, timeout, request))
   }
 
   /** Eval http Transport in cases where you have to do side-effects (e.g. spark). */
@@ -66,22 +66,36 @@ object Transport {
       request: WeatherRequest,
       apiHost: String,
       apiKey: String,
-      requestTimeout: FiniteDuration,
+      timeout: FiniteDuration,
       ssl: Boolean
     ): Eval[Either[WeatherError, W]] = Eval.later {
-      buildRequest(apiHost, apiKey, ssl, request)
+      getResponse(apiHost, apiKey, ssl, timeout, request)
     }
   }
 
-  private def buildRequest[W <: WeatherResponse: Decoder](
+  /** Id http Transport in cases where you have to do side-effects (e.g. spark). */
+  implicit def idTransport: Transport[Id] = new Transport[Id] {
+    def receive[W <: WeatherResponse: Decoder](
+      request: WeatherRequest,
+      apiHost: String,
+      apiKey: String,
+      timeout: FiniteDuration,
+      ssl: Boolean
+    ): Id[Either[WeatherError, W]] = getResponse(apiHost, apiKey, ssl, timeout, request)
+  }
+
+  private def getResponse[W <: WeatherResponse: Decoder](
     apiHost: String,
     apiKey: String,
     ssl: Boolean,
+    timeout: FiniteDuration,
     request: WeatherRequest
   ): Either[WeatherError, W] = {
     val scheme  = if (ssl) "https" else "http"
     val baseUri = s"$scheme://$apiHost"
-    val uri     = request.constructRequest(baseUri, apiKey)
+    val uri = request
+      .constructRequest(baseUri, apiKey)
+      .timeout(timeout.toMillis.toInt, timeout.toMillis.toInt)
 
     for {
       response <- Either.catchNonFatal(uri.asString).leftMap(e => InternalError(e.getMessage))
