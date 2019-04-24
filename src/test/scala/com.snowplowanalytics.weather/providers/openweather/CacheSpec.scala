@@ -77,7 +77,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     val ioEmptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
     implicit val ioTransport   = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
     val ioAction = for {
-      client <- CreateOWM[IO].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[IO].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
     } yield ()
     ioAction.unsafeRunSync()
@@ -89,7 +89,7 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     val evalEmptyHistoryResponse = Eval.now(Right(History(BigInt(100), "0", List())))
     implicit val evalTransport   = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
     val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
     } yield ()
     evalAction.value

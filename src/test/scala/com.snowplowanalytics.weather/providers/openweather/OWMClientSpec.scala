@@ -56,7 +56,7 @@ class OWMClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
       .receive(any[WeatherRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
         any[Decoder[WeatherResponse]])
       .returns(ioEmptyHistoryResponse)
-    val ioClient = CreateOWM[IO].create("host", "key", 1.seconds)
+    val ioClient = CreateOWM[IO].create("host", "key", 1.seconds, true)
     ioClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
     there.was(
       1.times(ioTransport)
@@ -68,7 +68,7 @@ class OWMClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
       .receive(any[WeatherRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
         any[Decoder[WeatherResponse]])
       .returns(evalEmptyHistoryResponse)
-    val evalClient = CreateOWM[Eval].create("host", "key", 1.seconds)
+    val evalClient = CreateOWM[Eval].create("host", "key", 1.seconds, true)
     evalClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
     there.was(
       1.times(evalTransport)

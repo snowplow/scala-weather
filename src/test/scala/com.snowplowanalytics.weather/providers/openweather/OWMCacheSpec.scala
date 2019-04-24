@@ -59,7 +59,7 @@ class OWMCacheSpec extends Specification with Mockito {
   def e1 = {
     implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
     val ioAction = for {
-      client <- CreateOWM[IO].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[IO].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
@@ -71,7 +71,7 @@ class OWMCacheSpec extends Specification with Mockito {
 
     implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
     val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
@@ -90,7 +90,7 @@ class OWMCacheSpec extends Specification with Mockito {
       .returns(ioTimeoutErrorResponse)
       .thenReturn(ioEmptyHistoryResponse)
     val ioAction = for {
-      client <- CreateOWM[IO].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[IO].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
@@ -106,7 +106,7 @@ class OWMCacheSpec extends Specification with Mockito {
       .returns(evalTimeoutErrorResponse)
       .thenReturn(evalEmptyHistoryResponse)
     val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
     } yield ()
@@ -119,7 +119,7 @@ class OWMCacheSpec extends Specification with Mockito {
   def e3 = {
     implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
     val ioAction = for {
-      client <- CreateOWM[IO].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[IO].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(6.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(8.44f, 3.33f, 100)
@@ -132,7 +132,7 @@ class OWMCacheSpec extends Specification with Mockito {
 
     implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
     val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
+      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(6.44f, 3.33f, 100)
       _      <- client.cachingHistoryByCoords(8.44f, 3.33f, 100)
@@ -147,7 +147,7 @@ class OWMCacheSpec extends Specification with Mockito {
   def e4 = {
     implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
     val ioAction = for {
-      client <- CreateOWM[IO].create("host", "key", 1.seconds, 10, 1).map(_.toOption.get)
+      client <- CreateOWM[IO].create("host", "key", 1.seconds, true, 10, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
@@ -159,7 +159,7 @@ class OWMCacheSpec extends Specification with Mockito {
 
     implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
     val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, 10, 1).map(_.toOption.get)
+      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 10, 1).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
@@ -173,7 +173,7 @@ class OWMCacheSpec extends Specification with Mockito {
   def e5 = {
     implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
     val ioAction = for {
-      client <- CreateOWM[IO].create("host", "key", 1.seconds, 10, 2).map(_.toOption.get)
+      client <- CreateOWM[IO].create("host", "key", 1.seconds, true, 10, 2).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
@@ -185,7 +185,7 @@ class OWMCacheSpec extends Specification with Mockito {
 
     implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
     val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, 10, 2).map(_.toOption.get)
+      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 10, 2).map(_.toOption.get)
       _      <- client.cachingHistoryByCoords(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
       _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
       _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
@@ -197,19 +197,19 @@ class OWMCacheSpec extends Specification with Mockito {
   }
 
   def e6 = {
-    CreateOWM[IO].create("host", "KEY", 1.seconds, 10, geoPrecision = 0).unsafeRunSync() must beLeft.like {
+    CreateOWM[IO].create("host", "KEY", 1.seconds, true, 10, geoPrecision = 0).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
     }
-    CreateOWM[Eval].create("host", "KEY", 1.seconds, 10, geoPrecision = 0).value must beLeft.like {
+    CreateOWM[Eval].create("host", "KEY", 1.seconds, true, 10, geoPrecision = 0).value must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
     }
   }
 
   def e7 = {
-    CreateOWM[IO].create("host", "KEY", 1.seconds, cacheSize = 0, 10).unsafeRunSync() must beLeft.like {
+    CreateOWM[IO].create("host", "KEY", 1.seconds, true, cacheSize = 0, 10).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
     }
-    CreateOWM[Eval].create("host", "KEY", 1.seconds, cacheSize = 0, 10).value must beLeft.like {
+    CreateOWM[Eval].create("host", "KEY", 1.seconds, true, cacheSize = 0, 10).value must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
     }
   }

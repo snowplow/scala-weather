@@ -31,15 +31,18 @@ trait CreateOWM[F[_]] {
    * Create an `OWMClient`
    * @param apiHost URL to the OpenWeatherMap API endpoints
    * @param apiKey API key from OpenWeatherMap
+   * @param timeout time after which active request will be considered failed
+   * @param ssl whether to use https
    * @return an OWMClient
    */
-  def create(apiHost: String, apiKey: String, timeout: FiniteDuration): OWMClient[F]
+  def create(apiHost: String, apiKey: String, timeout: FiniteDuration, ssl: Boolean): OWMClient[F]
 
   /**
    * Create an `OwmCacheClient` capable of caching results
    * @param apiHost URL to the OpenWeatherMap API endpoints
    * @param apiKey API key from OpenWeatherMap
    * @param timeout time after which active request will be considered failed
+   * @param ssl whether to use https
    * @param cacheSize amount of history requests storing in cache
    * it's better to store whole OWM packet (5000/50000/150000) plus some space for errors (~1%)
    * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
@@ -52,6 +55,7 @@ trait CreateOWM[F[_]] {
     apiHost: String,
     apiKey: String,
     timeout: FiniteDuration,
+    ssl: Boolean,
     cacheSize: Int,
     geoPrecision: Int
   ): F[Either[InvalidConfigurationError, OWMCacheClient[F]]]
@@ -61,51 +65,66 @@ object CreateOWM {
   def apply[F[_]](implicit ev: CreateOWM[F]): CreateOWM[F] = ev
 
   implicit def syncCreateOWM[F[_]: Sync: Transport]: CreateOWM[F] = new CreateOWM[F] {
-    def create(apiHost: String, apiKey: String, timeout: FiniteDuration): OWMClient[F] =
-      new OWMClient(apiHost, apiKey, timeout, ssl = true)
     def create(
       apiHost: String,
       apiKey: String,
       timeout: FiniteDuration,
+      ssl: Boolean
+    ): OWMClient[F] = new OWMClient(apiHost, apiKey, timeout, ssl)
+    def create(
+      apiHost: String,
+      apiKey: String,
+      timeout: FiniteDuration,
+      ssl: Boolean,
       cacheSize: Int,
       geoPrecision: Int
     ): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
-      cacheClient[F](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
+      cacheClient[F](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
   }
 
   implicit def evalCreateOWM(implicit T: Transport[Eval]): CreateOWM[Eval] = new CreateOWM[Eval] {
-    def create(apiHost: String, apiKey: String, timeout: FiniteDuration): OWMClient[Eval] =
-      new OWMClient(apiHost, apiKey, timeout, ssl = true)
     def create(
       apiHost: String,
       apiKey: String,
       timeout: FiniteDuration,
+      ssl: Boolean
+    ): OWMClient[Eval] = new OWMClient(apiHost, apiKey, timeout, ssl)
+    def create(
+      apiHost: String,
+      apiKey: String,
+      timeout: FiniteDuration,
+      ssl: Boolean,
       cacheSize: Int,
       geoPrecision: Int
     ): Eval[Either[InvalidConfigurationError, OWMCacheClient[Eval]]] =
-      cacheClient[Eval](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
+      cacheClient[Eval](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
   }
 
   implicit def idCreateOWM(implicit T: Transport[Id]): CreateOWM[Id] = new CreateOWM[Id] {
-    def create(apiHost: String, apiKey: String, timeout: FiniteDuration): OWMClient[Id] =
-      new OWMClient(apiHost, apiKey, timeout, ssl = true)
     def create(
       apiHost: String,
       apiKey: String,
       timeout: FiniteDuration,
+      ssl: Boolean
+    ): OWMClient[Id] = new OWMClient(apiHost, apiKey, timeout, ssl)
+    def create(
+      apiHost: String,
+      apiKey: String,
+      timeout: FiniteDuration,
+      ssl: Boolean,
       cacheSize: Int,
       geoPrecision: Int
     ): Id[Either[InvalidConfigurationError, OWMCacheClient[Id]]] =
-      cacheClient[Id](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
+      cacheClient[Id](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
   }
 
   private[openweather] def cacheClient[F[_]: Monad](
     apiHost: String,
     apiKey: String,
     timeout: FiniteDuration,
+    ssl: Boolean,
     cacheSize: Int,
-    geoPrecision: Int,
-    ssl: Boolean
+    geoPrecision: Int
   )(
     implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]],
     T: Transport[F]

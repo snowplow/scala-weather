@@ -30,9 +30,8 @@ libraryDependencies += "com.snowplowanalytics" %% "scala-weather" % "0.5.0"
 ## Guide
 
 **Note:** All of the clients take `F` as a type parameter. It can be any type that has an instance
-of `cats.effect.Sync` in case of basic clients and `cats.effect.Concurrent` in case of caching
-clients. In the following guide we will be using `cats.effect.IO`. We also provide instances for
-`cats.Eval` in cases side-effects are needed (e.g. Spark or Beam)
+of `cats.effect.Sync`, here we use `cats.effect.IO`. We also provide instances for
+`cats.Eval` and `cats.Id` in cases side-effects are needed (e.g. Spark or Beam)
 
 ### OpenWeatherMap
 
@@ -40,30 +39,31 @@ First **[sign up][owm-signup]** to OpenWeatherMap to get your API key.
 
 Unfortunately, with the free plan you can only perform current weather and forecast lookups; for historical data access you need to subscribe to the **[history plan][history-plan]**. If you use the free plan all `historyBy...` methods will return failures.
 
-
 #### Usage
 
 Once you have your API key, you can create a client:
 
 ```scala
-import com.snowplowanalytics.weather.providers.openweather.OpenWeatherMap
+import scala.concurrent.duration._
+import com.snowplowanalytics.weather.providers.openweather.CreateOWM
+import cats.{Eval, Id}
 import cats.effect.IO
-val client = OpenWeatherMap.basicClient[IO]("YOUR_KEY")
+val client = CreateOWM[IO].create(
+  "history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds, ssl = true)
+// using Eval and Id
+val evalClient = CreateOWM[Eval].create(
+  "history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds, ssl = true)
+val idClient = CreateOWM[Id].create(
+  "history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds, ssl = true)
 ```
 
-OpenWeatherMap provides several hosts for API with various benefits, which you can pass as the second argument:
+OpenWeatherMap provides several hosts for API with various benefits, which you can pass as the first argument:
 
-+ `api.openweathermap.org` - free access, recommended, used in `OwmAsyncClient` by default
-+ `history.openweathermap.org` - paid, history only, used in `OwmCacheClient` by default
++ `api.openweathermap.org` - free access, recommended
++ `history.openweathermap.org` - paid, history only
 + `pro.openweathermap.org` - paid, faster, SSL-enabled
 
-You can enable SSL through the third boolean argument:
-
-```scala
-val client = OpenWeatherMap.basicClient[IO]("YOUR_KEY", "history.openweathermap.org", ssl = true)
-```
-
-Both clients offer the same set of public methods:
+Both the caching and normal clients offer the same set of public methods:
 
 + `forecastById`
 + `forecastByName`
@@ -81,6 +81,9 @@ These methods were designed to follow OpenWeatherMap's own API calls as closely 
 import com.snowplowanalytics.weather.errors.WeatherError
 import com.snowplowanalytics.weather.providers.openweather.responses.Current
 val weatherInLondon: IO[Either[WeatherError, Current]] = client.currentByCoords(35.0f, 139.0f)
+// using Eval and Id
+val evalWeatherInLondon: Eval[Either[WeatherError, Current]] = evalClient.currentByCoords(35.0f, 139.0f)
+val idWeatherInLondon: Either[WeatherError, Current] = idClient.currentByCoords(35.0f, 139.0f)
 ```
 
 Notice that all temperature fields are in Kelvin, which is the OpenWeatherMap default (OWM only supports unit preference for the current weather).
@@ -88,7 +91,7 @@ Notice that all temperature fields are in Kelvin, which is the OpenWeatherMap de
 Scala Weather doesn't try to validate your arguments (except of course their types), so invalid calls like this one:
 
 ```scala
-// Count supposed to be positive
+// Count is supposed to be positive
 val forecast: IO[Either[WeatherError, Current]] = client.forecastById(3070325, cnt=-1)
 ```
 
@@ -96,9 +99,10 @@ will still be executed and OpenWeatherMap will decide how to handle it (in this 
 
 The caching client is created like this:
 ```scala
-val cachingClient = OpenWeatherMap.cacheClient[IO]("YOUR_KEY")
+val cachingClient = CreateOWM[IO].create(
+  "history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds, ssl = true, cacheSize = 5000, geoPrecision = 2)
 ```
-More about caching later.
+More on `cacheSize` and `geoPrecision` below.
 
 ### Dark Sky
 
@@ -109,9 +113,16 @@ Sign up **[here][darkskydev]** to receive the API key. Dark Sky currently allows
 Similar to OpenWeatherMap, to create a basic client you can use the factories in the `DarkSky` object:
 ```scala
 import com.snowplowanalytics.weather.providers.darksky.DarkSky
+import cats.{Eval, Id}
 import cats.effect.IO
 
-val client = DarkSky.basicClient[IO]("YOUR_KEY")
+val client = CreateOWM[IO].create(
+  "history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds)
+// using Eval and Id
+val evalClient = CreateDarkSky[Eval].create(
+  "history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds)
+val idClient = CreateDarkSky[Id].create(
+  "history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds)
 ```
 
 Dark Sky API is much simpler than OWM, it consists only of two functions, namely `forecast` and `timeMachine`
@@ -130,7 +141,7 @@ val response: IO[Either[WeatherError, DarkSkyResponse]] =
   client.timeMachine(40.71f, 74.0f, ZonedDateTime.now().minusYears(1))
 ```
 
-Contrary to OpenWeatherMap, Dark Sky does not provide geocoding features,
+Unlike OpenWeatherMap, Dark Sky does not provide geocoding features,
 meaning you must know the latitude and longitude of the location.
 
 ## Understanding the cache
@@ -179,7 +190,7 @@ For example, the following code will make only one request to OpenWeatherMap, bu
 `cachingTimeMachine` in the Dark Sky client will return the whole `DarkSkyResponse` for the specified day.
 The field `currently` will be omitted, so the user must rely on the `hourly` or `daily` fields.
 
-The return type of both `OpenWeatherMap.cacheClient` and `DarkSky.cacheClient` is wrapped in the effect type, as
+The return type of both caching clients creation is wrapped in the effect type, as
 the creation of the underlying cache allocates mutable state.
 
 ```scala
@@ -187,7 +198,7 @@ import com.snowplowanalytics.weather.providers.openweather.OpenWeatherMap
 import cats.effect.IO
 
 val action = for {
-  client <- OpenWeatherMap.cacheClient[IO]("YOUR_KEY", cacheSize = 10, geoPrecision = 1, timeout = 5.seconds)
+  client <- CreateOWM[IO].create("history.openweathermap.org", "YOUR_KEY", timeout = 1.seconds, ssl = true, cacheSize = 10, geoPrecision = 1)
   response1 <- client.cachingHistoryByCoords(10.4f, 32.1f, 1514765952)   // Jan 1 12:19:12 2018.
   response2 <- client.cachingHistoryByCoords(10.1f, 32.312f, 1514821267) // Jan 1 15:41:07 2018. From cache
   response3 <- client.cachingHistoryByCoords(10.2f, 32.4f, 1514776320)   // Jan 1 03:12:00 2018. From cache
