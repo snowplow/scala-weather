@@ -15,6 +15,8 @@ package providers.openweather
 
 import java.time.ZonedDateTime
 
+import scala.concurrent.duration._
+
 import cats.Eval
 import cats.effect.IO
 import cats.syntax.either._
@@ -29,7 +31,7 @@ import model._
 import requests.OwmHistoryRequest
 import responses.History
 
-class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
+class OWMClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
   def is = s2"""
 
   OWM Client API test
@@ -49,21 +51,29 @@ class OwmClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
   )
 
   def e1 = {
-    val ioTransport = mock[Transport[IO]]
+    implicit val ioTransport = mock[Transport[IO]]
     ioTransport
-      .receive(any[WeatherRequest])(any[Decoder[WeatherResponse]])
+      .receive(any[WeatherRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
+        any[Decoder[WeatherResponse]])
       .returns(ioEmptyHistoryResponse)
-    val ioClient = OpenWeatherMap.basicClient[IO](ioTransport)
+    val ioClient = CreateOWM[IO].create("host", "key", 1.seconds)
     ioClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(1.times(ioTransport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
+    there.was(
+      1.times(ioTransport)
+        .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
 
-    val evalTransport = mock[Transport[Eval]]
+    implicit val evalTransport = mock[Transport[Eval]]
     evalTransport
-      .receive(any[WeatherRequest])(any[Decoder[WeatherResponse]])
+      .receive(any[WeatherRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
+        any[Decoder[WeatherResponse]])
       .returns(evalEmptyHistoryResponse)
-    val evalClient = OpenWeatherMap.basicClient[Eval](evalTransport)
+    val evalClient = CreateOWM[Eval].create("host", "key", 1.seconds)
     evalClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(1.times(evalTransport).receive[History](eqTo(expectedRequest))(eqTo(implicitly)))
+    there.was(
+      1.times(evalTransport)
+        .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
 
 }

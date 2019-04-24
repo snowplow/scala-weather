@@ -15,6 +15,8 @@ package providers.darksky
 
 import java.time.ZonedDateTime
 
+import scala.concurrent.duration._
+
 import errors.WeatherError
 import responses.DarkSkyResponse
 import requests.DarkSkyRequest
@@ -24,10 +26,18 @@ import requests.DarkSkyRequest
  * Allows forecast, current, and historical data requests
  * This API does not support Geocoding - coordinates only
  * For more detailed description go to: https://darksky.net/dev/docs
- *
+ * @param apiHost address of the API to interrogate
+ * @param apiKey credentials to interrogate the API
+ * @param requestTimeout duration after which the request will be timed out
+ * @param ssl whether to use https or http
  * @tparam F effect type
  */
-class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Transport[F]) {
+class DarkSkyClient[F[_]] private[darksky] (
+  apiHost: String,
+  apiKey: String,
+  requestTimeout: FiniteDuration,
+  ssl: Boolean
+)(implicit T: Transport[F]) {
 
   /** Forecast request that returns the current weather condition,
    * a minute-by-minute forecast (where available), an hour-by-hour forecast
@@ -51,7 +61,7 @@ class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Tran
     units: Option[Units]     = None
   ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, None, exclude, extend, lang, units)
-    transport.receive(request)
+    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
   }
 
   /** "Time Machine Request" - returns the observed (in the past) or forecasted (in the future)
@@ -77,6 +87,6 @@ class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Tran
     units: Option[Units]     = None
   ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, Some(dateTime.toEpochSecond), exclude, extend, lang, units)
-    transport.receive(request)
+    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
   }
 }

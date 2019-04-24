@@ -21,7 +21,7 @@ import org.scalacheck.Prop.forAll
 import errors._
 import responses._
 
-class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
+class OWMBatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
   def is = s2"""
 
   Pick neighbour item out of collection

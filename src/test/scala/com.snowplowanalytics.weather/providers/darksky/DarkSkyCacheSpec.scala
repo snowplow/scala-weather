@@ -16,6 +16,7 @@ package providers.darksky
 import java.time.ZonedDateTime
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 import cats.Eval
 import cats.effect.{ContextShift, IO}
@@ -57,139 +58,171 @@ class DarkSkyCacheSpec extends Specification with Mockito {
     Eval.now(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
 
   def e1 = {
-    val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
+    implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
     val ioAction = for {
-      client <- DarkSky.cacheClient(1, 1, ioTransport).map(_.toOption.get)
+      client <- CreateDarkSky[IO].create("host", "key", 1.seconds, 1, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     ioAction.unsafeRunSync()
-    there.was(1.times(ioTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      1.times(ioTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
 
-    val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
+    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
     val evalAction = for {
-      client <- DarkSky.cacheClient(1, 1, evalTransport).map(_.toOption.get)
+      client <- CreateDarkSky[Eval].create("host", "key", 1.seconds, 1, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     evalAction.value
-    there.was(1.times(evalTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      1.times(evalTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
 
   def e2 = {
-    val ioTransport = mock[Transport[IO]]
+    implicit val ioTransport = mock[Transport[IO]]
     ioTransport
-      .receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly))
+      .receive[DarkSkyResponse](any[DarkSkyRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
+        eqTo(implicitly))
       .returns(ioTimeoutErrorResponse)
       .thenReturn(ioExampleResponse)
 
     val ioAction = for {
-      client <- DarkSky.cacheClient(2, 1, ioTransport).map(_.toOption.get)
+      client <- CreateDarkSky[IO].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     ioAction.unsafeRunSync()
-    there.was(2.times(ioTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      2.times(ioTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
 
-    val evalTransport = mock[Transport[Eval]]
+    implicit val evalTransport = mock[Transport[Eval]]
     evalTransport
-      .receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly))
+      .receive[DarkSkyResponse](any[DarkSkyRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
+        eqTo(implicitly))
       .returns(evalTimeoutErrorResponse)
       .thenReturn(evalExampleResponse)
 
     val evalAction = for {
-      client <- DarkSky.cacheClient(2, 1, evalTransport).map(_.toOption.get)
+      client <- CreateDarkSky[Eval].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     evalAction.value
-    there.was(2.times(evalTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      2.times(evalTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
 
   def e3 = {
-    val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
+    implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
     val ioAction = for {
-      client <- DarkSky.cacheClient(2, 1, ioTransport).map(_.toOption.get)
+      client <- CreateDarkSky[IO].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(6.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(8.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     ioAction.unsafeRunSync()
-    there.was(4.times(ioTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      4.times(ioTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
 
-    val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
+    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
     val evalAction = for {
-      client <- DarkSky.cacheClient(2, 1, evalTransport).map(_.toOption.get)
+      client <- CreateDarkSky[Eval].create("host", "key", 1.seconds, 2, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(6.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(8.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     evalAction.value
-    there.was(4.times(evalTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      4.times(evalTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
 
   def e4 = {
-    val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
+    implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
     val ioAction = for {
-      client <- DarkSky.cacheClient(1, 1, ioTransport).map(_.toOption.get)
+      client <- CreateDarkSky[IO].create("host", "key", 1.seconds, 1, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(10.4f, 32.1f, ZonedDateTime.parse("2015-11-09T12:00:40Z"))
       _      <- client.cachingTimeMachine(10.1f, 32.312f, ZonedDateTime.parse("2015-11-09T00:06:47Z"))
       _      <- client.cachingTimeMachine(10.2f, 32.4f, ZonedDateTime.parse("2015-11-09T23:06:47Z"))
     } yield ()
     ioAction.unsafeRunSync()
-    there.was(1.times(ioTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      1.times(ioTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
 
-    val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
+    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
     val evalAction = for {
-      client <- DarkSky.cacheClient(1, 1, evalTransport).map(_.toOption.get)
+      client <- CreateDarkSky[Eval].create("host", "key", 1.seconds, 1, 1).map(_.toOption.get)
       _      <- client.cachingTimeMachine(10.4f, 32.1f, ZonedDateTime.parse("2015-11-09T12:00:40Z"))
       _      <- client.cachingTimeMachine(10.1f, 32.312f, ZonedDateTime.parse("2015-11-09T00:06:47Z"))
       _      <- client.cachingTimeMachine(10.2f, 32.4f, ZonedDateTime.parse("2015-11-09T23:06:47Z"))
     } yield ()
     evalAction.value
-    there.was(1.times(evalTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      1.times(evalTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
 
   def e5 = {
-    val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
+    implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioExampleResponse)
     val ioAction = for {
-      client <- DarkSky.cacheClient(10, 2, ioTransport).map(_.toOption.get)
+      client <- CreateDarkSky[IO].create("host", "key", 1.seconds, 10, 2).map(_.toOption.get)
       _      <- client.cachingTimeMachine(10.8f, 32.1f, ZonedDateTime.parse("2015-11-09T12:00:40Z"))
       _      <- client.cachingTimeMachine(10.1f, 32.312f, ZonedDateTime.parse("2015-11-09T00:06:47Z"))
       _      <- client.cachingTimeMachine(10.2f, 32.4f, ZonedDateTime.parse("2015-11-09T23:06:47Z"))
     } yield ()
     ioAction.unsafeRunSync()
-    there.was(2.times(ioTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      2.times(ioTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
 
-    val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
+    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalExampleResponse)
     val evalAction = for {
-      client <- DarkSky.cacheClient(10, 2, evalTransport).map(_.toOption.get)
+      client <- CreateDarkSky[Eval].create("host", "key", 1.seconds, 10, 2).map(_.toOption.get)
       _      <- client.cachingTimeMachine(10.8f, 32.1f, ZonedDateTime.parse("2015-11-09T12:00:40Z"))
       _      <- client.cachingTimeMachine(10.1f, 32.312f, ZonedDateTime.parse("2015-11-09T00:06:47Z"))
       _      <- client.cachingTimeMachine(10.2f, 32.4f, ZonedDateTime.parse("2015-11-09T23:06:47Z"))
     } yield ()
     evalAction.value
-    there.was(2.times(evalTransport).receive[DarkSkyResponse](any[DarkSkyRequest])(eqTo(implicitly)))
+    there.was(
+      2.times(evalTransport)
+        .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
 
   def e6 = {
-    DarkSky.cacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must beLeft.like {
+    CreateDarkSky[IO].create("host", "KEY", 1.seconds, 10, geoPrecision = 0).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
     }
-    DarkSky.unsafeCacheClient("KEY", geoPrecision = 0).value must beLeft.like {
+    CreateDarkSky[Eval].create("host", "KEY", 1.seconds, 10, geoPrecision = 0).value must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
     }
   }
 
   def e7 = {
-    DarkSky.cacheClient[IO]("KEY", cacheSize = 0).unsafeRunSync() must beLeft.like {
+    CreateDarkSky[IO].create("host", "KEY", 1.seconds, cacheSize = 0, 10).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
     }
-    DarkSky.unsafeCacheClient("KEY", cacheSize = 0).value must beLeft.like {
+    CreateDarkSky[Eval].create("host", "KEY", 1.seconds, cacheSize = 0, 10).value must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
     }
   }

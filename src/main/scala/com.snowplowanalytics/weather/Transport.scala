@@ -16,9 +16,8 @@ import scala.concurrent.duration.FiniteDuration
 
 import cats.Eval
 import cats.free.Free
-import cats.effect.{Concurrent, ContextShift, IO, Sync, Timer}
+import cats.effect.{IO, Sync}
 import cats.syntax.either._
-import cats.syntax.functor._
 import hammock._
 import hammock.jvm.Interpreter
 import io.circe.{Decoder, Json}
@@ -32,114 +31,51 @@ trait Transport[F[_]] {
   /**
    * Main client logic for Request => Response function,
    * where Response is wrapped in tparam `F`
-   *
    * @param request request built by client method
+   * @param apiHost address of the API to interrogate
+   * @param apiKey credentials to interrogate the API
+   * @param requestTimeout duration after which the request will be timed out
+   * @param ssl whether to use https or http
    * @tparam W type of weather response to extract
    * @return extracted either error or weather wrapped in `F`
    */
-  def receive[W <: WeatherResponse: Decoder](request: WeatherRequest): F[Either[WeatherError, W]]
-
+  def receive[W <: WeatherResponse: Decoder](
+    request: WeatherRequest,
+    apiHost: String,
+    apiKey: String,
+    requestTimeout: FiniteDuration,
+    ssl: Boolean
+  ): F[Either[WeatherError, W]]
 }
 
 object Transport {
 
-  /**
-   * Http Transport leveraging cats-effect's Sync.
-   * @param apiHost address of the API to interrogate
-   * @param apiKey credentials to interrogate the API
-   * @param ssl whether to use https or http
-   * @return a Sync Transport
-   */
-  def httpTransport[F[_]: Sync](
-    apiHost: String,
-    apiKey: String,
-    ssl: Boolean = true
-  ): Transport[F] = new Transport[F] {
-
+  /** Http Transport leveraging cats-effect's Sync. */
+  implicit def syncTransport[F[_]: Sync]: Transport[F] = new Transport[F] {
     implicit val interpreter = Interpreter[F]
 
     def receive[W <: WeatherResponse: Decoder](
-      request: WeatherRequest
+      request: WeatherRequest,
+      apiHost: String,
+      apiKey: String,
+      requestTimeout: FiniteDuration,
+      ssl: Boolean
     ): F[Either[WeatherError, W]] =
-      buildRequest(apiHost, apiKey, ssl, request)
-        .exec[F]
+      buildRequest(apiHost, apiKey, ssl, request).exec[F]
   }
 
-  /**
-   * Unsafe http Transport to use in cases where you have to do side-effects (e.g. spark or beam).
-   * @param apiHost address of the API to interrogate
-   * @param apiKey credentials to interrogate the API
-   * @param ssl whether to use https or http
-   * @return an Eval Transport
-   */
-  def unsafeHttpTransport(
-    apiHost: String,
-    apiKey: String,
-    ssl: Boolean = true
-  ): Transport[Eval] = new Transport[Eval] {
-
+  /** Eval http Transport in cases where you have to do side-effects (e.g. spark). */
+  implicit def evalTransport: Transport[Eval] = new Transport[Eval] {
     implicit val interpreter = Interpreter[IO]
 
     def receive[W <: WeatherResponse: Decoder](
-      request: WeatherRequest
-    ): Eval[Either[WeatherError, W]] =
-      Eval.later {
-        buildRequest(apiHost, apiKey, ssl, request)
-          .exec[IO]
-          .unsafeRunSync()
-      }
-  }
-
-  /**
-   * Http Transport which is able to timeout requests.
-   * @param apiHost address of the API to interrogate
-   * @param apiKey credentials to interrogate the API
-   * @param requestTimeout duration after which the request will be timed out
-   * @param ssl whether to use https or http
-   * @return a Transport with Concurrent and Timer constraints
-   */
-  def timeoutHttpTransport[F[_]: Concurrent: Timer](
-    apiHost: String,
-    apiKey: String,
-    requestTimeout: FiniteDuration,
-    ssl: Boolean = true
-  ): Transport[F] = new Transport[F] {
-
-    implicit val interpreter = Interpreter[F]
-
-    def receive[W <: WeatherResponse: Decoder](
-      request: WeatherRequest
-    ): F[Either[WeatherError, W]] = {
-      val operation = buildRequest(apiHost, apiKey, ssl, request).exec[F]
-      timeout(operation, requestTimeout)
-    }
-  }
-
-  /**
-   * Unsafe http Transport which is able to timeout requests.
-   * @param apiHost address of the API to interrogate
-   * @param apiKey credentials to interrogate the API
-   * @param requestTimeout duration after which the request will be timed out
-   * @param ssl whether to use https or http
-   * @return an Eval Transport
-   */
-  def unsafeTimeoutHttpTransport(
-    apiHost: String,
-    apiKey: String,
-    requestTimeout: FiniteDuration,
-    ssl: Boolean = true
-  ): Transport[Eval] = new Transport[Eval] {
-
-    implicit val interpreter = Interpreter[IO]
-    implicit val timer       = IO.timer(scala.concurrent.ExecutionContext.Implicits.global)
-    implicit val cs: ContextShift[IO] =
-      IO.contextShift(scala.concurrent.ExecutionContext.Implicits.global)
-
-    def receive[W <: WeatherResponse: Decoder](
-      request: WeatherRequest
+      request: WeatherRequest,
+      apiHost: String,
+      apiKey: String,
+      requestTimeout: FiniteDuration,
+      ssl: Boolean
     ): Eval[Either[WeatherError, W]] = Eval.later {
-      val operation = buildRequest(apiHost, apiKey, ssl, request).exec[IO]
-      timeout(operation, requestTimeout).unsafeRunSync()
+      buildRequest(apiHost, apiKey, ssl, request).exec[IO].unsafeRunSync()
     }
   }
 
@@ -159,24 +95,6 @@ object Transport {
       .request(Method.GET, uri, Map())
       .map(uri => processResponse(uri))
   }
-
-  /**
-   * Apply timeout to the `operation` parameter. To be replaced by Concurrent[F].timeout in cats-effect 1.0.0
-   *
-   * @param operation The operation we want to run with a timeout
-   * @param duration Duration to timeout after
-   * @return either Left(TimeoutError) or a result of the operation, wrapped in F
-   */
-  private def timeout[F[_]: Concurrent: Timer, W](
-    operation: F[Either[WeatherError, W]],
-    duration: FiniteDuration,
-  ): F[Either[WeatherError, W]] =
-    Concurrent[F]
-      .race(operation, Timer[F].sleep(duration))
-      .map {
-        case Left(value) => value
-        case Right(_)    => Left(TimeoutError(s"OpenWeatherMap request timed out after ${duration.toSeconds} seconds"))
-      }
 
   /**
    * Decode response case class from HttpResponse body
