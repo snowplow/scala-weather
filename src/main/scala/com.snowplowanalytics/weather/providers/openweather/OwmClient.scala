@@ -24,14 +24,14 @@ import requests._
  * Non-caching OpenWeatherMap client
  * @param apiHost address of the API to interrogate
  * @param apiKey credentials to interrogate the API
- * @param requestTimeout duration after which the request will be timed out
+ * @param timeout duration after which the request will be timed out
  * @param ssl whether to use https or http
  * @tparam F effect type
  */
 class OWMClient[F[_]] private[openweather] (
   apiHost: String,
   apiKey: String,
-  requestTimeout: FiniteDuration,
+  timeout: FiniteDuration,
   ssl: Boolean
 )(implicit T: Transport[F]) {
 
@@ -61,7 +61,7 @@ class OWMClient[F[_]] private[openweather] (
         ++ ("cnt"   -> cnt)
         ++ ("type"  -> measure.map(_.toString))
     )
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -93,7 +93,7 @@ class OWMClient[F[_]] private[openweather] (
         ++ ("cnt"   -> cnt)
         ++ ("type"  -> measure.map(_.toString))
     )
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -122,7 +122,7 @@ class OWMClient[F[_]] private[openweather] (
                                       ++ ("end"   -> end)
                                       ++ ("cnt"   -> cnt)
                                       ++ ("type"  -> measure.map(_.toString)))
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -134,7 +134,7 @@ class OWMClient[F[_]] private[openweather] (
    */
   def forecastById(id: Int, cnt: OptArg[Int] = None): F[Either[WeatherError, Forecast]] = {
     val request = OwmForecastRequest("city", Map("id" -> id.toString, "cnt" -> cnt.toString))
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -153,7 +153,7 @@ class OWMClient[F[_]] private[openweather] (
   ): F[Either[WeatherError, Forecast]] = {
     val query   = name + country.map("," + _).getOrElse("")
     val request = OwmForecastRequest("city", Map("q" -> query, "cnt" -> cnt.toString))
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -170,7 +170,7 @@ class OWMClient[F[_]] private[openweather] (
   ): F[Either[WeatherError, Weather]] = {
     val request =
       OwmForecastRequest("weather", Map("lat" -> lat.toString, "lon" -> lon.toString, "cnt" -> cnt.toString))
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -182,7 +182,7 @@ class OWMClient[F[_]] private[openweather] (
    */
   def currentById(id: Int): F[Either[WeatherError, Current]] = {
     val request = OwmCurrentRequest("weather", Map("id" -> id.toString))
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -201,7 +201,7 @@ class OWMClient[F[_]] private[openweather] (
   ): F[Either[WeatherError, Current]] = {
     val query   = name + country.map("," + _).getOrElse("")
     val request = OwmCurrentRequest("weather", Map("q" -> query, "cnt" -> cnt.toString))
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /**
@@ -214,7 +214,7 @@ class OWMClient[F[_]] private[openweather] (
    */
   def currentByCoords(lat: Float, lon: Float): F[Either[WeatherError, Current]] = {
     val request = OwmCurrentRequest("weather", Map("lat" -> lat.toString, "lon" -> lon.toString))
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
 }

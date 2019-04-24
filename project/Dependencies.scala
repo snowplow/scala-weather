@@ -18,7 +18,7 @@ object Dependencies {
     val circe  = "0.11.1"
     val scalaj = "2.4.1"
     val lruMap = "0.3.0"
-
+    
     // Tests
     val specs2 = "4.3.5"
   }

@@ -28,14 +28,14 @@ import requests.DarkSkyRequest
  * For more detailed description go to: https://darksky.net/dev/docs
  * @param apiHost address of the API to interrogate
  * @param apiKey credentials to interrogate the API
- * @param requestTimeout duration after which the request will be timed out
+ * @param timeout duration after which the request will be timed out
  * @param ssl whether to use https or http
  * @tparam F effect type
  */
 class DarkSkyClient[F[_]] private[darksky] (
   apiHost: String,
   apiKey: String,
-  requestTimeout: FiniteDuration,
+  timeout: FiniteDuration,
   ssl: Boolean
 )(implicit T: Transport[F]) {
 
@@ -61,7 +61,7 @@ class DarkSkyClient[F[_]] private[darksky] (
     units: Option[Units]     = None
   ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, None, exclude, extend, lang, units)
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /** "Time Machine Request" - returns the observed (in the past) or forecasted (in the future)
@@ -87,6 +87,6 @@ class DarkSkyClient[F[_]] private[darksky] (
     units: Option[Units]     = None
   ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, Some(dateTime.toEpochSecond), exclude, extend, lang, units)
-    T.receive(request, apiHost, apiKey, requestTimeout, ssl)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 }
