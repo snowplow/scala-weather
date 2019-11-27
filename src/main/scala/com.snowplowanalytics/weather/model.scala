@@ -12,13 +12,11 @@
  */
 package com.snowplowanalytics.weather
 
-import hammock.Uri
+import scalaj.http.HttpRequest
 
 object model {
-
   trait WeatherRequest {
-    def constructQuery(baseUri: Uri, apiKey: String): Uri
+    def constructRequest(baseUri: String, apiKey: String): HttpRequest
   }
   trait WeatherResponse
-
 }

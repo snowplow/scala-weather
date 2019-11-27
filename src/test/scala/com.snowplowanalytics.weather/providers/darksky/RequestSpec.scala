@@ -12,9 +12,8 @@
  */
 package com.snowplowanalytics.weather.providers.darksky
 
-import cats.data.NonEmptyList
-import hammock._
 import org.specs2.{ScalaCheck, Specification}
+import scalaj.http._
 
 import requests.DarkSkyRequest
 import BlockType._
@@ -32,29 +31,29 @@ class RequestSpec extends Specification with ScalaCheck {
 
   """
 
-  val baseUri = uri"http://example.com"
+  val baseUri = "http://example.com"
   val key     = "0123456789ABCDEF"
 
   def e1 = {
     val request = DarkSkyRequest(17.3f, -89.3f)
-    request.constructQuery(baseUri, key) mustEqual baseUri / key / "17.3,-89.3"
+    request.constructRequest(baseUri, key) mustEqual Http(s"$baseUri/$key/17.3,-89.3")
   }
 
   def e2 = {
     val request = DarkSkyRequest(17.3f, -89.3f, Some(1234567))
-    request.constructQuery(baseUri, key) mustEqual baseUri / key / "17.3,-89.3,1234567"
+    request.constructRequest(baseUri, key) mustEqual Http(s"$baseUri/$key/17.3,-89.3,1234567")
   }
 
   def e3 = {
     val request = DarkSkyRequest(17.3f, -89.3f, exclude = List(daily, minutely, hourly, flags))
-    request.constructQuery(baseUri, key) mustEqual
-      (baseUri / key / "17.3,-89.3") ? NonEmptyList.of("exclude" -> "daily,minutely,hourly,flags")
+    request.constructRequest(baseUri, key) mustEqual
+      Http(s"$baseUri/$key/17.3,-89.3").params("exclude" -> "daily,minutely,hourly,flags")
   }
 
   def e4 = {
     val request = DarkSkyRequest(17.3f, -89.3f, extend = true)
-    request.constructQuery(baseUri, key) mustEqual
-      (baseUri / key / "17.3,-89.3") ? NonEmptyList.of("extend" -> "hourly")
+    request.constructRequest(baseUri, key) mustEqual
+      Http(s"$baseUri/$key/17.3,-89.3").params("extend" -> "hourly")
   }
 
   def e5 = {
@@ -65,8 +64,8 @@ class RequestSpec extends Specification with ScalaCheck {
                                  extend  = true,
                                  lang    = Some("pl"),
                                  units   = Some(Units.auto))
-    request.constructQuery(baseUri, key) mustEqual (baseUri / key / "17.3,-89.3,1234567") ?
-      NonEmptyList.of("exclude" -> "daily", "extend" -> "hourly", "lang" -> "pl", "units" -> "auto")
+    request.constructRequest(baseUri, key) mustEqual Http(s"$baseUri/$key/17.3,-89.3,1234567")
+      .params("exclude" -> "daily", "extend" -> "hourly", "lang" -> "pl", "units" -> "auto")
   }
 
 }

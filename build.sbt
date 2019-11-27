@@ -34,7 +34,7 @@ lazy val root = project
       Dependencies.Libraries.circeGeneric,
       Dependencies.Libraries.circeParser,
       Dependencies.Libraries.circeExtras,
-      Dependencies.Libraries.hammockCore,
+      Dependencies.Libraries.scalaj,
       Dependencies.Libraries.lruMap,
       Dependencies.Libraries.specs2,
       Dependencies.Libraries.specs2Mock,

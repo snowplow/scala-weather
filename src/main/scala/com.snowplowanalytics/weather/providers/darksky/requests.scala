@@ -15,7 +15,7 @@ package providers.darksky
 
 import java.text.DecimalFormat
 
-import hammock.Uri
+import scalaj.http._
 
 import model.WeatherRequest
 
@@ -52,9 +52,9 @@ object requests {
     units: Option[Units]     = None
   ) extends WeatherRequest {
 
-    override def constructQuery(baseUri: Uri, apiKey: String): Uri = {
+    override def constructRequest(baseUri: String, apiKey: String): HttpRequest = {
       val pathParams = List(latitude, longitude).map(floatToString) ++ time.map(_.toString).toList
-      val uri        = baseUri / apiKey / pathParams.mkString(",")
+      val uri        = s"$baseUri/$apiKey/${pathParams.mkString(",")}"
 
       val queryParams = List(
         exclude.map(_.name).reduceOption(_ + "," + _).map("exclude" -> _),
@@ -63,7 +63,7 @@ object requests {
         units.map("units" -> _.name)
       ).flatten
 
-      uri.params(queryParams: _*)
+      Http(uri).params(queryParams)
     }
   }
 

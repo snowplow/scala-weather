@@ -15,13 +15,11 @@ package com.snowplowanalytics.weather
 import scala.concurrent.duration.FiniteDuration
 
 import cats.Eval
-import cats.free.Free
-import cats.effect.{IO, Sync}
+import cats.effect.Sync
 import cats.syntax.either._
-import hammock._
-import hammock.jvm.Interpreter
 import io.circe.{Decoder, Json}
 import io.circe.parser.parse
+import scalaj.http._
 
 import errors._
 import model._
@@ -52,8 +50,6 @@ object Transport {
 
   /** Http Transport leveraging cats-effect's Sync. */
   implicit def syncTransport[F[_]: Sync]: Transport[F] = new Transport[F] {
-    implicit val interpreter = Interpreter[F]
-
     def receive[W <: WeatherResponse: Decoder](
       request: WeatherRequest,
       apiHost: String,
@@ -61,13 +57,11 @@ object Transport {
       requestTimeout: FiniteDuration,
       ssl: Boolean
     ): F[Either[WeatherError, W]] =
-      buildRequest(apiHost, apiKey, ssl, request).exec[F]
+      Sync[F].delay(buildRequest(apiHost, apiKey, ssl, request))
   }
 
   /** Eval http Transport in cases where you have to do side-effects (e.g. spark). */
   implicit def evalTransport: Transport[Eval] = new Transport[Eval] {
-    implicit val interpreter = Interpreter[IO]
-
     def receive[W <: WeatherResponse: Decoder](
       request: WeatherRequest,
       apiHost: String,
@@ -75,7 +69,7 @@ object Transport {
       requestTimeout: FiniteDuration,
       ssl: Boolean
     ): Eval[Either[WeatherError, W]] = Eval.later {
-      buildRequest(apiHost, apiKey, ssl, request).exec[IO].unsafeRunSync()
+      buildRequest(apiHost, apiKey, ssl, request)
     }
   }
 
@@ -84,28 +78,18 @@ object Transport {
     apiKey: String,
     ssl: Boolean,
     request: WeatherRequest
-  ): Free[HttpF, Either[WeatherError, W]] = {
-    val scheme    = if (ssl) "https" else "http"
-    val authority = Uri.Authority(None, Uri.Host.Other(apiHost), None)
-    val baseUri   = Uri(Some(scheme), Some(authority))
+  ): Either[WeatherError, W] = {
+    val scheme  = if (ssl) "https" else "http"
+    val baseUri = s"$scheme://$apiHost"
+    val uri     = request.constructRequest(baseUri, apiKey)
 
-    val uri = request.constructQuery(baseUri, apiKey)
-
-    Hammock
-      .request(Method.GET, uri, Map())
-      .map(uri => processResponse(uri))
+    for {
+      response <- Either.catchNonFatal(uri.asString).leftMap(e => InternalError(e.getMessage))
+      content  <- getResponseContent(response)
+      json     <- parseJson(content)
+      weather  <- extractWeather(json)
+    } yield weather
   }
-
-  /**
-   * Decode response case class from HttpResponse body
-   *
-   * @param response full HTTP response
-   * @return either error or decoded case class
-   */
-  private def processResponse[A: Decoder](response: HttpResponse): Either[WeatherError, A] =
-    getResponseContent(response)
-      .flatMap(parseJson)
-      .flatMap(json => extractWeather(json))
 
   /**
    * Convert the response to string
@@ -113,12 +97,10 @@ object Transport {
    * @param response full HTTP response
    * @return either entity content of HTTP response or WeatherError (AuthorizationError / HTTPError)
    */
-  private def getResponseContent(response: HttpResponse): Either[WeatherError, String] =
-    response.status match {
-      case Status.OK => Right(response.entity.content.toString)
-      case Status.Unauthorized | Status.Forbidden => Left(AuthorizationError)
-      case _ => Left(HTTPError(s"Request failed with status ${response.status.code}"))
-    }
+  private def getResponseContent(response: HttpResponse[String]): Either[WeatherError, String] =
+    if (response.isSuccess) Right(response.body)
+    else if (response.code == 401 || response.code == 403) Left(AuthorizationError)
+    else Left(HTTPError(s"Request failed with status ${response.code}"))
 
   private def parseJson(content: String): Either[ParseError, Json] =
     parse(content)
