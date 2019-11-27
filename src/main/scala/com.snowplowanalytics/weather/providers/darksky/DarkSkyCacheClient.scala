@@ -15,13 +15,21 @@ package providers.darksky
 
 import java.time.ZonedDateTime
 
+import scala.concurrent.duration._
+
 import cats.Monad
 
 import responses.DarkSkyResponse
 import errors.WeatherError
 
-class DarkSkyCacheClient[F[_]] private[darksky] (cache: Cache[F, DarkSkyResponse], transport: Transport[F])
-    extends DarkSkyClient[F](transport) {
+class DarkSkyCacheClient[F[_]] private[darksky] (
+  cache: Cache[F, DarkSkyResponse],
+  apiHost: String,
+  apiKey: String,
+  timeout: FiniteDuration,
+  ssl: Boolean
+)(implicit T: Transport[F])
+    extends DarkSkyClient[F](apiHost, apiKey, timeout, ssl)(T) {
 
   /** nth part of 1 to which latitude and longitude will be rounded */
   val geoPrecision: Int = cache.geoPrecision
@@ -31,7 +39,6 @@ class DarkSkyCacheClient[F[_]] private[darksky] (cache: Cache[F, DarkSkyResponse
    * if not found, then performs the request
    * == IMPORTANT ==
    * Returned DarkSkyResponse's `currently` field excluded, because the time is always aligned to midnight
-   *
    * @param latitude The latitude of a location. Positive is north, negative is south.
    * @param longitude The longitude of a location. Positive is east, negative is west.
    * @param dateTime zoned datetime, time is aligned to midnight
@@ -59,5 +66,4 @@ class DarkSkyCacheClient[F[_]] private[darksky] (cache: Cache[F, DarkSkyResponse
     dateTime: ZonedDateTime
   ): F[Either[WeatherError, DarkSkyResponse]] =
     timeMachine(latitude, longitude, dateTime, (List(BlockType.currently) ++ exclude).distinct, extend, lang, units)
-
 }

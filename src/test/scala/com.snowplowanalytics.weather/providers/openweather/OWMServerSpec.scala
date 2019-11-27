@@ -49,17 +49,15 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
       works with https                      $e4
   """
 
-  val host               = "history.openweathermap.org"
-  lazy val ioClient      = OpenWeatherMap.basicClient[IO](owmKey.get, host, false)
-  lazy val ioSslClient   = OpenWeatherMap.basicClient[IO](owmKey.get, host, true)
-  val ioRun              = (a: IO[Either[WeatherError, History]]) => a.unsafeRunSync()
-  lazy val evalClient    = OpenWeatherMap.unsafeBasicClient(owmKey.get, host, false)
-  lazy val evalSslClient = OpenWeatherMap.unsafeBasicClient(owmKey.get, host, true)
-  val evalRun            = (a: Eval[Either[WeatherError, History]]) => a.value
+  val host            = "history.openweathermap.org"
+  lazy val ioClient   = CreateOWM[IO].create(host, owmKey.get, 1.seconds)
+  val ioRun           = (a: IO[Either[WeatherError, History]]) => a.unsafeRunSync()
+  lazy val evalClient = CreateOWM[Eval].create(host, owmKey.get, 1.seconds)
+  val evalRun         = (a: Eval[Either[WeatherError, History]]) => a.value
 
   def testCities[F[_]](
     cities: Vector[(Float, Float)],
-    client: OwmClient[F],
+    client: OWMClient[F],
     f: F[Either[WeatherError, History]] => Either[WeatherError, History]
   ): Prop =
     Prop.forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
@@ -83,20 +81,20 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
   }
 
   def e3 = {
-    val ioClient = OpenWeatherMap.basicClient[IO]("INVALID-KEY", host, true)
+    val ioClient = CreateOWM[IO].create(host, "INVALID-KEY", 1.seconds)
     val ioResult = ioClient.historyById(1).unsafeRunTimed(5.seconds)
     ioResult must beSome
     ioResult.get must beLeft(AuthorizationError)
 
-    val evalClient = OpenWeatherMap.unsafeBasicClient("INVALID-KEY", host, true)
+    val evalClient = CreateOWM[Eval].create(host, "INVALID-KEY", 1.seconds)
     val evalResult = evalClient.historyById(1).value
     evalResult must beLeft(AuthorizationError)
   }
 
   def e4 = {
-    testCities(TestData.randomCities, ioSslClient, ioRun)
+    testCities(TestData.randomCities, ioClient, ioRun)
       .set(maxSize = 10, minTestsOk = 10)
-    testCities(TestData.randomCities, evalSslClient, evalRun)
+    testCities(TestData.randomCities, evalClient, evalRun)
       .set(maxSize = 10, minTestsOk = 10)
   }
 }

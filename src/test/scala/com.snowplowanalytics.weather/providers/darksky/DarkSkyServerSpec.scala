@@ -87,9 +87,9 @@ class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with
     }
   }
 
-  private lazy val ioClient   = DarkSky.basicClient[IO](key.get)
+  private lazy val ioClient   = CreateDarkSky[IO].create("api.darksky.net/forecast", key.get, 1.seconds)
   val ioRun                   = (a: IO[Either[WeatherError, DarkSkyResponse]]) => a.unsafeRunSync()
-  private lazy val evalClient = DarkSky.unsafeBasicClient(key.get)
+  private lazy val evalClient = CreateDarkSky[Eval].create("api.darksky.net/forecast", key.get, 1.seconds)
   val evalRun                 = (a: Eval[Either[WeatherError, DarkSkyResponse]]) => a.value
 
   def e1 = {
@@ -119,12 +119,12 @@ class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with
   }
 
   def e5 = {
-    val ioClient = DarkSky.basicClient[IO]("INVALID-KEY")
+    val ioClient = CreateDarkSky[IO].create("api.darksky.net/forecast", "INVALID_KEY", 1.seconds)
     val ioResult = ioClient.forecast(0f, 0f).unsafeRunTimed(5.seconds)
     ioResult must beSome
     ioResult.get must beLeft(AuthorizationError)
 
-    val evalClient = DarkSky.unsafeBasicClient("INVALID-KEY")
+    val evalClient = CreateDarkSky[Eval].create("api.darksky.net/forecast", "INVALID_KEY", 1.seconds)
     val evalResult = evalClient.forecast(0f, 0f).value
     evalResult must beLeft(AuthorizationError)
   }

@@ -15,6 +15,8 @@ package providers.openweather
 
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
+import scala.concurrent.duration._
+
 import cats.Monad
 import cats.syntax.functor._
 
@@ -27,10 +29,14 @@ import responses._
  *
  * WARNING. Caching will not work with free OWM licenses - history plan is required
  */
-class OwmCacheClient[F[_]] private[openweather] (
+class OWMCacheClient[F[_]] private[openweather] (
   cache: Cache[F, History],
-  transport: Transport[F]
-) extends OwmClient[F](transport) {
+  apiHost: String,
+  apiKey: String,
+  timeout: FiniteDuration,
+  ssl: Boolean
+)(implicit T: Transport[F])
+    extends OWMClient[F](apiHost, apiKey, timeout, ssl)(T) {
 
   /** nth part of 1 to which latitude and longitude will be rounded */
   val geoPrecision: Int = cache.geoPrecision
