@@ -43,15 +43,15 @@ class OWMClient[F[_]] private[openweather] (
    * @param start start (unix time, UTC)
    * @param end end (unix time, UTC)
    * @param cnt count of returned data
-   * @param measure one of predefined `Api.Measures` to constrain accuracy
+   * @param measure one of predefined `Api.Measure` values to constrain accuracy
    * @return either error or history wrapped in `F`
    */
   def historyById(
     id: Int,
-    start: OptArg[Long]                 = None,
-    end: OptArg[Long]                   = None,
-    cnt: OptArg[Int]                    = None,
-    measure: OptArg[Api.Measures.Value] = None
+    start: OptArg[Long]          = None,
+    end: OptArg[Long]            = None,
+    cnt: OptArg[Int]             = None,
+    measure: OptArg[Api.Measure] = None
   ): F[Either[WeatherError, History]] = {
     val request = OwmHistoryRequest(
       "city",
@@ -59,7 +59,7 @@ class OWMClient[F[_]] private[openweather] (
         ++ ("start" -> start)
         ++ ("end"   -> end)
         ++ ("cnt"   -> cnt)
-        ++ ("type"  -> measure.map(_.toString))
+        ++ ("type"  -> measure.map(_.value))
     )
     T.receive(request, apiHost, apiKey, timeout, ssl)
   }
@@ -73,16 +73,16 @@ class OWMClient[F[_]] private[openweather] (
    * @param start start (unix time, UTC)
    * @param end end (unix time, UTC)
    * @param cnt count of returned data
-   * @param measure one of predefined `Api.Measures` to constrain accuracy
+   * @param measure one of predefined `Api.Measure` values to constrain accuracy
    * @return either error or history wrapped in `F`
    */
   def historyByName(
     name: String,
-    country: OptArg[String]             = None,
-    start: OptArg[Long]                 = None,
-    end: OptArg[Long]                   = None,
-    cnt: OptArg[Int]                    = None,
-    measure: OptArg[Api.Measures.Value] = None
+    country: OptArg[String]      = None,
+    start: OptArg[Long]          = None,
+    end: OptArg[Long]            = None,
+    cnt: OptArg[Int]             = None,
+    measure: OptArg[Api.Measure] = None
   ): F[Either[WeatherError, History]] = {
     val query = name + country.map("," + _).getOrElse("")
     val request = OwmHistoryRequest(
@@ -91,7 +91,7 @@ class OWMClient[F[_]] private[openweather] (
         ++ ("start" -> start)
         ++ ("end"   -> end)
         ++ ("cnt"   -> cnt)
-        ++ ("type"  -> measure.map(_.toString))
+        ++ ("type"  -> measure.map(_.value))
     )
     T.receive(request, apiHost, apiKey, timeout, ssl)
   }
@@ -105,23 +105,23 @@ class OWMClient[F[_]] private[openweather] (
    * @param start start (unix time, UTC)
    * @param end end (unix time, UTC)
    * @param cnt count of returned data
-   * @param measure one of predefined `Api.Measures` to constrain accuracy
+   * @param measure one of predefined `Api.Measure` values to constrain accuracy
    * @return either error or history wrapped in `F`
    */
   def historyByCoords(
     lat: Float,
     lon: Float,
-    start: OptArg[Long]                 = None,
-    end: OptArg[Long]                   = None,
-    cnt: OptArg[Int]                    = None,
-    measure: OptArg[Api.Measures.Value] = None
+    start: OptArg[Long]          = None,
+    end: OptArg[Long]            = None,
+    cnt: OptArg[Int]             = None,
+    measure: OptArg[Api.Measure] = None
   ): F[Either[WeatherError, History]] = {
     val request = OwmHistoryRequest("city",
                                     Map("lat" -> lat.toString, "lon" -> lon.toString)
                                       ++ ("start" -> start)
                                       ++ ("end"   -> end)
                                       ++ ("cnt"   -> cnt)
-                                      ++ ("type"  -> measure.map(_.toString)))
+                                      ++ ("type"  -> measure.map(_.value)))
     T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 

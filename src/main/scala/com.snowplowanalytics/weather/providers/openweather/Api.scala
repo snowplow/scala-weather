@@ -16,11 +16,21 @@ package providers.openweather
 /** Module for various predefined values in OWM specification */
 object Api {
 
-  /** Enums for measurements for history requests */
-  object Measures extends Enumeration {
-    val Tick = Value("tick")
-    val Hour = Value("hour")
-    val Day  = Value("day")
+  /** Representation of measurement enums for history requests */
+  sealed trait Measure {
+    val value: String
+  }
+
+  final case object Tick extends Measure {
+    val value = "tick"
+  }
+
+  final case object Hour extends Measure {
+    val value = "hour"
+  }
+
+  final case object Day extends Measure {
+    val value = "day"
   }
 
 }
