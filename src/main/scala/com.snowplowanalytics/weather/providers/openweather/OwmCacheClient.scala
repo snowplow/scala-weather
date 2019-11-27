@@ -15,7 +15,7 @@ package providers.openweather
 
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
-import cats.Functor
+import cats.Monad
 import cats.syntax.functor._
 
 import errors._
@@ -27,7 +27,7 @@ import responses._
  *
  * WARNING. Caching will not work with free OWM licenses - history plan is required
  */
-class OwmCacheClient[F[_]: Functor] private[openweather] (
+class OwmCacheClient[F[_]] private[openweather] (
   cache: Cache[F, History],
   transport: Transport[F]
 ) extends OwmClient[F](transport) {
@@ -48,7 +48,7 @@ class OwmCacheClient[F[_]: Functor] private[openweather] (
     latitude: Float,
     longitude: Float,
     timestamp: Timestamp
-  ): F[Either[WeatherError, Weather]] =
+  )(implicit M: Monad[F]): F[Either[WeatherError, Weather]] =
     cachingHistoryByCoords(latitude,
                            longitude,
                            ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC))
@@ -60,7 +60,7 @@ class OwmCacheClient[F[_]: Functor] private[openweather] (
     latitude: Float,
     longitude: Float,
     dateTime: ZonedDateTime
-  ): F[Either[WeatherError, Weather]] =
+  )(implicit M: Monad[F]): F[Either[WeatherError, Weather]] =
     cache
       .getCachedOrRequest(latitude, longitude, dateTime)(doRequest)
       .map(historyResult => getWeatherStamp(historyResult, dateTime))

@@ -15,6 +15,8 @@ package providers.darksky
 
 import java.time.ZonedDateTime
 
+import cats.Monad
+
 import responses.DarkSkyResponse
 import errors.WeatherError
 
@@ -43,7 +45,7 @@ class DarkSkyCacheClient[F[_]] private[darksky] (cache: Cache[F, DarkSkyResponse
     extend: Boolean          = false,
     lang: Option[String]     = None,
     units: Option[Units]     = None
-  ): F[Either[WeatherError, DarkSkyResponse]] =
+  )(implicit M: Monad[F]): F[Either[WeatherError, DarkSkyResponse]] =
     cache.getCachedOrRequest(latitude, longitude, dateTime)(doRequest(exclude, extend, lang, units))
 
   private def doRequest(

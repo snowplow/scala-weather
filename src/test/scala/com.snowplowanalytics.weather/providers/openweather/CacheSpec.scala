@@ -13,11 +13,12 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-import cats.effect.IO
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import cats.effect.{ContextShift, IO}
 import cats.syntax.either._
 import io.circe.Decoder
 import org.mockito.ArgumentMatchers.{eq => eqTo}
-import org.specs2.concurrent.ExecutionEnv
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 
@@ -26,7 +27,7 @@ import requests.OwmRequest
 import responses.History
 
 // Mock transport which returns predefined responses
-class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
+class CacheSpec extends Specification with Mockito {
   def is =
     s2"""
 
@@ -40,6 +41,9 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     throw exception for invalid precision $e6
     throw exception for invalid cache size $e7
   """
+
+  implicit val timer                = IO.timer(global)
+  implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
   val emptyHistoryResponse: IO[Either[TimeoutError, History]] = IO.pure(History(BigInt(100), "0", List()).asRight)
   val timeoutErrorResponse: IO[Either[TimeoutError, History]] =

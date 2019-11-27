@@ -22,7 +22,7 @@ import io.circe.Decoder
 import errors.{TimeoutError, WeatherError}
 import model._
 
-class TimeoutHttpTransport[F[_]: Concurrent](
+class TimeoutHttpTransport[F[_]: Concurrent: Timer](
   apiHost: String,
   apiKey: String,
   requestTimeout: FiniteDuration,
@@ -32,12 +32,10 @@ class TimeoutHttpTransport[F[_]: Concurrent](
 
   import TimeoutHttpTransport._
 
-  private val timer: Timer[F] = Timer.derive[F]
-
   override def receive[W <: WeatherResponse: Decoder](
     request: WeatherRequest
   ): F[Either[WeatherError, W]] =
-    timeout(super.receive(request), requestTimeout, timer)
+    timeout(super.receive(request), requestTimeout)
 
 }
 
@@ -50,13 +48,12 @@ object TimeoutHttpTransport {
    * @param duration Duration to timeout after
    * @return either Left(TimeoutError) or a result of the operation, wrapped in F
    */
-  private def timeout[F[_]: Concurrent, W](
+  private def timeout[F[_]: Concurrent: Timer, W](
     operation: F[Either[WeatherError, W]],
     duration: FiniteDuration,
-    timer: Timer[F]
   ): F[Either[WeatherError, W]] =
     Concurrent[F]
-      .race(operation, timer.sleep(duration))
+      .race(operation, Timer[F].sleep(duration))
       .map {
         case Left(value) => value
         case Right(_)    => Left(TimeoutError(s"OpenWeatherMap request timed out after ${duration.toSeconds} seconds"))
