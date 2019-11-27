@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -17,11 +17,9 @@ lazy val root = project
   .settings(
     name := "scala-weather",
     organization := "com.snowplowanalytics",
-    version := "0.4.0",
+    version := "0.5.0",
     description := "High-performance Scala library for performing current and historical weather lookups",
-    scalaVersion := "2.12.6",
-    crossScalaVersions := Seq("2.11.12", "2.12.6"),
-    scalacOptions := BuildSettings.compilerOptions,
+    scalaVersion := "2.12.8",
     javacOptions := BuildSettings.javaCompilerOptions,
     shellPrompt := { _ =>
       name.value + "> "
@@ -36,7 +34,7 @@ lazy val root = project
       Dependencies.Libraries.circeGeneric,
       Dependencies.Libraries.circeParser,
       Dependencies.Libraries.circeExtras,
-      Dependencies.Libraries.hammockCore,
+      Dependencies.Libraries.scalaj,
       Dependencies.Libraries.lruMap,
       Dependencies.Libraries.specs2,
       Dependencies.Libraries.specs2Mock,

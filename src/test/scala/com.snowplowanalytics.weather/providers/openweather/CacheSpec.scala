@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -13,110 +13,90 @@
 package com.snowplowanalytics.weather
 package providers.openweather
 
-// cats
-import cats.effect.IO
-import cats.syntax.either._
+import java.time._
 
-// tests
-import org.specs2.concurrent.ExecutionEnv
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+
+import cats.Eval
+import cats.effect.{ContextShift, IO}
 import org.specs2.Specification
 import org.specs2.mock.Mockito
-import org.specs2.matcher.DisjunctionMatchers
+import org.mockito.ArgumentMatchers.{eq => eqTo}
+import org.specs2.concurrent.ExecutionEnv
 
-// This library
-import Errors.{InvalidConfigurationError, TimeoutError}
-import Requests.OwmRequest
-import Responses.History
+import requests.OwmHistoryRequest
+import responses.History
+import Cache._
 
-// Mock transport which returns predefined responses
-class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito with DisjunctionMatchers {
-  def is =
-    s2"""
+class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockito {
+  def is = s2"""
 
-  Test cache specification
+  Testing cache keys
 
-    do not bother server on identical requests $e1
-    do not bother server on similar requests (example from README) $e4
-    retry request on timeout error $e2
-    check geoPrecision $e5
-    make requests again after full cache $e3
-    throw exception for invalid precision $e6
-    throw exception for invalid cache size $e7
+  Start day
+    Day of 1447945977 is 19 Nov 2015                        $e1
+    Key for 2018-06-01, 42.832, 32.1101                     $e2
+    dayStartEpoch produces correct time                     $e3
+    Key from next day in other timezone extracted correctly $e4
   """
 
-  val emptyHistoryResponse: IO[Either[TimeoutError, History]] = IO.pure(History(BigInt(100), "0", List()).asRight)
-  val timeoutErrorResponse: IO[Either[TimeoutError, History]] =
-    IO.pure(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
+  implicit val timer                = IO.timer(global)
+  implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
-  def e1 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(2, 1, transport)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-    } yield ()
-    action.unsafeRunSync()
-    there.was(1.times(transport).receive(any[OwmRequest])(any()))
-  }
+  private val precision          = 1
+  private val nov19time          = Instant.ofEpochSecond(1447945977).atZone(ZoneOffset.UTC).toLocalDate
+  private val nov19begin         = 1447891200
+  private val newDayInKranoyarsk = ZonedDateTime.parse("2015-12-14T00:12:44.000+07:00")
+  private val sunsetInKranoyarsk = ZonedDateTime.parse("2018-07-13T21:28:44.000+07:00")
 
-  def e2 = {
-    val transport = mock[TimeoutHttpTransport[IO]]
-    transport
-      .receive[History](any[OwmRequest])(any())
-      .returns(timeoutErrorResponse)
-      .thenReturn(emptyHistoryResponse)
-
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(2, 1, transport)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-    } yield ()
-    action.unsafeRunSync()
-    there.was(2.times(transport).receive(any[OwmRequest])(any()))
-  }
+  def e1 = Cache.dayStartEpoch(nov19time) must beEqualTo(nov19begin)
+  def e2 =
+    Cache.eventToCacheKey(ZonedDateTime.parse("2018-06-02T02:23:12+05:00"), Position(42.832f, 32.1101f), precision) must beEqualTo(
+      CacheKey(LocalDate.of(2018, 6, 1), Position(43.0f, 32.0f)))
 
   def e3 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(2, 1, transport)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(6.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(8.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-    } yield ()
-    action.unsafeRunSync()
-    there.was(4.times(transport).receive(any[OwmRequest])(any()))
+    val dateTime =
+      LocalDateTime.ofEpochSecond(Cache.dayStartEpoch(sunsetInKranoyarsk.toLocalDate), 0, ZoneOffset.ofHours(0))
+    dateTime.getHour must beEqualTo(0)
+    dateTime.getMinute must beEqualTo(0)
   }
 
   def e4 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(10, 1, transport)
-      _      <- client.cachingHistoryByCoords(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
+    val expectedRequest = OwmHistoryRequest(
+      "city",
+      Map(
+        "lat"   -> "4.44",
+        "lon"   -> "3.33",
+        "cnt"   -> "24",
+        "start" -> "1449964800", // "2015-12-13T00:00:00.000+00:00"
+        "end"   -> "1450051200" // "2015-12-14T00:00:00.000+00:00"
+      )
+    )
+
+    val ioEmptyHistoryResponse = IO.pure(Right(History(BigInt(100), "0", List())))
+    implicit val ioTransport   = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
+    val ioAction = for {
+      client <- CreateOWM[IO].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
     } yield ()
-    action.unsafeRunSync()
-    there.was(1.times(transport).receive(any[OwmRequest])(any()))
-  }
+    ioAction.unsafeRunSync()
+    there.was(
+      1.times(ioTransport)
+        .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
 
-  def e5 = {
-    val transport = mock[Transport[IO]].defaultReturn(emptyHistoryResponse)
-    val action = for {
-      client <- OpenWeatherMap.cacheClient(10, 2, transport)
-      _      <- client.cachingHistoryByCoords(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
+    val evalEmptyHistoryResponse = Eval.now(Right(History(BigInt(100), "0", List())))
+    implicit val evalTransport   = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
+    val evalAction = for {
+      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
+      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
     } yield ()
-    action.unsafeRunSync()
-    there.was(2.times(transport).receive(any[OwmRequest])(any()))
+    evalAction.value
+    there.was(
+      1.times(evalTransport)
+        .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
-
-  def e6 =
-    OpenWeatherMap.cacheClient[IO]("KEY", geoPrecision = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
-
-  def e7 =
-    OpenWeatherMap.cacheClient[IO]("KEY", cacheSize = 0).unsafeRunSync() must throwA[InvalidConfigurationError]
 
 }

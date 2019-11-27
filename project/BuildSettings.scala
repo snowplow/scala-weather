@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -26,22 +26,6 @@ import com.typesafe.sbt.site.SitePlugin.autoImport._
 import com.typesafe.sbt.SbtGit.GitKeys._
 
 object BuildSettings {
-
-  lazy val compilerOptions = Seq(
-    "-deprecation",
-    "-encoding", "UTF-8",
-    "-feature",
-    "-language:existentials",
-    "-language:higherKinds",
-    "-language:implicitConversions",
-    "-unchecked",
-    "-Ypartial-unification",
-    "-Yno-adapted-args",
-    "-Ywarn-dead-code",
-    "-Ywarn-numeric-widen",
-    "-Xfuture",
-    "-Xlint"
-  )
 
   lazy val javaCompilerOptions = Seq(
     "-source", "1.8",
@@ -77,7 +61,7 @@ object BuildSettings {
 
   lazy val docsSettings = Seq(
     addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), siteSubdirName in ScalaUnidoc),
-    gitRemoteRepo := "https://github.com/snowplow/scala-maxmind-iplookups.git",
+    gitRemoteRepo := "https://github.com/snowplow/scala-weather.git",
     siteSubdirName := ""
   )
 }

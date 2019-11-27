@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -15,7 +15,9 @@ package providers.darksky
 
 import java.text.DecimalFormat
 
-import hammock.Uri
+import scalaj.http._
+
+import model.WeatherRequest
 
 final case class BlockType private (name: String) extends AnyVal
 
@@ -38,20 +40,21 @@ object Units {
   val si   = Units("si")
 }
 
-object Requests {
+object requests {
 
-  final case class DarkSkyRequest(latitude: Float,
-                                  longitude: Float,
-                                  time: Option[Long]       = None,
-                                  exclude: List[BlockType] = List.empty[BlockType],
-                                  extend: Boolean          = false,
-                                  lang: Option[String]     = None,
-                                  units: Option[Units]     = None)
-      extends WeatherRequest {
+  final case class DarkSkyRequest(
+    latitude: Float,
+    longitude: Float,
+    time: Option[Long]       = None,
+    exclude: List[BlockType] = List.empty[BlockType],
+    extend: Boolean          = false,
+    lang: Option[String]     = None,
+    units: Option[Units]     = None
+  ) extends WeatherRequest {
 
-    override def constructQuery(baseUri: Uri, apiKey: String): Uri = {
+    override def constructRequest(baseUri: String, apiKey: String): HttpRequest = {
       val pathParams = List(latitude, longitude).map(floatToString) ++ time.map(_.toString).toList
-      val uri        = baseUri / apiKey / pathParams.mkString(",")
+      val uri        = s"$baseUri/$apiKey/${pathParams.mkString(",")}"
 
       val queryParams = List(
         exclude.map(_.name).reduceOption(_ + "," + _).map("exclude" -> _),
@@ -60,15 +63,16 @@ object Requests {
         units.map("units" -> _.name)
       ).flatten
 
-      uri.params(queryParams: _*)
+      Http(uri).params(queryParams)
     }
   }
 
-  /** Dark Sky seems to not consume numbers in scientific notation, which are sometimes produced by toString */
+  /** Dark Sky seems to not consume numbers in scientific notation,
+   * which are sometimes produced by toString */
   private def floatToString(value: Float): String = {
     val decimalFormat = new DecimalFormat("0.0000")
     decimalFormat.setMinimumFractionDigits(0)
-    decimalFormat.format(value)
+    decimalFormat.format(value.toDouble)
   }
 
 }

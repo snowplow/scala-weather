@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -12,22 +12,20 @@
  */
 package com.snowplowanalytics.weather
 
-// Java
 import java.time.{LocalDate, ZoneOffset, ZonedDateTime}
 
-// cats
-import cats.effect.Sync
+import cats.{Functor, Monad}
+import cats.syntax.functor._
 import cats.syntax.flatMap._
+import com.snowplowanalytics.lrumap.{CreateLruMap, LruMap}
 
-// LruMap
-import com.snowplowanalytics.lrumap.LruMap
+import errors.{TimeoutError, WeatherError}
+import model.WeatherResponse
 
-// This library
-import Errors.{TimeoutError, WeatherError}
-
-class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
+class Cache[F[_], W <: WeatherResponse] private (
   cache: LruMap[F, Cache.CacheKey, Either[WeatherError, W]],
-  val geoPrecision: Int) {
+  val geoPrecision: Int
+) {
 
   import Cache._
 
@@ -41,27 +39,42 @@ class Cache[F[_]: Sync, W <: WeatherResponse] private[weather] (
    * @return value stored in the cache or the result of the provided function
    */
   def getCachedOrRequest(latitude: Float, longitude: Float, dateTime: ZonedDateTime)(
-    doRequest: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]]): F[Either[WeatherError, W]] = {
-
+    doRequest: (Float, Float, ZonedDateTime) => F[Either[WeatherError, W]])(
+    implicit M: Monad[F]
+  ): F[Either[WeatherError, W]] = {
     val cacheKey = eventToCacheKey(dateTime, Position(latitude, longitude), geoPrecision)
     cache.get(cacheKey).flatMap {
       case Some(Right(cached)) =>
-        Sync[F].pure(Right(cached)) // Cache hit
+        M.pure(Right(cached)) // Cache hit
       case Some(Left(TimeoutError(_))) =>
         doRequest(latitude, longitude, dateTime)
           .flatTap(cache.put(cacheKey, _))
       case Some(Left(error)) =>
-        Sync[F].pure(Left(error))
+        M.pure(Left(error))
       case None =>
         doRequest(latitude, longitude, dateTime)
           .flatTap(cache.put(cacheKey, _))
     }
-
   }
-
 }
 
 object Cache {
+
+  /**
+   * Factory method to create a cache.
+   * @param size resulting cache's size
+   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded when making
+   * requests to the cache
+   * @return a cache of WeatherResponse wrapped in a F
+   */
+  def init[F[_]: Functor, W <: WeatherResponse](
+    size: Int,
+    geoPrecision: Int
+  )(implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, W]]): F[Cache[F, W]] =
+    for {
+      lru <- CreateLruMap[F, CacheKey, Either[WeatherError, W]].create(size)
+      cache = new Cache[F, W](lru, geoPrecision)
+    } yield cache
 
   /**
    * Cache key for obtaining record
@@ -98,8 +111,9 @@ object Cache {
    * @return cache key
    */
   def eventToCacheKey(dateTime: ZonedDateTime, position: Position, geoPrecision: Int): CacheKey = {
-    val roundPosition =
-      Position(roundCoordinate(position.latitude, geoPrecision), roundCoordinate(position.longitude, geoPrecision))
+    val lat           = roundCoordinate(position.latitude, geoPrecision)
+    val lng           = roundCoordinate(position.longitude, geoPrecision)
+    val roundPosition = Position(lat, lng)
     CacheKey(dateTime.withZoneSameInstant(ZoneOffset.UTC).toLocalDate, roundPosition)
   }
 

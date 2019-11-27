@@ -11,26 +11,12 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather
-package providers.openweather
 
-/** Module for various predefined values in OWM specification */
-object Api {
+import scalaj.http.HttpRequest
 
-  /** Representation of measurement enums for history requests */
-  sealed trait Measure {
-    val value: String
+object model {
+  trait WeatherRequest {
+    def constructRequest(baseUri: String, apiKey: String): HttpRequest
   }
-
-  final case object Tick extends Measure {
-    val value = "tick"
-  }
-
-  final case object Hour extends Measure {
-    val value = "hour"
-  }
-
-  final case object Day extends Measure {
-    val value = "day"
-  }
-
+  trait WeatherResponse
 }

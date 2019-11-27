@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -12,16 +12,9 @@
  */
 package com.snowplowanalytics
 
-import hammock.Uri
-
 package object weather {
 
   type Timestamp = Long
   type Day       = Long // 0:00:00 timestamp of day
-
-  trait WeatherRequest {
-    def constructQuery(baseUri: Uri, apiKey: String): Uri
-  }
-  trait WeatherResponse
 
 }

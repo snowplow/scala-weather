@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -11,14 +11,15 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather
-package providers.openweather
+package providers
+package openweather
 
 import org.scalacheck._
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen._
-import Responses._
+
+import responses._
 import Cache._
-import com.snowplowanalytics.weather.providers.TestData
 
 /**
  * Trait with methods for random weather generation
@@ -89,17 +90,13 @@ trait WeatherGenerator {
 
   def genEmptyHistoryBatch: Gen[History] =
     for {
-      cnt   <- Gen.choose(1, 23)
-      wind  <- genWind
-      count <- cnt
+      cnt <- Gen.choose(1, 23)
     } yield History(cnt, "200", Nil)
 
   def genNonEmptyHistoryBatch: Gen[History] =
     for {
       cnt    <- Gen.choose(2, 20)
-      wind   <- genWind
       seed   <- Gen.choose(-1, 3)
-      count  <- cnt
       stamps <- arbitrary[Weather]
     } yield History(cnt, "200", List.fill(cnt + seed)(stamps))
 

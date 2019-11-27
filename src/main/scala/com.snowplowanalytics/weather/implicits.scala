@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -12,13 +12,11 @@
  */
 package com.snowplowanalytics.weather
 
-// Java
 import java.time.ZonedDateTime
 
-// Scala
 import scala.language.implicitConversions
 
-object Implicits {
+object implicits {
 
   /**
    * Options as optional arguments

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -17,10 +17,11 @@ import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
 import org.specs2.{ScalaCheck, Specification}
 import org.scalacheck.Prop.forAll
-import Errors._
-import Responses._
 
-class BatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
+import errors._
+import responses._
+
+class OWMBatchGetSpec extends Specification with ScalaCheck with WeatherGenerator {
   def is = s2"""
 
   Pick neighbour item out of collection

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -13,24 +13,19 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
-// java
 import java.time.ZonedDateTime
 
-// cats
+import scala.concurrent.duration._
+
+import cats.Eval
 import cats.effect.IO
-
-// circe
-import io.circe.Decoder
-
-// tests
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2._
 import org.specs2.mock.Mockito
 
-// This library
-import com.snowplowanalytics.weather.Errors.WeatherError
-import com.snowplowanalytics.weather.providers.darksky.Requests.DarkSkyRequest
-import com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse
+import errors.WeatherError
+import requests.DarkSkyRequest
+import responses.DarkSkyResponse
 
 class DarkSkyClientSpec extends Specification with Mockito {
   def is = s2"""
@@ -41,18 +36,43 @@ class DarkSkyClientSpec extends Specification with Mockito {
 
   """
 
-  val exampleResponse: IO[Right[WeatherError, DarkSkyResponse]] =
+  val ioExampleResponse: IO[Either[WeatherError, DarkSkyResponse]] =
     IO.pure(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
+  val evalExampleResponse: Eval[Either[WeatherError, DarkSkyResponse]] =
+    Eval.now(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
 
   def e1 = {
-    val transportMock =
-      mock[Transport[IO]].receive(any[WeatherRequest])(any[Decoder[WeatherResponse]]).returns(exampleResponse)
-    val client = DarkSky.basicClient[IO](transportMock)
-
     val expectedRequest = DarkSkyRequest(32.12f, 15.2f, Some(1449774761)) // "2015-12-10T19:12:41+00:00"
-    client.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
 
-    there.was(1.times(client.transport).receive(eqTo(expectedRequest))(any()))
+    implicit val ioTransport: Transport[IO] = mock[Transport[IO]]
+    ioTransport
+      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)),
+                                any[String],
+                                any[String],
+                                any[FiniteDuration],
+                                any[Boolean])(eqTo(implicitly))
+      .returns(ioExampleResponse)
+    val ioClient = CreateDarkSky[IO].create("host", "key", 1.seconds)
+    ioClient.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
+    there.was(
+      1.times(ioTransport)
+        .receive[DarkSkyResponse](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
+
+    implicit val evalTransport: Transport[Eval] = mock[Transport[Eval]]
+    evalTransport
+      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)),
+                                any[String],
+                                any[String],
+                                any[FiniteDuration],
+                                any[Boolean])(eqTo(implicitly))
+      .returns(evalExampleResponse)
+    val evalClient = CreateDarkSky[Eval].create("host", "key", 1.seconds)
+    evalClient.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
+    there.was(
+      1.times(evalTransport)
+        .receive[DarkSkyResponse](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
+          eqTo(implicitly)))
   }
 
 }

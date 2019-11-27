@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -11,33 +11,33 @@
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
 package com.snowplowanalytics.weather
-package providers.darksky
+package providers
+package darksky
 
-// Java
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
-// Scala
 import scala.concurrent.duration._
 
-// cats
+import cats.Eval
 import cats.effect.IO
-
-// tests
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.specification.ExecutionEnvironment
+import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.specs2.{ScalaCheck, Specification}
 
-// This library
-import com.snowplowanalytics.weather.Errors.AuthorizationError
-import com.snowplowanalytics.weather.providers.TestData
+import errors._
+import responses._
 
 /**
  * Test case classes extraction from real server responses
+ *
+ * Define environment variable called DARKSKY_KEY with DarkSky API Key in it,
+ * otherwise these tests are skipped.
  */
-class DarkSkyServerSpec extends Specification with ScalaCheck with ExecutionEnvironment {
-  def is(implicit ee: ExecutionEnv) = skipAllIf(key.isEmpty) ^ s2"""
+class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExecutionEnv {
+  private val key = sys.env.get("DARKSKY_KEY")
+
+  def is = skipAllIf(key.isEmpty) ^ s2"""
 
     Test server responses (it can take several minutes)
 
@@ -47,11 +47,6 @@ class DarkSkyServerSpec extends Specification with ScalaCheck with ExecutionEnvi
       random cities - history               $e4
       sane error message for unauthorized   $e5
   """
-
-  private val key = sys.env.get("DARKSKY_KEY")
-  if (key.isEmpty) {
-    throw new RuntimeException("Define environment variable called DARKSKY_KEY with DarkSky API Key in it")
-  }
 
   def zonedDateTimeGenerator: Gen[ZonedDateTime] = {
     val rangeStart = ZonedDateTime.now().minusYears(1).toEpochSecond
@@ -63,42 +58,75 @@ class DarkSkyServerSpec extends Specification with ScalaCheck with ExecutionEnvi
     }
   }
 
-  val client = DarkSky.basicClient[IO](key.get)
-
-  def testCitiesForecast(cities: Vector[(Float, Float)]) =
+  def testCitiesForecast[F[_]](
+    cities: Vector[(Float, Float)],
+    client: DarkSkyClient[F],
+    f: F[Either[WeatherError, DarkSkyResponse]] => Either[WeatherError, DarkSkyResponse]
+  ) =
     forAll(Gen.oneOf(cities)) {
       case (latitude, longitude) =>
-        val result = client.forecast(latitude, longitude).unsafeRunTimed(5.seconds)
-        result must beSome
-        result.get must beRight
+        val forecast = client.forecast(latitude, longitude)
+        val result   = f(forecast)
+        result must beRight
     }
 
-  def testCitiesHistory(cities: Vector[(Float, Float)]) = {
+  def testCitiesHistory[F[_]](
+    cities: Vector[(Float, Float)],
+    client: DarkSkyClient[F],
+    f: F[Either[WeatherError, DarkSkyResponse]] => Either[WeatherError, DarkSkyResponse]
+  ) = {
     val gen = for {
       city <- Gen.oneOf(cities)
       date <- zonedDateTimeGenerator
     } yield (city, date)
     forAll(gen) {
       case ((latitude, longitude), dateTime) =>
-        val result = client.timeMachine(latitude, longitude, dateTime).unsafeRunTimed(5.seconds)
-        result must beSome
-        result.get must beRight
+        val timeMachine = client.timeMachine(latitude, longitude, dateTime)
+        val result      = f(timeMachine)
+        result must beRight
     }
   }
 
-  def e1 = testCitiesForecast(TestData.bigAndAbnormalCities).set(maxSize = 10, minTestsOk = 10)
+  private lazy val ioClient   = CreateDarkSky[IO].create("api.darksky.net/forecast", key.get, 1.seconds)
+  val ioRun                   = (a: IO[Either[WeatherError, DarkSkyResponse]]) => a.unsafeRunSync()
+  private lazy val evalClient = CreateDarkSky[Eval].create("api.darksky.net/forecast", key.get, 1.seconds)
+  val evalRun                 = (a: Eval[Either[WeatherError, DarkSkyResponse]]) => a.value
 
-  def e2 = testCitiesForecast(TestData.randomCities).set(maxSize = 10, minTestsOk = 10)
+  def e1 = {
+    testCitiesForecast(TestData.bigAndAbnormalCities, ioClient, ioRun)
+      .set(maxSize = 10, minTestsOk = 10)
+    testCitiesForecast(TestData.bigAndAbnormalCities, evalClient, evalRun)
+      .set(maxSize = 10, minTestsOk = 10)
+  }
 
-  def e3 = testCitiesHistory(TestData.bigAndAbnormalCities).set(maxSize = 10, minTestsOk = 10)
+  def e2 = {
+    testCitiesForecast(TestData.randomCities, ioClient, ioRun)
+      .set(maxSize = 10, minTestsOk = 10)
+    testCitiesForecast(TestData.randomCities, evalClient, evalRun)
+      .set(maxSize = 10, minTestsOk = 10)
+  }
 
-  def e4 = testCitiesHistory(TestData.randomCities).set(maxSize = 10, minTestsOk = 10)
+  def e3 = {
+    testCitiesHistory(TestData.bigAndAbnormalCities, ioClient, ioRun)
+      .set(maxSize = 10, minTestsOk = 10)
+    testCitiesHistory(TestData.bigAndAbnormalCities, evalClient, evalRun)
+      .set(maxSize = 10, minTestsOk = 10)
+  }
+
+  def e4 = {
+    testCitiesHistory(TestData.randomCities, ioClient, ioRun).set(maxSize     = 10, minTestsOk = 10)
+    testCitiesHistory(TestData.randomCities, evalClient, evalRun).set(maxSize = 10, minTestsOk = 10)
+  }
 
   def e5 = {
-    val client = DarkSky.basicClient[IO]("INVALID-KEY")
-    val result = client.forecast(0f, 0f).unsafeRunTimed(5.seconds)
-    result must beSome
-    result.get must beLeft(AuthorizationError)
+    val ioClient = CreateDarkSky[IO].create("api.darksky.net/forecast", "INVALID_KEY", 1.seconds)
+    val ioResult = ioClient.forecast(0f, 0f).unsafeRunTimed(5.seconds)
+    ioResult must beSome
+    ioResult.get must beLeft(AuthorizationError)
+
+    val evalClient = CreateDarkSky[Eval].create("api.darksky.net/forecast", "INVALID_KEY", 1.seconds)
+    val evalResult = evalClient.forecast(0f, 0f).value
+    evalResult must beLeft(AuthorizationError)
   }
 
 }

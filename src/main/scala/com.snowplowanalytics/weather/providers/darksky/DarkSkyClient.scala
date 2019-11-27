@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -13,23 +13,31 @@
 package com.snowplowanalytics.weather
 package providers.darksky
 
-// joda
 import java.time.ZonedDateTime
 
-// This library
-import Errors.WeatherError
-import Responses.DarkSkyResponse
-import Requests.DarkSkyRequest
+import scala.concurrent.duration._
+
+import errors.WeatherError
+import responses.DarkSkyResponse
+import requests.DarkSkyRequest
 
 /**
  * Non-caching Dark Sky client
  * Allows forecast, current, and historical data requests
  * This API does not support Geocoding - coordinates only
  * For more detailed description go to: https://darksky.net/dev/docs
- *
+ * @param apiHost address of the API to interrogate
+ * @param apiKey credentials to interrogate the API
+ * @param timeout duration after which the request will be timed out
+ * @param ssl whether to use https or http
  * @tparam F effect type
  */
-class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Transport[F]) {
+class DarkSkyClient[F[_]] private[darksky] (
+  apiHost: String,
+  apiKey: String,
+  timeout: FiniteDuration,
+  ssl: Boolean
+)(implicit T: Transport[F]) {
 
   /** Forecast request that returns the current weather condition,
    * a minute-by-minute forecast (where available), an hour-by-hour forecast
@@ -44,14 +52,16 @@ class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Tran
    * @param units return weather conditions in the specified units
    * @return either error or response, wrapped in effect type `F`
    */
-  def forecast(latitude: Float,
-               longitude: Float,
-               exclude: List[BlockType] = List.empty[BlockType],
-               extend: Boolean          = false,
-               lang: Option[String]     = None,
-               units: Option[Units]     = None): F[Either[WeatherError, DarkSkyResponse]] = {
+  def forecast(
+    latitude: Float,
+    longitude: Float,
+    exclude: List[BlockType] = List.empty[BlockType],
+    extend: Boolean          = false,
+    lang: Option[String]     = None,
+    units: Option[Units]     = None
+  ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, None, exclude, extend, lang, units)
-    transport.receive(request)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 
   /** "Time Machine Request" - returns the observed (in the past) or forecasted (in the future)
@@ -67,14 +77,16 @@ class DarkSkyClient[F[_]] private[darksky] (private[darksky] val transport: Tran
    * @param units return weather conditions in the specified units
    * @return either error or response, wrapped in effect type `F`
    */
-  def timeMachine(latitude: Float,
-                  longitude: Float,
-                  dateTime: ZonedDateTime,
-                  exclude: List[BlockType] = List.empty[BlockType],
-                  extend: Boolean          = false,
-                  lang: Option[String]     = None,
-                  units: Option[Units]     = None): F[Either[WeatherError, DarkSkyResponse]] = {
+  def timeMachine(
+    latitude: Float,
+    longitude: Float,
+    dateTime: ZonedDateTime,
+    exclude: List[BlockType] = List.empty[BlockType],
+    extend: Boolean          = false,
+    lang: Option[String]     = None,
+    units: Option[Units]     = None
+  ): F[Either[WeatherError, DarkSkyResponse]] = {
     val request = DarkSkyRequest(latitude, longitude, Some(dateTime.toEpochSecond), exclude, extend, lang, units)
-    transport.receive(request)
+    T.receive(request, apiHost, apiKey, timeout, ssl)
   }
 }

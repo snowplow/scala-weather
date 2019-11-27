@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2018 Snowplow Analytics Ltd. All rights reserved.
+ * Copyright (c) 2015-2019 Snowplow Analytics Ltd. All rights reserved.
  *
  * This program is licensed to you under the Apache License Version 2.0,
  * and you may not use this file except in compliance with the Apache License Version 2.0.
@@ -10,29 +10,28 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the Apache License Version 2.0 for the specific language governing permissions and limitations there under.
  */
-package com.snowplowanalytics.weather.providers.openweather
+package com.snowplowanalytics.weather
+package providers.openweather
 
-import cats.data.NonEmptyList
-import hammock.Uri
+import scalaj.http._
 
-// This library
-import com.snowplowanalytics.weather.WeatherRequest
+import model.WeatherRequest
 
-private[weather] object Requests {
+private[weather] object requests {
 
   sealed trait OwmRequest extends WeatherRequest {
     val endpoint: Option[String]
     val resource: String
     val parameters: Map[String, String]
 
-    def constructQuery(baseUri: Uri, apiKey: String): Uri = {
-      val versionedBaseUri = baseUri / "data" / "2.5"
-      val uriWithPath      = endpoint.map(e => versionedBaseUri / e / resource).getOrElse(versionedBaseUri / resource)
-      val params           = NonEmptyList.of("appid" -> apiKey) ++ parameters.toList
-
-      uriWithPath ? params
+    override def constructRequest(baseUri: String, apiKey: String): HttpRequest = {
+      val versionedBaseUri = s"$baseUri/data/2.5"
+      val uriWithPath = endpoint
+        .map(e => s"$versionedBaseUri/$e/$resource")
+        .getOrElse(s"$versionedBaseUri/$resource")
+      val params = ("appid", apiKey) :: parameters.toList
+      Http(uriWithPath).params(params)
     }
-
   }
 
   final case class OwmHistoryRequest(resource: String, parameters: Map[String, String]) extends OwmRequest {
