@@ -138,33 +138,21 @@
                         <a class="class" href="" title=""></a>
                         <a href="" title="">Cache</a>
                       </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="Errors$.html" title=""></a>
-                        <a href="Errors$.html" title="">Errors</a>
-                      </li><li class="current-entities indented3">
-                        <a class="object" href="HttpTransport$.html" title=""></a>
-                        <a class="class" href="HttpTransport.html" title=""></a>
-                        <a href="HttpTransport.html" title="">HttpTransport</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="Implicits$.html" title=""></a>
-                        <a href="Implicits$.html" title="">Implicits</a>
-                      </li><li class="current-entities indented3">
-                        <a class="object" href="TimeoutHttpTransport$.html" title=""></a>
-                        <a class="class" href="TimeoutHttpTransport.html" title=""></a>
-                        <a href="TimeoutHttpTransport.html" title="">TimeoutHttpTransport</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
+                        <a class="object" href="Transport$.html" title=""></a>
                         <a class="trait" href="Transport.html" title=""></a>
                         <a href="Transport.html" title="">Transport</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="trait" href="package$$WeatherRequest.html" title=""></a>
-                        <a href="package$$WeatherRequest.html" title="">WeatherRequest</a>
+                        <a class="object" href="errors$.html" title=""></a>
+                        <a href="errors$.html" title="">errors</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="trait" href="package$$WeatherResponse.html" title=""></a>
-                        <a href="package$$WeatherResponse.html" title="">WeatherResponse</a>
+                        <a class="object" href="implicits$.html" title=""></a>
+                        <a href="implicits$.html" title="">implicits</a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="object" href="model$.html" title=""></a>
+                        <a href="model$.html" title="">model</a>
                       </li>
               </ul>
             </div>
@@ -190,7 +178,7 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">Cache</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="W">W &lt;: <a href="package$$WeatherResponse.html" class="extype" name="com.snowplowanalytics.weather.WeatherResponse">WeatherResponse</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+        <span class="name">Cache</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="W">W &lt;: <a href="model$$WeatherResponse.html" class="extype" name="com.snowplowanalytics.weather.model.WeatherResponse">WeatherResponse</a></span>]</span><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
       </span>
       </h4>
 
@@ -411,9 +399,9 @@
       
       
     </li><li name="com.snowplowanalytics.weather.Cache#getCachedOrRequest" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="getCachedOrRequest(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime)(doRequest:(Float,Float,java.time.ZonedDateTime)=&gt;F[Either[com.snowplowanalytics.weather.Errors.WeatherError,W]]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,W]]"></a><a id="getCachedOrRequest(Float,Float,ZonedDateTime)((Float,Float,ZonedDateTime)⇒F[Either[WeatherError,W]]):F[Either[WeatherError,W]]"></a>
+      <a id="getCachedOrRequest(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime)(doRequest:(Float,Float,java.time.ZonedDateTime)=&gt;F[Either[com.snowplowanalytics.weather.errors.WeatherError,W]])(implicitM:cats.Monad[F]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,W]]"></a><a id="getCachedOrRequest(Float,Float,ZonedDateTime)((Float,Float,ZonedDateTime)⇒F[Either[WeatherError,W]])(Monad[F]):F[Either[WeatherError,W]]"></a>
       <span class="permalink">
-      <a href="../../../com/snowplowanalytics/weather/Cache.html#getCachedOrRequest(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime)(doRequest:(Float,Float,java.time.ZonedDateTime)=&gt;F[Either[com.snowplowanalytics.weather.Errors.WeatherError,W]]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,W]]" title="Permalink">
+      <a href="../../../com/snowplowanalytics/weather/Cache.html#getCachedOrRequest(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime)(doRequest:(Float,Float,java.time.ZonedDateTime)=&gt;F[Either[com.snowplowanalytics.weather.errors.WeatherError,W]])(implicitM:cats.Monad[F]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,W]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -422,7 +410,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getCachedOrRequest</span><span class="params">(<span name="latitude">latitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="longitude">longitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="dateTime">dateTime: <span class="extype" name="java.time.ZonedDateTime">ZonedDateTime</span></span>)</span><span class="params">(<span name="doRequest">doRequest: (<span class="extype" name="scala.Float">Float</span>, <span class="extype" name="scala.Float">Float</span>, <span class="extype" name="java.time.ZonedDateTime">ZonedDateTime</span>) ⇒ <span class="extype" name="com.snowplowanalytics.weather.Cache.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="Errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.Errors.WeatherError">WeatherError</a>, <span class="extype" name="com.snowplowanalytics.weather.Cache.W">W</span>]]</span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.Cache.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="Errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.Errors.WeatherError">WeatherError</a>, <span class="extype" name="com.snowplowanalytics.weather.Cache.W">W</span>]]</span>
+        <span class="name">getCachedOrRequest</span><span class="params">(<span name="latitude">latitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="longitude">longitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="dateTime">dateTime: <span class="extype" name="java.time.ZonedDateTime">ZonedDateTime</span></span>)</span><span class="params">(<span name="doRequest">doRequest: (<span class="extype" name="scala.Float">Float</span>, <span class="extype" name="scala.Float">Float</span>, <span class="extype" name="java.time.ZonedDateTime">ZonedDateTime</span>) ⇒ <span class="extype" name="com.snowplowanalytics.weather.Cache.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.errors.WeatherError">WeatherError</a>, <span class="extype" name="com.snowplowanalytics.weather.Cache.W">W</span>]]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="M">M: <span class="extype" name="cats.Monad">Monad</span>[<span class="extype" name="com.snowplowanalytics.weather.Cache.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.Cache.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.errors.WeatherError">WeatherError</a>, <span class="extype" name="com.snowplowanalytics.weather.Cache.W">W</span>]]</span>
       </span>
       
       <p class="shortcomment cmt">Gets the response from cache; if not found, then calls the provided function <code>doRequest</code>,

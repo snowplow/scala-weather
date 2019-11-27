@@ -154,21 +154,21 @@
                         <a class="object" href="" title="Module for various predefined values in OWM specification"></a>
                         <a href="" title="Module for various predefined values in OWM specification">Api</a>
                       </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="object" href="OpenWeatherMap$.html" title=""></a>
-                        <a href="OpenWeatherMap$.html" title="">OpenWeatherMap</a>
+                        <a class="object" href="CreateOWM$.html" title=""></a>
+                        <a class="trait" href="CreateOWM.html" title=""></a>
+                        <a href="CreateOWM.html" title="">CreateOWM</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="OwmCacheClient.html" title="Blocking OpenWeatherMap client with history (only) cache Extends OwmClient, but uses timeouts for requests"></a>
-                        <a href="OwmCacheClient.html" title="Blocking OpenWeatherMap client with history (only) cache Extends OwmClient, but uses timeouts for requests">OwmCacheClient</a>
+                        <a class="class" href="OWMCacheClient.html" title="Blocking OpenWeatherMap client with history (only) cache Extends OwmClient, but uses timeouts for requests"></a>
+                        <a href="OWMCacheClient.html" title="Blocking OpenWeatherMap client with history (only) cache Extends OwmClient, but uses timeouts for requests">OWMCacheClient</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="OwmClient.html" title="Non-caching OpenWeatherMap client"></a>
-                        <a href="OwmClient.html" title="Non-caching OpenWeatherMap client">OwmClient</a>
+                        <a class="class" href="OWMClient.html" title="Non-caching OpenWeatherMap client"></a>
+                        <a href="OWMClient.html" title="Non-caching OpenWeatherMap client">OWMClient</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="object" href="Responses$.html" title="Case classes used for extracting data from JSON"></a>
-                        <a href="Responses$.html" title="Case classes used for extracting data from JSON">Responses</a>
+                        <a class="object" href="responses$.html" title="Case classes used for extracting data from JSON"></a>
+                        <a href="responses$.html" title="Case classes used for extracting data from JSON">responses</a>
                       </li>
               </ul>
             </div>
@@ -197,8 +197,7 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Module for various predefined values in OWM specification
-</p></div><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Module for various predefined values in OWM specification</p></div><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -248,7 +247,26 @@
         <div id="allMembers">
         
 
-        
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="com.snowplowanalytics.weather.providers.openweather.Api.Measure" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="MeasureextendsAnyRef"></a><a id="Measure:Measure"></a>
+      <span class="permalink">
+      <a href="../../../../../com/snowplowanalytics/weather/providers/openweather/Api$.html#MeasureextendsAnyRef" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">sealed </span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="Representation of measurement enums for history requests" href="Api$$Measure.html"><span class="name">Measure</span></a><span class="result"> extends <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Representation of measurement enums for history requests</p>
+    </li></ol>
+            </div>
 
         
 
@@ -605,10 +623,10 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="com.snowplowanalytics.weather.providers.openweather.Api.Measures" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Measures"></a><a id="Measures:Measures"></a>
+    </li><li name="com.snowplowanalytics.weather.providers.openweather.Api.Day" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Day"></a><a id="Day:Day"></a>
       <span class="permalink">
-      <a href="../../../../../com/snowplowanalytics/weather/providers/openweather/Api$.html#Measures" title="Permalink">
+      <a href="../../../../../com/snowplowanalytics/weather/providers/openweather/Api$.html#Day" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -617,11 +635,42 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a title="Enums for measurements for history requests" href="Api$$Measures$.html"><span class="name">Measures</span></a><span class="result"> extends <span class="extype" name="scala.Enumeration">Enumeration</span></span>
+        <a title="" href="Api$$Day$.html"><span class="name">Day</span></a><span class="result"> extends <a href="Api$$Measure.html" class="extype" name="com.snowplowanalytics.weather.providers.openweather.Api.Measure">Measure</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
       </span>
       
-      <p class="shortcomment cmt">Enums for measurements for history requests
-</p>
+      
+    </li><li name="com.snowplowanalytics.weather.providers.openweather.Api.Hour" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Hour"></a><a id="Hour:Hour"></a>
+      <span class="permalink">
+      <a href="../../../../../com/snowplowanalytics/weather/providers/openweather/Api$.html#Hour" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Api$$Hour$.html"><span class="name">Hour</span></a><span class="result"> extends <a href="Api$$Measure.html" class="extype" name="com.snowplowanalytics.weather.providers.openweather.Api.Measure">Measure</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
+    </li><li name="com.snowplowanalytics.weather.providers.openweather.Api.Tick" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Tick"></a><a id="Tick:Tick"></a>
+      <span class="permalink">
+      <a href="../../../../../com/snowplowanalytics/weather/providers/openweather/Api$.html#Tick" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="Api$$Tick$.html"><span class="name">Tick</span></a><span class="result"> extends <a href="Api$$Measure.html" class="extype" name="com.snowplowanalytics.weather.providers.openweather.Api.Measure">Measure</a> with <span class="extype" name="scala.Product">Product</span> with <span class="extype" name="scala.Serializable">Serializable</span></span>
+      </span>
+      
+      
     </li>
               </ol>
             </div>

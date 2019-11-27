@@ -154,9 +154,9 @@
                         <a class="class" href="BlockType.html" title=""></a>
                         <a href="BlockType.html" title="">BlockType</a>
                       </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="object" href="DarkSky$.html" title=""></a>
-                        <a href="DarkSky$.html" title="">DarkSky</a>
+                        <a class="object" href="CreateDarkSky$.html" title=""></a>
+                        <a class="trait" href="CreateDarkSky.html" title=""></a>
+                        <a href="CreateDarkSky.html" title="">CreateDarkSky</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
                         <a class="class" href="DarkSkyCacheClient.html" title=""></a>
@@ -166,17 +166,17 @@
                         <a class="class" href="" title="Non-caching Dark Sky client Allows forecast, current, and historical data requests This API does not support Geocoding - coordinates only For more detailed description go to: https://darksky.net/dev/docs"></a>
                         <a href="" title="Non-caching Dark Sky client Allows forecast, current, and historical data requests This API does not support Geocoding - coordinates only For more detailed description go to: https://darksky.net/dev/docs">DarkSkyClient</a>
                       </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="object" href="Requests$.html" title=""></a>
-                        <a href="Requests$.html" title="">Requests</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="object" href="Responses$.html" title=""></a>
-                        <a href="Responses$.html" title="">Responses</a>
-                      </li><li class="current-entities indented5">
                         <a class="object" href="Units$.html" title=""></a>
                         <a class="class" href="Units.html" title=""></a>
                         <a href="Units.html" title="">Units</a>
+                      </li><li class="current-entities indented5">
+                        <span class="separator"></span>
+                        <a class="object" href="requests$.html" title=""></a>
+                        <a href="requests$.html" title="">requests</a>
+                      </li><li class="current-entities indented5">
+                        <span class="separator"></span>
+                        <a class="object" href="responses$.html" title=""></a>
+                        <a href="responses$.html" title="">responses</a>
                       </li>
               </ul>
             </div>
@@ -208,8 +208,7 @@
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Non-caching Dark Sky client
 Allows forecast, current, and historical data requests
 This API does not support Geocoding - coordinates only
-For more detailed description go to: https://darksky.net/dev/docs
-</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd class="cmt"><p>effect type</p></dd></dl><div class="toggleContainer block">
+For more detailed description go to: https://darksky.net/dev/docs</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd class="cmt"><p>effect type</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -414,9 +413,9 @@ For more detailed description go to: https://darksky.net/dev/docs
               
         </dd></dl></div>
     </li><li name="com.snowplowanalytics.weather.providers.darksky.DarkSkyClient#forecast" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="forecast(latitude:Float,longitude:Float,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse]]"></a><a id="forecast(Float,Float,List[BlockType],Boolean,Option[String],Option[Units]):F[Either[WeatherError,DarkSkyResponse]]"></a>
+      <a id="forecast(latitude:Float,longitude:Float,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.responses.DarkSkyResponse]]"></a><a id="forecast(Float,Float,List[BlockType],Boolean,Option[String],Option[Units]):F[Either[WeatherError,DarkSkyResponse]]"></a>
       <span class="permalink">
-      <a href="../../../../../com/snowplowanalytics/weather/providers/darksky/DarkSkyClient.html#forecast(latitude:Float,longitude:Float,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse]]" title="Permalink">
+      <a href="../../../../../com/snowplowanalytics/weather/providers/darksky/DarkSkyClient.html#forecast(latitude:Float,longitude:Float,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.responses.DarkSkyResponse]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -425,7 +424,7 @@ For more detailed description go to: https://darksky.net/dev/docs
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">forecast</span><span class="params">(<span name="latitude">latitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="longitude">longitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="exclude">exclude: <span class="extype" name="scala.List">List</span>[<a href="BlockType.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.BlockType">BlockType</a>] = <span class="symbol">List.empty[BlockType]</span></span>, <span name="extend">extend: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="lang">lang: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="units">units: <span class="extype" name="scala.Option">Option</span>[<a href="Units.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.Units">Units</a>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.providers.darksky.DarkSkyClient.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="../../Errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.Errors.WeatherError">WeatherError</a>, <a href="Responses$$DarkSkyResponse.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse">DarkSkyResponse</a>]]</span>
+        <span class="name">forecast</span><span class="params">(<span name="latitude">latitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="longitude">longitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="exclude">exclude: <span class="extype" name="scala.List">List</span>[<a href="BlockType.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.BlockType">BlockType</a>] = <span class="symbol">List.empty[BlockType]</span></span>, <span name="extend">extend: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="lang">lang: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="units">units: <span class="extype" name="scala.Option">Option</span>[<a href="Units.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.Units">Units</a>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.providers.darksky.DarkSkyClient.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="../../errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.errors.WeatherError">WeatherError</a>, <a href="responses$$DarkSkyResponse.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.responses.DarkSkyResponse">DarkSkyResponse</a>]]</span>
       </span>
       
       <p class="shortcomment cmt">Forecast request that returns the current weather condition,
@@ -561,9 +560,9 @@ for the next 48 hours, and a day-by-day forecast for the next week
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="com.snowplowanalytics.weather.providers.darksky.DarkSkyClient#timeMachine" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="timeMachine(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse]]"></a><a id="timeMachine(Float,Float,ZonedDateTime,List[BlockType],Boolean,Option[String],Option[Units]):F[Either[WeatherError,DarkSkyResponse]]"></a>
+      <a id="timeMachine(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.responses.DarkSkyResponse]]"></a><a id="timeMachine(Float,Float,ZonedDateTime,List[BlockType],Boolean,Option[String],Option[Units]):F[Either[WeatherError,DarkSkyResponse]]"></a>
       <span class="permalink">
-      <a href="../../../../../com/snowplowanalytics/weather/providers/darksky/DarkSkyClient.html#timeMachine(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse]]" title="Permalink">
+      <a href="../../../../../com/snowplowanalytics/weather/providers/darksky/DarkSkyClient.html#timeMachine(latitude:Float,longitude:Float,dateTime:java.time.ZonedDateTime,exclude:List[com.snowplowanalytics.weather.providers.darksky.BlockType],extend:Boolean,lang:Option[String],units:Option[com.snowplowanalytics.weather.providers.darksky.Units]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,com.snowplowanalytics.weather.providers.darksky.responses.DarkSkyResponse]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -572,7 +571,7 @@ for the next 48 hours, and a day-by-day forecast for the next week
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">timeMachine</span><span class="params">(<span name="latitude">latitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="longitude">longitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="dateTime">dateTime: <span class="extype" name="java.time.ZonedDateTime">ZonedDateTime</span></span>, <span name="exclude">exclude: <span class="extype" name="scala.List">List</span>[<a href="BlockType.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.BlockType">BlockType</a>] = <span class="symbol">List.empty[BlockType]</span></span>, <span name="extend">extend: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="lang">lang: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="units">units: <span class="extype" name="scala.Option">Option</span>[<a href="Units.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.Units">Units</a>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.providers.darksky.DarkSkyClient.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="../../Errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.Errors.WeatherError">WeatherError</a>, <a href="Responses$$DarkSkyResponse.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.Responses.DarkSkyResponse">DarkSkyResponse</a>]]</span>
+        <span class="name">timeMachine</span><span class="params">(<span name="latitude">latitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="longitude">longitude: <span class="extype" name="scala.Float">Float</span></span>, <span name="dateTime">dateTime: <span class="extype" name="java.time.ZonedDateTime">ZonedDateTime</span></span>, <span name="exclude">exclude: <span class="extype" name="scala.List">List</span>[<a href="BlockType.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.BlockType">BlockType</a>] = <span class="symbol">List.empty[BlockType]</span></span>, <span name="extend">extend: <span class="extype" name="scala.Boolean">Boolean</span> = <span class="symbol">false</span></span>, <span name="lang">lang: <span class="extype" name="scala.Option">Option</span>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="units">units: <span class="extype" name="scala.Option">Option</span>[<a href="Units.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.Units">Units</a>] = <span class="symbol">None</span></span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.providers.darksky.DarkSkyClient.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="../../errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.errors.WeatherError">WeatherError</a>, <a href="responses$$DarkSkyResponse.html" class="extype" name="com.snowplowanalytics.weather.providers.darksky.responses.DarkSkyResponse">DarkSkyResponse</a>]]</span>
       </span>
       
       <p class="shortcomment cmt">&quot;Time Machine Request&quot; - returns the observed (in the past) or forecasted (in the future)

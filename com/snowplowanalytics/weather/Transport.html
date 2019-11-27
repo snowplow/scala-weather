@@ -138,33 +138,21 @@
                         <a class="class" href="Cache.html" title=""></a>
                         <a href="Cache.html" title="">Cache</a>
                       </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="Errors$.html" title=""></a>
-                        <a href="Errors$.html" title="">Errors</a>
-                      </li><li class="current-entities indented3">
-                        <a class="object" href="HttpTransport$.html" title=""></a>
-                        <a class="class" href="HttpTransport.html" title=""></a>
-                        <a href="HttpTransport.html" title="">HttpTransport</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="Implicits$.html" title=""></a>
-                        <a href="Implicits$.html" title="">Implicits</a>
-                      </li><li class="current-entities indented3">
-                        <a class="object" href="TimeoutHttpTransport$.html" title=""></a>
-                        <a class="class" href="TimeoutHttpTransport.html" title=""></a>
-                        <a href="TimeoutHttpTransport.html" title="">TimeoutHttpTransport</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
+                        <a class="object" href="Transport$.html" title=""></a>
                         <a class="trait" href="" title=""></a>
                         <a href="" title="">Transport</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="trait" href="package$$WeatherRequest.html" title=""></a>
-                        <a href="package$$WeatherRequest.html" title="">WeatherRequest</a>
+                        <a class="object" href="errors$.html" title=""></a>
+                        <a href="errors$.html" title="">errors</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="trait" href="package$$WeatherResponse.html" title=""></a>
-                        <a href="package$$WeatherResponse.html" title="">WeatherResponse</a>
+                        <a class="object" href="implicits$.html" title=""></a>
+                        <a href="implicits$.html" title="">implicits</a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="object" href="model$.html" title=""></a>
+                        <a href="model$.html" title="">model</a>
                       </li>
               </ul>
             </div>
@@ -172,14 +160,16 @@
           <div id="content">
             <body class="trait type">
       <div id="definition">
-        <div class="big-circle trait">t</div>
+        <a href="Transport$.html" title="See companion object"><div class="big-circle trait-companion-object">t</div></a>
         <p id="owner"><a href="../../index.html" class="extype" name="com">com</a>.<a href="../index.html" class="extype" name="com.snowplowanalytics">snowplowanalytics</a>.<a href="index.html" class="extype" name="com.snowplowanalytics.weather">weather</a></p>
-        <h1>Transport<span class="permalink">
+        <h1><a href="Transport$.html" title="See companion object">Transport</a><span class="permalink">
       <a href="../../../com/snowplowanalytics/weather/Transport.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
-        <h3><span class="morelinks"></span></h3>
+        <h3><span class="morelinks"><div>
+            Companion <a href="Transport$.html" title="See companion object">object Transport</a>
+          </div></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
@@ -198,12 +188,7 @@
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
-        </div><div class="toggleContainer block">
-            <span class="toggle">
-              Known Subclasses
-            </span>
-            <div class="subClasses hiddenContent"><a href="HttpTransport.html" class="extype" name="com.snowplowanalytics.weather.HttpTransport">HttpTransport</a>, <a href="TimeoutHttpTransport.html" class="extype" name="com.snowplowanalytics.weather.TimeoutHttpTransport">TimeoutHttpTransport</a></div>
-          </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -253,9 +238,9 @@
         <div class="values members">
               <h3>Abstract Value Members</h3>
               <ol><li name="com.snowplowanalytics.weather.Transport#receive" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="receive[W&lt;:com.snowplowanalytics.weather.WeatherResponse](request:com.snowplowanalytics.weather.WeatherRequest)(implicitevidence$1:io.circe.Decoder[W]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,W]]"></a><a id="receive[W&lt;:WeatherResponse](WeatherRequest)(Decoder[W]):F[Either[WeatherError,W]]"></a>
+      <a id="receive[W&lt;:com.snowplowanalytics.weather.model.WeatherResponse](request:com.snowplowanalytics.weather.model.WeatherRequest,apiHost:String,apiKey:String,timeout:scala.concurrent.duration.FiniteDuration,ssl:Boolean)(implicitevidence$1:io.circe.Decoder[W]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,W]]"></a><a id="receive[W&lt;:WeatherResponse](WeatherRequest,String,String,FiniteDuration,Boolean)(Decoder[W]):F[Either[WeatherError,W]]"></a>
       <span class="permalink">
-      <a href="../../../com/snowplowanalytics/weather/Transport.html#receive[W&lt;:com.snowplowanalytics.weather.WeatherResponse](request:com.snowplowanalytics.weather.WeatherRequest)(implicitevidence$1:io.circe.Decoder[W]):F[Either[com.snowplowanalytics.weather.Errors.WeatherError,W]]" title="Permalink">
+      <a href="../../../com/snowplowanalytics/weather/Transport.html#receive[W&lt;:com.snowplowanalytics.weather.model.WeatherResponse](request:com.snowplowanalytics.weather.model.WeatherRequest,apiHost:String,apiKey:String,timeout:scala.concurrent.duration.FiniteDuration,ssl:Boolean)(implicitevidence$1:io.circe.Decoder[W]):F[Either[com.snowplowanalytics.weather.errors.WeatherError,W]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -264,14 +249,12 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">receive</span><span class="tparams">[<span name="W">W &lt;: <a href="package$$WeatherResponse.html" class="extype" name="com.snowplowanalytics.weather.WeatherResponse">WeatherResponse</a></span>]</span><span class="params">(<span name="request">request: <a href="package$$WeatherRequest.html" class="extype" name="com.snowplowanalytics.weather.WeatherRequest">WeatherRequest</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="io.circe.Decoder">Decoder</span>[<span class="extype" name="com.snowplowanalytics.weather.Transport.receive.W">W</span>]</span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.Transport.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="Errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.Errors.WeatherError">WeatherError</a>, <span class="extype" name="com.snowplowanalytics.weather.Transport.receive.W">W</span>]]</span>
+        <span class="name">receive</span><span class="tparams">[<span name="W">W &lt;: <a href="model$$WeatherResponse.html" class="extype" name="com.snowplowanalytics.weather.model.WeatherResponse">WeatherResponse</a></span>]</span><span class="params">(<span name="request">request: <a href="model$$WeatherRequest.html" class="extype" name="com.snowplowanalytics.weather.model.WeatherRequest">WeatherRequest</a></span>, <span name="apiHost">apiHost: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="apiKey">apiKey: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="timeout">timeout: <span class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</span></span>, <span name="ssl">ssl: <span class="extype" name="scala.Boolean">Boolean</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="io.circe.Decoder">Decoder</span>[<span class="extype" name="com.snowplowanalytics.weather.Transport.receive.W">W</span>]</span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.Transport.F">F</span>[<span class="extype" name="scala.Either">Either</span>[<a href="errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.errors.WeatherError">WeatherError</a>, <span class="extype" name="com.snowplowanalytics.weather.Transport.receive.W">W</span>]]</span>
       </span>
       
       <p class="shortcomment cmt">Main client logic for Request =&gt; Response function,
-where Response is wrapped in tparam <code>F</code>
-</p><div class="fullcomment"><div class="comment cmt"><p>Main client logic for Request =&gt; Response function,
-where Response is wrapped in tparam <code>F</code>
-</p></div><dl class="paramcmts block"><dt class="tparam">W</dt><dd class="cmt"><p>type of weather response to extract</p></dd><dt class="param">request</dt><dd class="cmt"><p>request built by client method</p></dd><dt>returns</dt><dd class="cmt"><p>extracted either error or weather wrapped in <code>F</code></p></dd></dl></div>
+where Response is wrapped in tparam <code>F</code></p><div class="fullcomment"><div class="comment cmt"><p>Main client logic for Request =&gt; Response function,
+where Response is wrapped in tparam <code>F</code></p></div><dl class="paramcmts block"><dt class="tparam">W</dt><dd class="cmt"><p>type of weather response to extract</p></dd><dt class="param">request</dt><dd class="cmt"><p>request built by client method</p></dd><dt class="param">apiHost</dt><dd class="cmt"><p>address of the API to interrogate</p></dd><dt class="param">apiKey</dt><dd class="cmt"><p>credentials to interrogate the API</p></dd><dt class="param">timeout</dt><dd class="cmt"><p>duration after which the request will be timed out</p></dd><dt class="param">ssl</dt><dd class="cmt"><p>whether to use https or http</p></dd><dt>returns</dt><dd class="cmt"><p>extracted either error or weather wrapped in <code>F</code></p></dd></dl></div>
     </li></ol>
             </div>
 

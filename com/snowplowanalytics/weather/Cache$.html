@@ -138,33 +138,21 @@
                         <a class="class" href="Cache.html" title=""></a>
                         <a href="Cache.html" title="">Cache</a>
                       </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="Errors$.html" title=""></a>
-                        <a href="Errors$.html" title="">Errors</a>
-                      </li><li class="current-entities indented3">
-                        <a class="object" href="HttpTransport$.html" title=""></a>
-                        <a class="class" href="HttpTransport.html" title=""></a>
-                        <a href="HttpTransport.html" title="">HttpTransport</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="Implicits$.html" title=""></a>
-                        <a href="Implicits$.html" title="">Implicits</a>
-                      </li><li class="current-entities indented3">
-                        <a class="object" href="TimeoutHttpTransport$.html" title=""></a>
-                        <a class="class" href="TimeoutHttpTransport.html" title=""></a>
-                        <a href="TimeoutHttpTransport.html" title="">TimeoutHttpTransport</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
+                        <a class="object" href="Transport$.html" title=""></a>
                         <a class="trait" href="Transport.html" title=""></a>
                         <a href="Transport.html" title="">Transport</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="trait" href="package$$WeatherRequest.html" title=""></a>
-                        <a href="package$$WeatherRequest.html" title="">WeatherRequest</a>
+                        <a class="object" href="errors$.html" title=""></a>
+                        <a href="errors$.html" title="">errors</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="trait" href="package$$WeatherResponse.html" title=""></a>
-                        <a href="package$$WeatherResponse.html" title="">WeatherResponse</a>
+                        <a class="object" href="implicits$.html" title=""></a>
+                        <a href="implicits$.html" title="">implicits</a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="object" href="model$.html" title=""></a>
+                        <a href="model$.html" title="">model</a>
                       </li>
               </ul>
             </div>
@@ -521,6 +509,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="com.snowplowanalytics.weather.Cache#init" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="init[F[_],W&lt;:com.snowplowanalytics.weather.model.WeatherResponse](size:Int,geoPrecision:Int)(implicitevidence$1:cats.Functor[F],implicitCLM:com.snowplowanalytics.lrumap.CreateLruMap[F,com.snowplowanalytics.weather.Cache.CacheKey,Either[com.snowplowanalytics.weather.errors.WeatherError,W]]):F[com.snowplowanalytics.weather.Cache[F,W]]"></a><a id="init[F[_],W&lt;:WeatherResponse](Int,Int)(Functor[F],CreateLruMap[F,CacheKey,Either[WeatherError,W]]):F[Cache[F,W]]"></a>
+      <span class="permalink">
+      <a href="../../../com/snowplowanalytics/weather/Cache$.html#init[F[_],W&lt;:com.snowplowanalytics.weather.model.WeatherResponse](size:Int,geoPrecision:Int)(implicitevidence$1:cats.Functor[F],implicitCLM:com.snowplowanalytics.lrumap.CreateLruMap[F,com.snowplowanalytics.weather.Cache.CacheKey,Either[com.snowplowanalytics.weather.errors.WeatherError,W]]):F[com.snowplowanalytics.weather.Cache[F,W]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">init</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="W">W &lt;: <a href="model$$WeatherResponse.html" class="extype" name="com.snowplowanalytics.weather.model.WeatherResponse">WeatherResponse</a></span>]</span><span class="params">(<span name="size">size: <span class="extype" name="scala.Int">Int</span></span>, <span name="geoPrecision">geoPrecision: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <span class="extype" name="cats.Functor">Functor</span>[<span class="extype" name="com.snowplowanalytics.weather.Cache.init.F">F</span>]</span>, <span name="CLM">CLM: <span class="extype" name="com.snowplowanalytics.lrumap.CreateLruMap">CreateLruMap</span>[<span class="extype" name="com.snowplowanalytics.weather.Cache.init.F">F</span>, <a href="Cache$$CacheKey.html" class="extype" name="com.snowplowanalytics.weather.Cache.CacheKey">CacheKey</a>, <span class="extype" name="scala.Either">Either</span>[<a href="errors$$WeatherError.html" class="extype" name="com.snowplowanalytics.weather.errors.WeatherError">WeatherError</a>, <span class="extype" name="com.snowplowanalytics.weather.Cache.init.W">W</span>]]</span>)</span><span class="result">: <span class="extype" name="com.snowplowanalytics.weather.Cache.init.F">F</span>[<a href="Cache.html" class="extype" name="com.snowplowanalytics.weather.Cache">Cache</a>[<span class="extype" name="com.snowplowanalytics.weather.Cache.init.F">F</span>, <span class="extype" name="com.snowplowanalytics.weather.Cache.init.W">W</span>]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Factory method to create a cache.</p><div class="fullcomment"><div class="comment cmt"><p>Factory method to create a cache.</p></div><dl class="paramcmts block"><dt class="param">size</dt><dd class="cmt"><p>resulting cache's size</p></dd><dt class="param">geoPrecision</dt><dd class="cmt"><p>nth part of 1 to which latitude and longitude will be rounded when making
+requests to the cache</p></dd><dt>returns</dt><dd class="cmt"><p>a cache of WeatherResponse wrapped in a F</p></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
