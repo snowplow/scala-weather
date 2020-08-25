@@ -41,7 +41,7 @@ import ServerSpec._
 class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExecutionEnv with WeatherGenerator {
   def is = skipAllIf(owmKey.isEmpty) ^ s2"""
 
-    Test server responses for history requests by coordinates (it can take several minutes)
+    Test server responses for current weather by coordinates (it can take several minutes)
 
       big cities                            $e1
       random cities                         $e2
@@ -49,20 +49,20 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
       works with https                      $e4
   """
 
-  val host            = "history.openweathermap.org"
+  val host            = "api.openweathermap.org"
   lazy val ioClient   = CreateOWM[IO].create(host, owmKey.get, 1.seconds, true)
-  val ioRun           = (a: IO[Either[WeatherError, History]]) => a.unsafeRunSync()
+  val ioRun           = (a: IO[Either[WeatherError, Current]]) => a.unsafeRunSync()
   lazy val evalClient = CreateOWM[Eval].create(host, owmKey.get, 1.seconds, true)
-  val evalRun         = (a: Eval[Either[WeatherError, History]]) => a.value
+  val evalRun         = (a: Eval[Either[WeatherError, Current]]) => a.value
 
   def testCities[F[_]](
     cities: Vector[(Float, Float)],
     client: OWMClient[F],
-    f: F[Either[WeatherError, History]] => Either[WeatherError, History]
+    f: F[Either[WeatherError, Current]] => Either[WeatherError, Current]
   ): Prop =
-    Prop.forAll(genPredefinedPosition(cities), genLastWeekTimeStamp) { (position: Position, timestamp: Timestamp) =>
-      val history = client.historyByCoords(position.latitude, position.longitude, timestamp, timestamp + 80000)
-      val result  = f(history)
+    Prop.forAll(genPredefinedPosition(cities)) { position: Position =>
+      val current = client.currentByCoords(position.latitude, position.longitude)
+      val result  = f(current)
       result must beRight
     }
 
@@ -82,12 +82,12 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
 
   def e3 = {
     val ioClient = CreateOWM[IO].create(host, "INVALID-KEY", 1.seconds, true)
-    val ioResult = ioClient.historyById(1).unsafeRunTimed(5.seconds)
+    val ioResult = ioClient.currentById(1).unsafeRunTimed(5.seconds)
     ioResult must beSome
     ioResult.get must beLeft(AuthorizationError)
 
     val evalClient = CreateOWM[Eval].create(host, "INVALID-KEY", 1.seconds, true)
-    val evalResult = evalClient.historyById(1).value
+    val evalResult = evalClient.currentById(1).value
     evalResult must beLeft(AuthorizationError)
   }
 
