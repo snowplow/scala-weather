@@ -15,7 +15,7 @@ package providers.darksky
 
 import scala.concurrent.duration._
 
-import cats.{Eval, Id, Monad}
+import cats.{Id, Monad}
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.syntax.either._
@@ -59,37 +59,23 @@ sealed trait CreateDarkSky[F[_]] {
 object CreateDarkSky {
   def apply[F[_]](implicit ev: CreateDarkSky[F]): CreateDarkSky[F] = ev
 
-  implicit def syncCreateDarkSky[F[_]: Sync: Transport]: CreateDarkSky[F] = new CreateDarkSky[F] {
-    override def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration
-    ): DarkSkyClient[F] = new DarkSkyClient[F](apiHost, apiKey, timeout, ssl = true)
-    override def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      cacheSize: Int,
-      geoPrecision: Int
-    ): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
-      cacheClient[F](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
-  }
-
-  implicit def evalCreateDarkSky(implicit T: Transport[Eval]): CreateDarkSky[Eval] =
-    new CreateDarkSky[Eval] {
+  implicit def syncCreateDarkSky[F[_]: Sync: Transport](
+    implicit
+    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]]): CreateDarkSky[F] =
+    new CreateDarkSky[F] {
       override def create(
         apiHost: String,
         apiKey: String,
         timeout: FiniteDuration
-      ): DarkSkyClient[Eval] = new DarkSkyClient[Eval](apiHost, apiKey, timeout, ssl = true)
+      ): DarkSkyClient[F] = new DarkSkyClient[F](apiHost, apiKey, timeout, ssl = true)
       override def create(
         apiHost: String,
         apiKey: String,
         timeout: FiniteDuration,
         cacheSize: Int,
         geoPrecision: Int
-      ): Eval[Either[InvalidConfigurationError, DarkSkyCacheClient[Eval]]] =
-        cacheClient[Eval](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
+      ): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
+        cacheClient[F](apiHost, apiKey, timeout, cacheSize, geoPrecision, ssl = true)
     }
 
   implicit def idCreateDarkSky(implicit T: Transport[Id]): CreateDarkSky[Id] =
@@ -116,10 +102,9 @@ object CreateDarkSky {
     cacheSize: Int,
     geoPrecision: Int,
     ssl: Boolean
-  )(
-    implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]],
-    T: Transport[F]
-  ): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
+  )(implicit
+    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]],
+    T: Transport[F]): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
     (for {
       _ <- EitherT.fromEither[F] {
         ().asRight

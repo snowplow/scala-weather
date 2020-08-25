@@ -17,7 +17,6 @@ import java.time.ZonedDateTime
 
 import scala.concurrent.duration._
 
-import cats.Eval
 import cats.effect.IO
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2._
@@ -38,41 +37,28 @@ class DarkSkyClientSpec extends Specification with Mockito {
 
   val ioExampleResponse: IO[Either[WeatherError, DarkSkyResponse]] =
     IO.pure(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
-  val evalExampleResponse: Eval[Either[WeatherError, DarkSkyResponse]] =
-    Eval.now(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
 
   def e1 = {
     val expectedRequest = DarkSkyRequest(32.12f, 15.2f, Some(1449774761)) // "2015-12-10T19:12:41+00:00"
 
     implicit val ioTransport: Transport[IO] = mock[Transport[IO]]
     ioTransport
-      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)),
-                                any[String],
-                                any[String],
-                                any[FiniteDuration],
-                                any[Boolean])(eqTo(implicitly))
+      .receive[DarkSkyResponse](
+        eqTo(DarkSkyRequest(0f, 0f)),
+        any[String],
+        any[String],
+        any[FiniteDuration],
+        any[Boolean]
+      )(eqTo(implicitly))
       .returns(ioExampleResponse)
     val ioClient = CreateDarkSky[IO].create("host", "key", 1.seconds)
     ioClient.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
     there.was(
       1.times(ioTransport)
         .receive[DarkSkyResponse](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
-
-    implicit val evalTransport: Transport[Eval] = mock[Transport[Eval]]
-    evalTransport
-      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)),
-                                any[String],
-                                any[String],
-                                any[FiniteDuration],
-                                any[Boolean])(eqTo(implicitly))
-      .returns(evalExampleResponse)
-    val evalClient = CreateDarkSky[Eval].create("host", "key", 1.seconds)
-    evalClient.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(
-      1.times(evalTransport)
-        .receive[DarkSkyResponse](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
 }

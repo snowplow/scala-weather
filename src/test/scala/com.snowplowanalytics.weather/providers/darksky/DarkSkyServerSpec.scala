@@ -18,7 +18,6 @@ import java.time.{Instant, ZoneOffset, ZonedDateTime}
 
 import scala.concurrent.duration._
 
-import cats.Eval
 import cats.effect.IO
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
@@ -87,46 +86,29 @@ class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with
     }
   }
 
-  private lazy val ioClient   = CreateDarkSky[IO].create("api.darksky.net/forecast", key.get, 1.seconds)
-  val ioRun                   = (a: IO[Either[WeatherError, DarkSkyResponse]]) => a.unsafeRunSync()
-  private lazy val evalClient = CreateDarkSky[Eval].create("api.darksky.net/forecast", key.get, 1.seconds)
-  val evalRun                 = (a: Eval[Either[WeatherError, DarkSkyResponse]]) => a.value
+  private lazy val ioClient = CreateDarkSky[IO].create("api.darksky.net/forecast", key.get, 1.seconds)
+  val ioRun                 = (a: IO[Either[WeatherError, DarkSkyResponse]]) => a.unsafeRunSync()
 
-  def e1 = {
+  def e1 =
     testCitiesForecast(TestData.bigAndAbnormalCities, ioClient, ioRun)
       .set(maxSize = 10, minTestsOk = 10)
-    testCitiesForecast(TestData.bigAndAbnormalCities, evalClient, evalRun)
-      .set(maxSize = 10, minTestsOk = 10)
-  }
 
-  def e2 = {
+  def e2 =
     testCitiesForecast(TestData.randomCities, ioClient, ioRun)
       .set(maxSize = 10, minTestsOk = 10)
-    testCitiesForecast(TestData.randomCities, evalClient, evalRun)
-      .set(maxSize = 10, minTestsOk = 10)
-  }
 
-  def e3 = {
+  def e3 =
     testCitiesHistory(TestData.bigAndAbnormalCities, ioClient, ioRun)
       .set(maxSize = 10, minTestsOk = 10)
-    testCitiesHistory(TestData.bigAndAbnormalCities, evalClient, evalRun)
-      .set(maxSize = 10, minTestsOk = 10)
-  }
 
-  def e4 = {
-    testCitiesHistory(TestData.randomCities, ioClient, ioRun).set(maxSize     = 10, minTestsOk = 10)
-    testCitiesHistory(TestData.randomCities, evalClient, evalRun).set(maxSize = 10, minTestsOk = 10)
-  }
+  def e4 =
+    testCitiesHistory(TestData.randomCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 
   def e5 = {
     val ioClient = CreateDarkSky[IO].create("api.darksky.net/forecast", "INVALID_KEY", 1.seconds)
     val ioResult = ioClient.forecast(0f, 0f).unsafeRunTimed(5.seconds)
     ioResult must beSome
     ioResult.get must beLeft(AuthorizationError)
-
-    val evalClient = CreateDarkSky[Eval].create("api.darksky.net/forecast", "INVALID_KEY", 1.seconds)
-    val evalResult = evalClient.forecast(0f, 0f).value
-    evalResult must beLeft(AuthorizationError)
   }
 
 }
