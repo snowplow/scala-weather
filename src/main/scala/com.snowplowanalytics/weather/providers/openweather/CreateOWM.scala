@@ -15,7 +15,7 @@ package providers.openweather
 
 import scala.concurrent.duration._
 
-import cats.{Eval, Id, Monad}
+import cats.{Id, Monad}
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.syntax.either._
@@ -64,59 +64,45 @@ trait CreateOWM[F[_]] {
 object CreateOWM {
   def apply[F[_]](implicit ev: CreateOWM[F]): CreateOWM[F] = ev
 
-  implicit def syncCreateOWM[F[_]: Sync: Transport]: CreateOWM[F] = new CreateOWM[F] {
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean
-    ): OWMClient[F] = new OWMClient(apiHost, apiKey, timeout, ssl)
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean,
-      cacheSize: Int,
-      geoPrecision: Int
-    ): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
-      cacheClient[F](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
-  }
+  implicit def syncCreateOWM[F[_]: Sync: Transport](
+    implicit
+    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]]): CreateOWM[F] =
+    new CreateOWM[F] {
+      def create(
+        apiHost: String,
+        apiKey: String,
+        timeout: FiniteDuration,
+        ssl: Boolean
+      ): OWMClient[F] = new OWMClient(apiHost, apiKey, timeout, ssl)
+      def create(
+        apiHost: String,
+        apiKey: String,
+        timeout: FiniteDuration,
+        ssl: Boolean,
+        cacheSize: Int,
+        geoPrecision: Int
+      ): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
+        cacheClient[F](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
+    }
 
-  implicit def evalCreateOWM(implicit T: Transport[Eval]): CreateOWM[Eval] = new CreateOWM[Eval] {
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean
-    ): OWMClient[Eval] = new OWMClient(apiHost, apiKey, timeout, ssl)
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean,
-      cacheSize: Int,
-      geoPrecision: Int
-    ): Eval[Either[InvalidConfigurationError, OWMCacheClient[Eval]]] =
-      cacheClient[Eval](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
-  }
-
-  implicit def idCreateOWM(implicit T: Transport[Id]): CreateOWM[Id] = new CreateOWM[Id] {
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean
-    ): OWMClient[Id] = new OWMClient(apiHost, apiKey, timeout, ssl)
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean,
-      cacheSize: Int,
-      geoPrecision: Int
-    ): Id[Either[InvalidConfigurationError, OWMCacheClient[Id]]] =
-      cacheClient[Id](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
-  }
+  implicit def idCreateOWM(implicit T: Transport[Id]): CreateOWM[Id] =
+    new CreateOWM[Id] {
+      def create(
+        apiHost: String,
+        apiKey: String,
+        timeout: FiniteDuration,
+        ssl: Boolean
+      ): OWMClient[Id] = new OWMClient(apiHost, apiKey, timeout, ssl)
+      def create(
+        apiHost: String,
+        apiKey: String,
+        timeout: FiniteDuration,
+        ssl: Boolean,
+        cacheSize: Int,
+        geoPrecision: Int
+      ): Id[Either[InvalidConfigurationError, OWMCacheClient[Id]]] =
+        cacheClient[Id](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
+    }
 
   private[openweather] def cacheClient[F[_]: Monad](
     apiHost: String,
@@ -125,10 +111,9 @@ object CreateOWM {
     ssl: Boolean,
     cacheSize: Int,
     geoPrecision: Int
-  )(
-    implicit CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]],
-    T: Transport[F]
-  ): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
+  )(implicit
+    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]],
+    T: Transport[F]): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
     (for {
       _ <- EitherT.fromEither[F] {
         ().asRight
