@@ -27,7 +27,6 @@ lazy val root = project
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
   )
   .settings(BuildSettings.publishSettings)
-  .settings(BuildSettings.formatting)
   .settings(BuildSettings.docsSettings)
   .settings(
     libraryDependencies ++= Seq(

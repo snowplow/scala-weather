@@ -17,9 +17,6 @@ import Keys._
 import bintray.BintrayPlugin._
 import bintray.BintrayKeys._
 
-// Scalafmt plugin
-import com.lucidchart.sbt.scalafmt.ScalafmtCorePlugin.autoImport.{scalafmtOnCompile, scalafmtTestOnCompile}
-
 // Docs
 import sbtunidoc.ScalaUnidocPlugin.autoImport._
 import com.typesafe.sbt.site.SitePlugin.autoImport._
@@ -52,11 +49,6 @@ object BuildSettings {
           <organizationUrl>http://snowplowanalytics.com</organizationUrl>
         </developer>
       </developers>)
-  )
-
-  lazy val formatting = Seq(
-    scalafmtOnCompile := true,
-    scalafmtTestOnCompile := true
   )
 
   lazy val docsSettings = Seq(
