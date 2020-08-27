@@ -53,46 +53,52 @@ class OWMBatchGetSpec extends Specification with ScalaCheck with WeatherGenerato
       "200",
       List(
         Weather(
-          main = MainInfo(Some(100),
-                          50,
-                          BigDecimal(3),
-                          Some(BigDecimal(10)),
-                          BigDecimal(12),
-                          BigDecimal(10),
-                          BigDecimal(15)),
-          wind    = Wind(1, 5, None, None, None),
-          clouds  = Clouds(100),
-          rain    = None,
-          snow    = None,
+          main = MainInfo(
+            Some(100),
+            50,
+            BigDecimal(3),
+            Some(BigDecimal(10)),
+            BigDecimal(12),
+            BigDecimal(10),
+            BigDecimal(15)
+          ),
+          wind = Wind(1, 5, None, None, None),
+          clouds = Clouds(100),
+          rain = None,
+          snow = None,
           weather = List(WeatherCondition("Clouds", "few clouds", 801, "02d")),
-          dt      = 1447941977
+          dt = 1447941977
         ),
         Weather(
-          main = MainInfo(Some(150),
-                          50,
-                          BigDecimal(13),
-                          Some(BigDecimal(0)),
-                          BigDecimal(17),
-                          BigDecimal(10),
-                          BigDecimal(25)),
-          wind    = Wind(1, 5, None, None, None),
-          clouds  = Clouds(100),
-          rain    = None,
-          snow    = None,
+          main = MainInfo(
+            Some(150),
+            50,
+            BigDecimal(13),
+            Some(BigDecimal(0)),
+            BigDecimal(17),
+            BigDecimal(10),
+            BigDecimal(25)
+          ),
+          wind = Wind(1, 5, None, None, None),
+          clouds = Clouds(100),
+          rain = None,
+          snow = None,
           weather = List(WeatherCondition("Haze", "haze", 721, "50n")),
-          dt      = 1447941171
+          dt = 1447941171
         )
       )
     ).pickCloseIn(ZonedDateTime.ofInstant(Instant.ofEpochSecond(1447941101), ZoneOffset.UTC))
       .right
       .map(_.dt) must beRight(1447941171)
 
-  def e7 = forAll(genNonEmptyHistoryBatch, genTimestamp) { (h: History, t: Long) =>
-    val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)
-    h.pickCloseIn(dateTime) must beRight
-  }
-  def e8 = forAll(genEmptyHistoryBatch, genTimestamp) { (h: History, t: Long) =>
-    val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)
-    h.pickCloseIn(dateTime) must beLeft(InternalError("Server response has no weather stamps"))
-  }
+  def e7 =
+    forAll(genNonEmptyHistoryBatch, genTimestamp) { (h: History, t: Long) =>
+      val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)
+      h.pickCloseIn(dateTime) must beRight
+    }
+  def e8 =
+    forAll(genEmptyHistoryBatch, genTimestamp) { (h: History, t: Long) =>
+      val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(t), ZoneOffset.UTC)
+      h.pickCloseIn(dateTime) must beLeft(InternalError("Server response has no weather stamps"))
+    }
 }

@@ -45,11 +45,11 @@ object requests {
   final case class DarkSkyRequest(
     latitude: Float,
     longitude: Float,
-    time: Option[Long]       = None,
+    time: Option[Long] = None,
     exclude: List[BlockType] = List.empty[BlockType],
-    extend: Boolean          = false,
-    lang: Option[String]     = None,
-    units: Option[Units]     = None
+    extend: Boolean = false,
+    lang: Option[String] = None,
+    units: Option[Units] = None
   ) extends WeatherRequest {
 
     override def constructRequest(baseUri: String, apiKey: String): HttpRequest = {
@@ -68,7 +68,8 @@ object requests {
   }
 
   /** Dark Sky seems to not consume numbers in scientific notation,
-   * which are sometimes produced by toString */
+    * which are sometimes produced by toString
+    */
   private def floatToString(value: Float): String = {
     val decimalFormat = new DecimalFormat("0.0000")
     decimalFormat.setMinimumFractionDigits(0)

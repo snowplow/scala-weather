@@ -25,8 +25,10 @@ import com.typesafe.sbt.SbtGit.GitKeys._
 object BuildSettings {
 
   lazy val javaCompilerOptions = Seq(
-    "-source", "1.8",
-    "-target", "1.8"
+    "-source",
+    "1.8",
+    "-target",
+    "1.8"
   )
 
   lazy val publishSettings = bintraySettings ++ Seq(
@@ -38,10 +40,10 @@ object BuildSettings {
     bintrayRepository := "snowplow-maven",
     pomIncludeRepository := { _ => false },
     homepage := Some(url("http://snowplowanalytics.com")),
-    scmInfo := Some(ScmInfo(url("https://github.com/snowplow/scala-weather"),
-      "scm:git@github.com:snowplow/scala-weather.git")),
-    pomExtra := (
-      <developers>
+    scmInfo := Some(
+      ScmInfo(url("https://github.com/snowplow/scala-weather"), "scm:git@github.com:snowplow/scala-weather.git")
+    ),
+    pomExtra := (<developers>
         <developer>
           <name>Snowplow Analytics Ltd</name>
           <email>support@snowplowanalytics.com</email>

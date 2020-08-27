@@ -28,11 +28,11 @@ import errors._
 import responses._
 
 /**
- * Test case classes extraction from real server responses
- *
- * Define environment variable called DARKSKY_KEY with DarkSky API Key in it,
- * otherwise these tests are skipped.
- */
+  * Test case classes extraction from real server responses
+  *
+  * Define environment variable called DARKSKY_KEY with DarkSky API Key in it,
+  * otherwise these tests are skipped.
+  */
 class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExecutionEnv {
   private val key = sys.env.get("DARKSKY_KEY")
 
@@ -90,16 +90,13 @@ class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with
   val ioRun                 = (a: IO[Either[WeatherError, DarkSkyResponse]]) => a.unsafeRunSync()
 
   def e1 =
-    testCitiesForecast(TestData.bigAndAbnormalCities, ioClient, ioRun)
-      .set(maxSize = 10, minTestsOk = 10)
+    testCitiesForecast(TestData.bigAndAbnormalCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 
   def e2 =
-    testCitiesForecast(TestData.randomCities, ioClient, ioRun)
-      .set(maxSize = 10, minTestsOk = 10)
+    testCitiesForecast(TestData.randomCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 
   def e3 =
-    testCitiesHistory(TestData.bigAndAbnormalCities, ioClient, ioRun)
-      .set(maxSize = 10, minTestsOk = 10)
+    testCitiesHistory(TestData.bigAndAbnormalCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 
   def e4 =
     testCitiesHistory(TestData.randomCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)

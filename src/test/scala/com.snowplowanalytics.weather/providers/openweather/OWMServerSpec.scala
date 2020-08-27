@@ -32,11 +32,11 @@ object ServerSpec {
 import ServerSpec._
 
 /**
- * Test case classes extraction from real server responses
- *
- * Define environment variable called OWM_KEY with OpenWeatherMap API Key in it,
- * otherwise these tests are skipped.
- */
+  * Test case classes extraction from real server responses
+  *
+  * Define environment variable called OWM_KEY with OpenWeatherMap API Key in it,
+  * otherwise these tests are skipped.
+  */
 class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExecutionEnv with WeatherGenerator {
   def is = skipAllIf(owmKey.isEmpty) ^ s2"""
 
@@ -64,12 +64,10 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
     }
 
   def e1 =
-    testCities(TestData.bigAndAbnormalCities, ioClient, ioRun)
-      .set(maxSize = 5, minTestsOk = 5)
+    testCities(TestData.bigAndAbnormalCities, ioClient, ioRun).set(maxSize = 5, minTestsOk = 5)
 
   def e2 =
-    testCities(TestData.randomCities, ioClient, ioRun)
-      .set(maxSize = 10, minTestsOk = 10)
+    testCities(TestData.randomCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 
   def e3 = {
     val ioClient = CreateOWM[IO].create(host, "INVALID-KEY", 1.seconds, true)
@@ -79,6 +77,5 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
   }
 
   def e4 =
-    testCities(TestData.randomCities, ioClient, ioRun)
-      .set(maxSize = 10, minTestsOk = 10)
+    testCities(TestData.randomCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 }

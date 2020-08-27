@@ -57,15 +57,21 @@ class RequestSpec extends Specification with ScalaCheck {
   }
 
   def e5 = {
-    val request = DarkSkyRequest(17.3f,
-                                 -89.3f,
-                                 Some(1234567),
-                                 exclude = List(daily),
-                                 extend  = true,
-                                 lang    = Some("pl"),
-                                 units   = Some(Units.auto))
-    request.constructRequest(baseUri, key) mustEqual Http(s"$baseUri/$key/17.3,-89.3,1234567")
-      .params("exclude" -> "daily", "extend" -> "hourly", "lang" -> "pl", "units" -> "auto")
+    val request = DarkSkyRequest(
+      17.3f,
+      -89.3f,
+      Some(1234567),
+      exclude = List(daily),
+      extend = true,
+      lang = Some("pl"),
+      units = Some(Units.auto)
+    )
+    request.constructRequest(baseUri, key) mustEqual Http(s"$baseUri/$key/17.3,-89.3,1234567").params(
+      "exclude" -> "daily",
+      "extend"  -> "hourly",
+      "lang"    -> "pl",
+      "units"   -> "auto"
+    )
   }
 
 }

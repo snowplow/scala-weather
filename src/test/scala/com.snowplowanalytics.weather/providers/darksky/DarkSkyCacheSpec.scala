@@ -63,14 +63,17 @@ class DarkSkyCacheSpec extends Specification with Mockito {
     there.was(
       1.times(ioTransport)
         .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
   def e2 = {
     implicit val ioTransport = mock[Transport[IO]]
     ioTransport
       .receive[DarkSkyResponse](any[DarkSkyRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
-        eqTo(implicitly))
+        eqTo(implicitly)
+      )
       .returns(ioTimeoutErrorResponse)
       .thenReturn(ioExampleResponse)
 
@@ -83,7 +86,9 @@ class DarkSkyCacheSpec extends Specification with Mockito {
     there.was(
       2.times(ioTransport)
         .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
   def e3 = {
@@ -99,7 +104,9 @@ class DarkSkyCacheSpec extends Specification with Mockito {
     there.was(
       4.times(ioTransport)
         .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
   def e4 = {
@@ -114,7 +121,9 @@ class DarkSkyCacheSpec extends Specification with Mockito {
     there.was(
       1.times(ioTransport)
         .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
   def e5 = {
@@ -129,19 +138,19 @@ class DarkSkyCacheSpec extends Specification with Mockito {
     there.was(
       2.times(ioTransport)
         .receive[DarkSkyResponse](any[DarkSkyRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
-  def e6 = {
+  def e6 =
     CreateDarkSky[IO].create("host", "KEY", 1.seconds, 10, geoPrecision = 0).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
     }
-  }
 
-  def e7 = {
+  def e7 =
     CreateDarkSky[IO].create("host", "KEY", 1.seconds, cacheSize = 0, 10).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
     }
-  }
 
 }

@@ -21,8 +21,8 @@ import errors._
 import model.WeatherResponse
 
 /**
- * Case classes used for extracting data from JSON
- */
+  * Case classes used for extracting data from JSON
+  */
 object responses {
   sealed trait OwmResponse extends WeatherResponse
 
@@ -53,9 +53,9 @@ object responses {
   // DETAILS
 
   /**
-   * Weather conditions at exact moment, past, future or current
-   * Core data type
-   */
+    * Weather conditions at exact moment, past, future or current
+    * Core data type
+    */
   @JsonCodec
   final case class Weather(
     main: MainInfo,
@@ -68,8 +68,8 @@ object responses {
   ) extends OwmResponse
 
   /**
-   * Common main information about weather
-   */
+    * Common main information about weather
+    */
   @JsonCodec
   final case class MainInfo(
     grnd_level: Option[BigDecimal],
@@ -82,8 +82,8 @@ object responses {
   )
 
   /**
-   * Textual description of the weather
-   */
+    * Textual description of the weather
+    */
   @JsonCodec
   final case class WeatherCondition(main: String, description: String, id: Int, icon: String)
 
@@ -101,11 +101,11 @@ object responses {
   @JsonCodec final case class Rain(`1h`: Option[BigDecimal], `3h`: Option[BigDecimal])
 
   /**
-   * Pick an Integer from `list` which is close-in to `item`
-   *
-   * @param timestamp original integer
-   * @return close neighbour
-   */
+    * Pick an Integer from `list` which is close-in to `item`
+    *
+    * @param timestamp original integer
+    * @return close neighbour
+    */
   private[openweather] def pickClosestWeather(
     list: List[Weather],
     timestamp: Long
@@ -117,21 +117,17 @@ object responses {
         .getOrElse(Left(InternalError("Server response has no weather stamps")))
 
   /**
-   * Helper function for taking closest value out of some list
-   *
-   * @param list list of objects (weather stamps)
-   * @param index some index to derive position in ordering (timestamp)
-   * @param transform function to derive index (timestamp) out of object (weather stamp)
-   * @return closest object for some index
-   */
+    * Helper function for taking closest value out of some list
+    *
+    * @param list list of objects (weather stamps)
+    * @param index some index to derive position in ordering (timestamp)
+    * @param transform function to derive index (timestamp) out of object (weather stamp)
+    * @return closest object for some index
+    */
   private[openweather] def pickClosest[A](
     list: List[A],
     index: Long,
     transform: A => (Int, A)
   ): Option[A] =
-    list
-      .map(transform)
-      .sortBy(x => Math.abs(index - x._1))
-      .headOption
-      .map(_._2)
+    list.map(transform).sortBy(x => Math.abs(index - x._1)).headOption.map(_._2)
 }
