@@ -51,17 +51,22 @@ class GeoPrecisionSpec extends Specification with ScalaCheck {
 
   // Rounding arbitrary floats
   val sensibleFloat = // we want omit big exponents
-    Arbitrary.arbitrary[Float] suchThat (f => (f > -180.0) && (f < 180.0))
+    Arbitrary.arbitrary[Float].suchThat(f => (f > -180.0) && (f < 180.0))
 
-  def e8 = forAll(sensibleFloat) { f: Float =>
-    Cache.roundCoordinate(f, 1).toString must endWith(".0")
-  }
-  def e9 = forAll(sensibleFloat) { f: Float =>
-    Cache.roundCoordinate(f, 2).toString must endWith(".0") or endWith(".5")
-  }
-  def e10 = forAll(sensibleFloat) { f: Float =>
-    Cache
-      .roundCoordinate(f, 5)
-      .toString must endWith(".0") or endWith(".2") or endWith(".4") or endWith(".6") or endWith(".8")
-  }
+  def e8 =
+    forAll(sensibleFloat) { f: Float =>
+      Cache.roundCoordinate(f, 1).toString must endWith(".0")
+    }
+  def e9 =
+    forAll(sensibleFloat) { f: Float =>
+      (Cache.roundCoordinate(f, 2).toString must endWith(".0")).or(endWith(".5"))
+    }
+  def e10 =
+    forAll(sensibleFloat) { f: Float =>
+      (Cache.roundCoordinate(f, 5).toString must endWith(".0"))
+        .or(endWith(".2"))
+        .or(endWith(".4"))
+        .or(endWith(".6"))
+        .or(endWith(".8"))
+    }
 }

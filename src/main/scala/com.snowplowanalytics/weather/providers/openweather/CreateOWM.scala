@@ -28,29 +28,29 @@ import responses.History
 trait CreateOWM[F[_]] {
 
   /**
-   * Create an `OWMClient`
-   * @param apiHost URL to the OpenWeatherMap API endpoints
-   * @param apiKey API key from OpenWeatherMap
-   * @param timeout time after which active request will be considered failed
-   * @param ssl whether to use https
-   * @return an OWMClient
-   */
+    * Create an `OWMClient`
+    * @param apiHost URL to the OpenWeatherMap API endpoints
+    * @param apiKey API key from OpenWeatherMap
+    * @param timeout time after which active request will be considered failed
+    * @param ssl whether to use https
+    * @return an OWMClient
+    */
   def create(apiHost: String, apiKey: String, timeout: FiniteDuration, ssl: Boolean): OWMClient[F]
 
   /**
-   * Create an `OwmCacheClient` capable of caching results
-   * @param apiHost URL to the OpenWeatherMap API endpoints
-   * @param apiKey API key from OpenWeatherMap
-   * @param timeout time after which active request will be considered failed
-   * @param ssl whether to use https
-   * @param cacheSize amount of history requests storing in cache
-   * it's better to store whole OWM packet (5000/50000/150000) plus some space for errors (~1%)
-   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
-   * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
-   * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km infelicity in the worst
-   * case; 2 ~30km etc
-   * @return either an InvalidConfigurationError or a OWMCacheClient
-   */
+    * Create an `OwmCacheClient` capable of caching results
+    * @param apiHost URL to the OpenWeatherMap API endpoints
+    * @param apiKey API key from OpenWeatherMap
+    * @param timeout time after which active request will be considered failed
+    * @param ssl whether to use https
+    * @param cacheSize amount of history requests storing in cache
+    * it's better to store whole OWM packet (5000/50000/150000) plus some space for errors (~1%)
+    * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
+    * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
+    * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km infelicity in the worst
+    * case; 2 ~30km etc
+    * @return either an InvalidConfigurationError or a OWMCacheClient
+    */
   def create(
     apiHost: String,
     apiKey: String,
@@ -64,9 +64,9 @@ trait CreateOWM[F[_]] {
 object CreateOWM {
   def apply[F[_]](implicit ev: CreateOWM[F]): CreateOWM[F] = ev
 
-  implicit def syncCreateOWM[F[_]: Sync: Transport](
-    implicit
-    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]]): CreateOWM[F] =
+  implicit def syncCreateOWM[F[_]: Sync: Transport](implicit
+    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]]
+  ): CreateOWM[F] =
     new CreateOWM[F] {
       def create(
         apiHost: String,
@@ -113,7 +113,8 @@ object CreateOWM {
     geoPrecision: Int
   )(implicit
     CLM: CreateLruMap[F, CacheKey, Either[WeatherError, History]],
-    T: Transport[F]): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
+    T: Transport[F]
+  ): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
     (for {
       _ <- EitherT.fromEither[F] {
         ().asRight

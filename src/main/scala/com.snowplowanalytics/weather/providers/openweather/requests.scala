@@ -26,10 +26,8 @@ private[weather] object requests {
 
     override def constructRequest(baseUri: String, apiKey: String): HttpRequest = {
       val versionedBaseUri = s"$baseUri/data/2.5"
-      val uriWithPath = endpoint
-        .map(e => s"$versionedBaseUri/$e/$resource")
-        .getOrElse(s"$versionedBaseUri/$resource")
-      val params = ("appid", apiKey) :: parameters.toList
+      val uriWithPath      = endpoint.map(e => s"$versionedBaseUri/$e/$resource").getOrElse(s"$versionedBaseUri/$resource")
+      val params           = ("appid", apiKey) :: parameters.toList
       Http(uriWithPath).params(params)
     }
   }

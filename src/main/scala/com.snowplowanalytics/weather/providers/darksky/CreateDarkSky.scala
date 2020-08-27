@@ -28,25 +28,25 @@ import responses.DarkSkyResponse
 sealed trait CreateDarkSky[F[_]] {
 
   /**
-   * Create a `DarkSkyClient`
-   * @param apiHost URL to the Dark Sky API endpoints
-   * @param apiKey API key from Dark Sky
-   * @return a DarkSkyClient
-   */
+    * Create a `DarkSkyClient`
+    * @param apiHost URL to the Dark Sky API endpoints
+    * @param apiKey API key from Dark Sky
+    * @return a DarkSkyClient
+    */
   def create(apiHost: String, apiKey: String, timeout: FiniteDuration): DarkSkyClient[F]
 
   /**
-   * Create a `DarkSkyCacheClient` capable of caching results
-   * @param apiHost URL to the Dark Sky API endpoints
-   * @param apiKey API key from Dark Sky
-   * @param timeout time after which active request will be considered failed
-   * @param cacheSize amount of responses stored in the cache
-   * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
-   * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
-   * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km accuracy in the worst
-   * case; 2 ~30km etc
-   * @return either an InvalidConfigurationError or a DarkSkyCacheClient
-   */
+    * Create a `DarkSkyCacheClient` capable of caching results
+    * @param apiHost URL to the Dark Sky API endpoints
+    * @param apiKey API key from Dark Sky
+    * @param timeout time after which active request will be considered failed
+    * @param cacheSize amount of responses stored in the cache
+    * @param geoPrecision nth part of 1 to which latitude and longitude will be rounded
+    * stored in cache. e.g. coordinate 45.678 will be rounded to values 46.0, 45.5, 45.7, 45.78 by
+    * geoPrecision 1,2,10,100 respectively. geoPrecision 1 will give ~60km accuracy in the worst
+    * case; 2 ~30km etc
+    * @return either an InvalidConfigurationError or a DarkSkyCacheClient
+    */
   def create(
     apiHost: String,
     apiKey: String,
@@ -59,9 +59,9 @@ sealed trait CreateDarkSky[F[_]] {
 object CreateDarkSky {
   def apply[F[_]](implicit ev: CreateDarkSky[F]): CreateDarkSky[F] = ev
 
-  implicit def syncCreateDarkSky[F[_]: Sync: Transport](
-    implicit
-    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]]): CreateDarkSky[F] =
+  implicit def syncCreateDarkSky[F[_]: Sync: Transport](implicit
+    CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]]
+  ): CreateDarkSky[F] =
     new CreateDarkSky[F] {
       override def create(
         apiHost: String,
@@ -104,7 +104,8 @@ object CreateDarkSky {
     ssl: Boolean
   )(implicit
     CLM: CreateLruMap[F, CacheKey, Either[WeatherError, DarkSkyResponse]],
-    T: Transport[F]): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
+    T: Transport[F]
+  ): F[Either[InvalidConfigurationError, DarkSkyCacheClient[F]]] =
     (for {
       _ <- EitherT.fromEither[F] {
         ().asRight
