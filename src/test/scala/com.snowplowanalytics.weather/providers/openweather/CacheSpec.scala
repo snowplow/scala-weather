@@ -51,8 +51,11 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
 
   def e1 = Cache.dayStartEpoch(nov19time) must beEqualTo(nov19begin)
   def e2 =
-    Cache.eventToCacheKey(ZonedDateTime.parse("2018-06-02T02:23:12+05:00"), Position(42.832f, 32.1101f), precision) must beEqualTo(
-      CacheKey(LocalDate.of(2018, 6, 1), Position(43.0f, 32.0f)))
+    Cache.eventToCacheKey(
+      ZonedDateTime.parse("2018-06-02T02:23:12+05:00"),
+      Position(42.832f, 32.1101f),
+      precision
+    ) must beEqualTo(CacheKey(LocalDate.of(2018, 6, 1), Position(43.0f, 32.0f)))
 
   def e3 = {
     val dateTime =
@@ -83,7 +86,9 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     there.was(
       1.times(ioTransport)
         .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
 }

@@ -24,11 +24,11 @@ import errors._
 import responses._
 
 /**
- * Blocking OpenWeatherMap client with history (only) cache
- * Extends `OwmClient`, but uses timeouts for requests
- *
- * WARNING. Caching will not work with free OWM licenses - history plan is required
- */
+  * Blocking OpenWeatherMap client with history (only) cache
+  * Extends `OwmClient`, but uses timeouts for requests
+  *
+  * WARNING. Caching will not work with free OWM licenses - history plan is required
+  */
 class OWMCacheClient[F[_]] private[openweather] (
   cache: Cache[F, History],
   apiHost: String,
@@ -42,26 +42,28 @@ class OWMCacheClient[F[_]] private[openweather] (
   val geoPrecision: Int = cache.geoPrecision
 
   /**
-   * Search history in cache and if not found request and await it from server
-   * and put to the cache. If timeout error was taken from cache, do request again
-   *
-   * @param latitude event's latitude
-   * @param longitude event's longitude
-   * @param timestamp event's timestamp
-   * @return weather stamp immediately taken from cache or requested from server
-   */
+    * Search history in cache and if not found request and await it from server
+    * and put to the cache. If timeout error was taken from cache, do request again
+    *
+    * @param latitude event's latitude
+    * @param longitude event's longitude
+    * @param timestamp event's timestamp
+    * @return weather stamp immediately taken from cache or requested from server
+    */
   def cachingHistoryByCoords(
     latitude: Float,
     longitude: Float,
     timestamp: Timestamp
   )(implicit M: Monad[F]): F[Either[WeatherError, Weather]] =
-    cachingHistoryByCoords(latitude,
-                           longitude,
-                           ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC))
+    cachingHistoryByCoords(
+      latitude,
+      longitude,
+      ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneOffset.UTC)
+    )
 
   /**
-   * Overloaded `cachingHistoryByCoords` method with `ZonedDateTime` instead of Unix epoch timestamp
-   */
+    * Overloaded `cachingHistoryByCoords` method with `ZonedDateTime` instead of Unix epoch timestamp
+    */
   def cachingHistoryByCoords(
     latitude: Float,
     longitude: Float,
@@ -72,14 +74,14 @@ class OWMCacheClient[F[_]] private[openweather] (
       .map(historyResult => getWeatherStamp(historyResult, dateTime))
 
   /**
-   * Retry request to the server, put whole batch result to client's cache
-   * and pick near to `timestamp` weather stamp
-   *
-   * @param latitude real event's latitude
-   * @param longitude real event's longitude
-   * @param dateTime real event's zoned datetime
-   * @return near weather stamp
-   */
+    * Retry request to the server, put whole batch result to client's cache
+    * and pick near to `timestamp` weather stamp
+    *
+    * @param latitude real event's latitude
+    * @param longitude real event's longitude
+    * @param dateTime real event's zoned datetime
+    * @return near weather stamp
+    */
   private def doRequest(
     latitude: Float,
     longitude: Float,
@@ -94,13 +96,13 @@ class OWMCacheClient[F[_]] private[openweather] (
     )
 
   /**
-   * Get exact weather stamp from history batch-request (probably failed)
-   * nearest to specified `timestamp`
-   *
-   * @param history history request with 0 or more weather stamps
-   * @param dateTime zoned date time
-   * @return either error or weather stamp
-   */
+    * Get exact weather stamp from history batch-request (probably failed)
+    * nearest to specified `timestamp`
+    *
+    * @param history history request with 0 or more weather stamps
+    * @param dateTime zoned date time
+    * @return either error or weather stamp
+    */
   private[openweather] def getWeatherStamp(
     history: Either[WeatherError, History],
     dateTime: ZonedDateTime

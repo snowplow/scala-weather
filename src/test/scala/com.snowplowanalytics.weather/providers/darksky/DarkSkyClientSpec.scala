@@ -43,18 +43,22 @@ class DarkSkyClientSpec extends Specification with Mockito {
 
     implicit val ioTransport: Transport[IO] = mock[Transport[IO]]
     ioTransport
-      .receive[DarkSkyResponse](eqTo(DarkSkyRequest(0f, 0f)),
-                                any[String],
-                                any[String],
-                                any[FiniteDuration],
-                                any[Boolean])(eqTo(implicitly))
+      .receive[DarkSkyResponse](
+        eqTo(DarkSkyRequest(0f, 0f)),
+        any[String],
+        any[String],
+        any[FiniteDuration],
+        any[Boolean]
+      )(eqTo(implicitly))
       .returns(ioExampleResponse)
     val ioClient = CreateDarkSky[IO].create("host", "key", 1.seconds)
     ioClient.timeMachine(32.12f, 15.2f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
     there.was(
       1.times(ioTransport)
         .receive[DarkSkyResponse](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
+          eqTo(implicitly)
+        )
+    )
   }
 
 }

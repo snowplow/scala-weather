@@ -13,10 +13,10 @@
 package com.snowplowanalytics.weather.providers
 
 /**
- * Contains most-populated cities plus randomly picked city from every country,
- * plus some very distant or unpopulated cities,
- * plus cities with abnormal responses which I've found
- */
+  * Contains most-populated cities plus randomly picked city from every country,
+  * plus some very distant or unpopulated cities,
+  * plus cities with abnormal responses which I've found
+  */
 object TestData {
   // Pre-picked cities
   val bigAndAbnormalCities = Vector(
@@ -33,10 +33,10 @@ object TestData {
     (42.98339f, -81.23304f),
     (43.2f, -80.38333f),
     (35.6895f, 139.69171f),
-    (37.085152f, 15.273000f), // Siracusa
+    (37.085152f, 15.273000f),   // Siracusa
     (39.213039f, -106.937820f), // Snowmass Village, US
-    (42.869999f, 74.589996f), // Bishkek
-    (50.000000f, 8.271110f) // Mainz, DE
+    (42.869999f, 74.589996f),   // Bishkek
+    (50.000000f, 8.271110f)     // Mainz, DE
   )
 
   // Random cities
@@ -153,24 +153,26 @@ object TestData {
     "light intensity shower rain"
   )
 
-  val owmIcons = Vector("01d",
-                        "01n",
-                        "02d",
-                        "02n",
-                        "03d",
-                        "03n",
-                        "04d",
-                        "04n",
-                        "09d",
-                        "09n",
-                        "10d",
-                        "10n",
-                        "11d",
-                        "11n",
-                        "13d",
-                        "13n",
-                        "50d",
-                        "50n")
+  val owmIcons = Vector(
+    "01d",
+    "01n",
+    "02d",
+    "02n",
+    "03d",
+    "03n",
+    "04d",
+    "04n",
+    "09d",
+    "09n",
+    "10d",
+    "10n",
+    "11d",
+    "11n",
+    "13d",
+    "13n",
+    "50d",
+    "50n"
+  )
 
   val owmDescriptionIds =
     Vector(200, 211, 300, 301, 302, 310, 500, 501, 502, 520, 521, 600, 620, 701, 721, 741, 800, 801, 802, 803, 804)

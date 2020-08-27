@@ -62,7 +62,8 @@ class OWMCacheSpec extends Specification with Mockito {
     ioAction.unsafeRunSync()
     there.was(
       1.times(ioTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
+        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly))
+    )
 
   }
 
@@ -70,7 +71,8 @@ class OWMCacheSpec extends Specification with Mockito {
     implicit val ioTransport = mock[Transport[IO]]
     ioTransport
       .receive[History](any[OwmRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
-        any[Decoder[History]])
+        any[Decoder[History]]
+      )
       .returns(ioTimeoutErrorResponse)
       .thenReturn(ioEmptyHistoryResponse)
     val ioAction = for {
@@ -81,7 +83,8 @@ class OWMCacheSpec extends Specification with Mockito {
     ioAction.unsafeRunSync()
     there.was(
       2.times(ioTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
+        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly))
+    )
   }
 
   def e3 = {
@@ -96,7 +99,8 @@ class OWMCacheSpec extends Specification with Mockito {
     ioAction.unsafeRunSync()
     there.was(
       4.times(ioTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
+        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly))
+    )
   }
 
   def e4 = {
@@ -110,7 +114,8 @@ class OWMCacheSpec extends Specification with Mockito {
     ioAction.unsafeRunSync()
     there.was(
       1.times(ioTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
+        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly))
+    )
   }
 
   def e5 = {
@@ -124,7 +129,8 @@ class OWMCacheSpec extends Specification with Mockito {
     ioAction.unsafeRunSync()
     there.was(
       2.times(ioTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
+        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly))
+    )
   }
 
   def e6 =

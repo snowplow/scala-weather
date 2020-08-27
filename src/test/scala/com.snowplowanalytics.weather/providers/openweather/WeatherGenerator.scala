@@ -22,8 +22,8 @@ import responses._
 import Cache._
 
 /**
- * Trait with methods for random weather generation
- */
+  * Trait with methods for random weather generation
+  */
 trait WeatherGenerator {
   val someTenths = (0 until 300).by(10).map(Some(_))
 
@@ -106,8 +106,8 @@ trait WeatherGenerator {
     Arbitrary(genWeatherStamp)
 
   /**
-   * Pick random position predefined in `TestData` and distort it with <30km
-   */
+    * Pick random position predefined in `TestData` and distort it with <30km
+    */
   def genPredefinedPosition(positions: Vector[(Float, Float)]): Gen[Position] =
     for {
       seedLat <- Gen.choose(-0.4f, 0.4f) // Distort lat and lon little bit
@@ -120,10 +120,10 @@ trait WeatherGenerator {
     }
 
   /**
-   * Generate timestamp somewhere between two weeks ago and yesterday
-   *
-   * @return timestamp in seconds
-   */
+    * Generate timestamp somewhere between two weeks ago and yesterday
+    *
+    * @return timestamp in seconds
+    */
   def genLastWeekTimeStamp: Gen[Long] = {
     val now = System.currentTimeMillis() / 1000
     for {
