@@ -1,3 +1,12 @@
+Version 1.0.0 (2020-09-02)
+--------------------------
+Reformat code (#128)
+Update scalafmt to newest (#127)
+Bump scala-lru-map to 0.5.0 (#122)
+Bump Circe to 0.13.0 (#120)
+Replace historic weather requests with current (#125)
+Update OpenWeatherMap credentials in travis.yml (#123)
+
 Version 0.5.0 (2019-11-27)
 --------------------------
 Introduce tagless final encoding (#102)
