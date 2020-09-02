@@ -15,7 +15,7 @@ package providers.openweather
 
 import scala.concurrent.duration._
 
-import cats.{Eval, Id, Monad}
+import cats.{Id, Monad}
 import cats.data.EitherT
 import cats.effect.Sync
 import cats.syntax.either._
@@ -80,24 +80,6 @@ object CreateOWM {
       geoPrecision: Int
     ): F[Either[InvalidConfigurationError, OWMCacheClient[F]]] =
       cacheClient[F](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
-  }
-
-  implicit def evalCreateOWM(implicit T: Transport[Eval]): CreateOWM[Eval] = new CreateOWM[Eval] {
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean
-    ): OWMClient[Eval] = new OWMClient(apiHost, apiKey, timeout, ssl)
-    def create(
-      apiHost: String,
-      apiKey: String,
-      timeout: FiniteDuration,
-      ssl: Boolean,
-      cacheSize: Int,
-      geoPrecision: Int
-    ): Eval[Either[InvalidConfigurationError, OWMCacheClient[Eval]]] =
-      cacheClient[Eval](apiHost, apiKey, timeout, ssl, cacheSize, geoPrecision)
   }
 
   implicit def idCreateOWM(implicit T: Transport[Id]): CreateOWM[Id] = new CreateOWM[Id] {

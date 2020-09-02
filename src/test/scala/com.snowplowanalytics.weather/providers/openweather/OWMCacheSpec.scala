@@ -16,7 +16,6 @@ package providers.openweather
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-import cats.Eval
 import cats.effect.{ContextShift, IO}
 import cats.syntax.either._
 import io.circe.Decoder
@@ -51,10 +50,6 @@ class OWMCacheSpec extends Specification with Mockito {
     IO.pure(History(BigInt(100), "0", List()).asRight)
   val ioTimeoutErrorResponse: IO[Either[TimeoutError, History]] =
     IO.pure(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
-  val evalEmptyHistoryResponse: Eval[Either[TimeoutError, History]] =
-    Eval.later(History(BigInt(100), "0", List()).asRight)
-  val evalTimeoutErrorResponse: Eval[Either[TimeoutError, History]] =
-    Eval.later(TimeoutError("java.util.concurrent.TimeoutException: Futures timed out after [1 second]").asLeft)
 
   def e1 = {
     implicit val ioTransport = mock[Transport[IO]].defaultReturn(ioEmptyHistoryResponse)
@@ -69,17 +64,6 @@ class OWMCacheSpec extends Specification with Mockito {
       1.times(ioTransport)
         .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
 
-    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
-    val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-    } yield ()
-    evalAction.value
-    there.was(
-      1.times(evalTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
   }
 
   def e2 = {
@@ -98,22 +82,6 @@ class OWMCacheSpec extends Specification with Mockito {
     there.was(
       2.times(ioTransport)
         .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
-
-    implicit val evalTransport = mock[Transport[Eval]]
-    evalTransport
-      .receive[History](any[OwmRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
-        any[Decoder[History]])
-      .returns(evalTimeoutErrorResponse)
-      .thenReturn(evalEmptyHistoryResponse)
-    val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-    } yield ()
-    evalAction.value
-    there.was(
-      2.times(evalTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
   }
 
   def e3 = {
@@ -129,19 +97,6 @@ class OWMCacheSpec extends Specification with Mockito {
     there.was(
       4.times(ioTransport)
         .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
-
-    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
-    val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(6.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(8.44f, 3.33f, 100)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, 100)
-    } yield ()
-    evalAction.value
-    there.was(
-      4.times(evalTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
   }
 
   def e4 = {
@@ -155,18 +110,6 @@ class OWMCacheSpec extends Specification with Mockito {
     ioAction.unsafeRunSync()
     there.was(
       1.times(ioTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
-
-    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
-    val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 10, 1).map(_.toOption.get)
-      _      <- client.cachingHistoryByCoords(10.4f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
-    } yield ()
-    evalAction.value
-    there.was(
-      1.times(evalTransport)
         .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
   }
 
@@ -182,36 +125,16 @@ class OWMCacheSpec extends Specification with Mockito {
     there.was(
       2.times(ioTransport)
         .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
-
-    implicit val evalTransport = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
-    val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 10, 2).map(_.toOption.get)
-      _      <- client.cachingHistoryByCoords(10.8f, 32.1f, 1447070440) // Nov 9 12:00:40 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.1f, 32.312f, 1447063607) // Nov 9 10:06:47 2015 GMT
-      _      <- client.cachingHistoryByCoords(10.2f, 32.4f, 1447096857) // Nov 9 19:20:57 2015 GMT
-    } yield ()
-    evalAction.value
-    there.was(
-      2.times(evalTransport)
-        .receive[History](any[OwmRequest], eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(eqTo(implicitly)))
   }
 
-  def e6 = {
+  def e6 =
     CreateOWM[IO].create("host", "KEY", 1.seconds, true, 10, geoPrecision = 0).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
     }
-    CreateOWM[Eval].create("host", "KEY", 1.seconds, true, 10, geoPrecision = 0).value must beLeft.like {
-      case InvalidConfigurationError(msg) => msg must be_==("geoPrecision must be greater than 0")
-    }
-  }
 
-  def e7 = {
+  def e7 =
     CreateOWM[IO].create("host", "KEY", 1.seconds, true, cacheSize = 0, 10).unsafeRunSync() must beLeft.like {
       case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
     }
-    CreateOWM[Eval].create("host", "KEY", 1.seconds, true, cacheSize = 0, 10).value must beLeft.like {
-      case InvalidConfigurationError(msg) => msg must be_==("cacheSize must be greater than 0")
-    }
-  }
 
 }

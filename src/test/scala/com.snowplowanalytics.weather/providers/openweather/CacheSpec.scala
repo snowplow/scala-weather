@@ -18,7 +18,6 @@ import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-import cats.Eval
 import cats.effect.{ContextShift, IO}
 import org.specs2.Specification
 import org.specs2.mock.Mockito
@@ -83,18 +82,6 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     ioAction.unsafeRunSync()
     there.was(
       1.times(ioTransport)
-        .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
-
-    val evalEmptyHistoryResponse = Eval.now(Right(History(BigInt(100), "0", List())))
-    implicit val evalTransport   = mock[Transport[Eval]].defaultReturn(evalEmptyHistoryResponse)
-    val evalAction = for {
-      client <- CreateOWM[Eval].create("host", "key", 1.seconds, true, 2, 1).map(_.toOption.get)
-      _      <- client.cachingHistoryByCoords(4.44f, 3.33f, newDayInKranoyarsk)
-    } yield ()
-    evalAction.value
-    there.was(
-      1.times(evalTransport)
         .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
           eqTo(implicitly)))
   }
