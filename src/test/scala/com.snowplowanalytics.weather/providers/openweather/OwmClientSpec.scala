@@ -17,7 +17,6 @@ import java.time.ZonedDateTime
 
 import scala.concurrent.duration._
 
-import cats.Eval
 import cats.effect.IO
 import cats.syntax.either._
 import io.circe.Decoder
@@ -39,8 +38,7 @@ class OWMClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
     Implicits for DateTime work as expected (without imports)   $e1
   """
 
-  val ioEmptyHistoryResponse   = IO.pure(History(BigInt(100), "0", List()).asRight[WeatherError])
-  val evalEmptyHistoryResponse = Eval.now(History(BigInt(100), "0", List()).asRight[WeatherError])
+  val ioEmptyHistoryResponse = IO.pure(History(BigInt(100), "0", List()).asRight[WeatherError])
   val expectedRequest = OwmHistoryRequest(
     "city",
     Map(
@@ -60,18 +58,6 @@ class OWMClientSpec(implicit val ec: ExecutionEnv) extends Specification with Mo
     ioClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
     there.was(
       1.times(ioTransport)
-        .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
-          eqTo(implicitly)))
-
-    implicit val evalTransport = mock[Transport[Eval]]
-    evalTransport
-      .receive(any[WeatherRequest], any[String], any[String], any[FiniteDuration], any[Boolean])(
-        any[Decoder[WeatherResponse]])
-      .returns(evalEmptyHistoryResponse)
-    val evalClient = CreateOWM[Eval].create("host", "key", 1.seconds, true)
-    evalClient.historyByCoords(0.00f, 0.00f, ZonedDateTime.parse("2015-12-11T02:12:41.000+07:00"))
-    there.was(
-      1.times(evalTransport)
         .receive[History](eqTo(expectedRequest), eqTo("host"), eqTo("key"), eqTo(1.seconds), eqTo(true))(
           eqTo(implicitly)))
   }
