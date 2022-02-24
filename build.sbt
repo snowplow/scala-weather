@@ -19,7 +19,7 @@ lazy val root = project
     organization := "com.snowplowanalytics",
     version := "1.0.0",
     description := "High-performance Scala library for performing current and historical weather lookups",
-    scalaVersion := "2.12.8",
+    scalaVersion := "2.12.15",
     javacOptions := BuildSettings.javaCompilerOptions,
     shellPrompt := { _ =>
       name.value + "> "
