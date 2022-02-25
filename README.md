@@ -1,8 +1,9 @@
 # Scala Weather
 
-[![Build Status][travis-image]][travis] [![Maven Central][maven-badge]][maven-link] [![License][license-image]][license]
-[![Join the chat at https://gitter.im/snowplow/scala-weather](https://badges.gitter.im/snowplow/scala-weather.svg)](https://gitter.im/snowplow/scala-weather?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![codecov](https://codecov.io/gh/snowplow/scala-weather/branch/master/graph/badge.svg)](https://codecov.io/gh/snowplow/scala-weather)
+[![Build Status][ci-image]][ci]
+[![Maven Central][release-image]][releases]
+[![Coverage Status][coveralls-image]][coveralls]
+[![License][license-image]][license]
 
 ## Overview
 
@@ -226,18 +227,21 @@ limitations under the License.
 [darksky]: https://darksky.net
 [darkskydev]: https://darksky.net/dev
 [lru]: https://en.wikipedia.org/wiki/Cache_algorithms#LRU
-[history-plan]: http://openweathermap.org/price
-[owm-signup]: http://home.openweathermap.org/users/sign_up
+[history-plan]: https://openweathermap.org/price
+[owm-signup]: https://home.openweathermap.org/users/sign_up
 
-[snowplow]: http://snowplowanalytics.com
+[snowplow]: https://snowplowanalytics.com
 [snowplow-repo]: https://github.com/snowplow/snowplow
 [weather-enrichment]: https://github.com/snowplow/snowplow/wiki/Weather-enrichment
 
-[travis]: https://travis-ci.org/snowplow/scala-weather
-[travis-image]: https://travis-ci.org/snowplow/scala-weather.png?branch=master
+[coveralls]: https://coveralls.io/github/snowplow/scala-weather?branch=master
+[coveralls-image]: https://coveralls.io/repos/github/snowplow/scala-weather/badge.svg?branch=master
 
-[maven-badge]: https://maven-badges.herokuapp.com/maven-central/com.snowplowanalytics/scala-weather_2.12/badge.svg
-[maven-link]: https://maven-badges.herokuapp.com/maven-central/com.snowplowanalytics/scala-weather_2.12
+[ci]: https://github.com/snowplow/scala-weather/actions?query=workflow%3ACI
+[ci-image]: https://github.com/snowplow/scala-weather/workflows/CI/badge.svg
+
+[releases]: https://maven-badges.herokuapp.com/maven-central/com.snowplowanalytics/scala-weather_2.12
+[release-image]: https://img.shields.io/maven-central/v/com.snowplowanalytics/scala-weather_2.12.svg
 
 [license-image]: http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat
 [license]: http://www.apache.org/licenses/LICENSE-2.0

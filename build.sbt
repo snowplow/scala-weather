@@ -13,11 +13,9 @@
 
 lazy val root = project
   .in(file("."))
-  .enablePlugins(ScalaUnidocPlugin, GhpagesPlugin)
   .settings(
     name := "scala-weather",
     organization := "com.snowplowanalytics",
-    version := "1.0.0",
     description := "High-performance Scala library for performing current and historical weather lookups",
     scalaVersion := "2.12.15",
     javacOptions := BuildSettings.javaCompilerOptions,
@@ -40,3 +38,4 @@ lazy val root = project
       Dependencies.Libraries.specsScalaCheck
     )
   )
+  .enablePlugins(SiteScaladocPlugin, PreprocessPlugin)
