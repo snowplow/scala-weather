@@ -21,12 +21,7 @@ import com.typesafe.sbt.SbtGit.GitKeys._
 
 object BuildSettings {
 
-  lazy val javaCompilerOptions = Seq(
-    "-source",
-    "1.8",
-    "-target",
-    "1.8"
-  )
+  lazy val javaCompilerOptions = Seq("-source", "11", "-target", "11")
 
   lazy val publishSettings = Seq[Setting[_]](
     publishArtifact := true,
