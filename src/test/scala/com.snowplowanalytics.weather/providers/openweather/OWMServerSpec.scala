@@ -16,6 +16,8 @@ package providers.openweather
 import scala.concurrent.duration._
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.scalacheck.Prop

@@ -15,10 +15,11 @@ package providers.darksky
 
 import java.time.ZonedDateTime
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+
 import cats.syntax.either._
 import org.mockito.ArgumentMatchers.{eq => eqTo}
 import org.specs2.Specification
@@ -42,9 +43,6 @@ class DarkSkyCacheSpec extends Specification with Mockito {
     be left for invalid precision $e6
     be left for invalid cache size $e7
   """
-
-  implicit val timer                = IO.timer(global)
-  implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
   val ioExampleResponse: IO[Right[TimeoutError, DarkSkyResponse]] =
     IO.pure(Right(DarkSkyResponse(0f, 0f, "", None, None, None, None, None, None)))
@@ -98,6 +96,7 @@ class DarkSkyCacheSpec extends Specification with Mockito {
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(6.44f, 3.33f, ZonedDateTime.now())
       _      <- client.cachingTimeMachine(8.44f, 3.33f, ZonedDateTime.now())
+      _      <- IO.sleep(1 second) // give some time for cache cleanup
       _      <- client.cachingTimeMachine(4.44f, 3.33f, ZonedDateTime.now())
     } yield ()
     ioAction.unsafeRunSync()

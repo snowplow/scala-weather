@@ -15,10 +15,11 @@ package providers.openweather
 
 import java.time._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+
 import org.specs2.Specification
 import org.specs2.mock.Mockito
 import org.mockito.ArgumentMatchers.{eq => eqTo}
@@ -39,9 +40,6 @@ class CacheSpec(implicit val ec: ExecutionEnv) extends Specification with Mockit
     dayStartEpoch produces correct time                     $e3
     Key from next day in other timezone extracted correctly $e4
   """
-
-  implicit val timer                = IO.timer(global)
-  implicit val cs: ContextShift[IO] = IO.contextShift(global)
 
   private val precision          = 1
   private val nov19time          = Instant.ofEpochSecond(1447945977).atZone(ZoneOffset.UTC).toLocalDate
