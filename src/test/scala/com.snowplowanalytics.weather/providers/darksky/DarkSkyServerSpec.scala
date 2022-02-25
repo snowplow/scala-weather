@@ -19,6 +19,7 @@ import java.time.{Instant, ZoneOffset, ZonedDateTime}
 import scala.concurrent.duration._
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
 import org.specs2.specification.core.{Env, OwnExecutionEnv}
