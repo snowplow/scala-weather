@@ -20,12 +20,12 @@ We provide caching and basic clients for both providers - `OwmClient` and `OwmCa
 
 ## Installation
 
-The latest version of Scala Weather is 0.5.0, which is built against Scala 2.12.x.
+The latest version of Scala Weather is 2.0.0, which is cross-built against Scala 2.12 & 2.13.
 
 If you're using SBT, add the following lines to your build file:
 
 ```scala
-libraryDependencies += "com.snowplowanalytics" %% "scala-weather" % "0.5.0"
+libraryDependencies += "com.snowplowanalytics" %% "scala-weather" % "2.0.0"
 ```
 
 ## Guide
