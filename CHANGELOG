@@ -1,3 +1,12 @@
+Version 1.0.1 (2022-03-01)
+--------------------------
+Bump scala-lru-map to 0.6.0 (#138)
+Bump Javac to 11 (#137)
+Migrate to GitHub Actions (#135)
+Extend copyright to 2022 (#134)
+Bump Scala to 2.12.15 (#133)
+Bump SBT to 1.6.2 (#132)
+
 Version 1.0.0 (2020-09-02)
 --------------------------
 Reformat code (#128)
