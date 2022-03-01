@@ -15,17 +15,15 @@ package providers
 package darksky
 
 import java.time.{Instant, ZoneOffset, ZonedDateTime}
-
 import scala.concurrent.duration._
-
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
 import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.specs2.{ScalaCheck, Specification}
-
 import errors._
+import org.specs2.matcher.MatchResult
 import responses._
 
 /**
@@ -102,11 +100,10 @@ class DarkSkyServerSpec(val env: Env) extends Specification with ScalaCheck with
   def e4 =
     testCitiesHistory(TestData.randomCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 
-  def e5 = {
+  def e5: MatchResult[Option[Either[WeatherError, DarkSkyResponse]]] = {
     val ioClient = CreateDarkSky[IO].create("api.darksky.net/forecast", "INVALID_KEY", 1.seconds)
     val ioResult = ioClient.forecast(0f, 0f).unsafeRunTimed(5.seconds)
-    ioResult must beSome
-    ioResult.get must beLeft(AuthorizationError)
+    ioResult must beSome(Left[WeatherError, DarkSkyResponse](AuthorizationError))
   }
 
 }

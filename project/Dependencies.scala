@@ -16,11 +16,11 @@ object Dependencies {
 
   object V {
     val circe  = "0.14.1"
-    val scalaj = "2.4.1"
+    val scalaj = "2.4.2"
     val lruMap = "0.6.0"
 
     // Tests
-    val specs2 = "4.3.5"
+    val specs2 = "4.13.2"
   }
 
   object Libraries {

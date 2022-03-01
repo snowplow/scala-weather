@@ -14,16 +14,14 @@ package com.snowplowanalytics.weather
 package providers.openweather
 
 import scala.concurrent.duration._
-
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-
 import org.specs2.{ScalaCheck, Specification}
 import org.specs2.specification.core.{Env, OwnExecutionEnv}
 import org.scalacheck.Prop
-
 import Cache.Position
 import errors._
+import org.specs2.matcher.MatchResult
 import providers.TestData
 import responses._
 
@@ -71,11 +69,10 @@ class ServerSpec(val env: Env) extends Specification with ScalaCheck with OwnExe
   def e2 =
     testCities(TestData.randomCities, ioClient, ioRun).set(maxSize = 10, minTestsOk = 10)
 
-  def e3 = {
+  def e3: MatchResult[Option[Either[WeatherError, Current]]] = {
     val ioClient = CreateOWM[IO].create(host, "INVALID-KEY", 1.seconds, true)
     val ioResult = ioClient.currentById(1).unsafeRunTimed(5.seconds)
-    ioResult must beSome
-    ioResult.get must beLeft(AuthorizationError)
+    ioResult must beSome(Left[WeatherError, Current](AuthorizationError))
   }
 
   def e4 =

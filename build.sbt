@@ -17,12 +17,25 @@ lazy val root = project
     name := "scala-weather",
     organization := "com.snowplowanalytics",
     description := "High-performance Scala library for performing current and historical weather lookups",
-    scalaVersion := "2.12.15",
+    scalaVersion := "2.13.8",
+    crossScalaVersions := Seq("2.12.15", "2.13.8"),
     javacOptions := BuildSettings.javaCompilerOptions,
     shellPrompt := { _ =>
       name.value + "> "
     },
-    addCompilerPlugin(("org.scalamacros" % "paradise" % "2.1.1").cross(CrossVersion.full))
+    libraryDependencies ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, n)) if n <= 12 =>
+          List(compilerPlugin(("org.scalamacros" % "paradise" % "2.1.1").cross(CrossVersion.full)))
+        case _ => Nil
+      }
+    },
+    Compile / scalacOptions ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, n)) if n <= 12 => Nil
+        case _                       => List("-Ymacro-annotations")
+      }
+    }
   )
   .settings(BuildSettings.publishSettings)
   .settings(BuildSettings.docsSettings)

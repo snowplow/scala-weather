@@ -87,9 +87,9 @@ class OWMBatchGetSpec extends Specification with ScalaCheck with WeatherGenerato
           dt = 1447941171
         )
       )
-    ).pickCloseIn(ZonedDateTime.ofInstant(Instant.ofEpochSecond(1447941101), ZoneOffset.UTC))
-      .right
-      .map(_.dt) must beRight(1447941171)
+    ).pickCloseIn(ZonedDateTime.ofInstant(Instant.ofEpochSecond(1447941101), ZoneOffset.UTC)).map(_.dt) must beRight(
+      1447941171
+    )
 
   def e7 =
     forAll(genNonEmptyHistoryBatch, genTimestamp) { (h: History, t: Long) =>

@@ -41,6 +41,6 @@ object BuildSettings {
   )
 
   lazy val docsSettings = Seq(
-    SiteScaladoc / siteSubdirName := s"${version.value}",
+    SiteScaladoc / siteSubdirName := s"${version.value}"
   )
 }

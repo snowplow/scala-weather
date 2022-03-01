@@ -107,6 +107,6 @@ class OWMCacheClient[F[_]] private[openweather] (
     history: Either[WeatherError, History],
     dateTime: ZonedDateTime
   ): Either[WeatherError, Weather] =
-    history.right.flatMap(_.pickCloseIn(dateTime))
+    history.flatMap(_.pickCloseIn(dateTime))
 
 }

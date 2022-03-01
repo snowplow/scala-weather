@@ -14,8 +14,6 @@ package com.snowplowanalytics.weather
 
 import java.time.ZonedDateTime
 
-import scala.language.implicitConversions
-
 object implicits {
 
   /**
