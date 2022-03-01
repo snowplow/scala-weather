@@ -15,7 +15,7 @@ import sbt._
 object Dependencies {
 
   object V {
-    val circe  = "0.13.0"
+    val circe  = "0.14.1"
     val scalaj = "2.4.1"
     val lruMap = "0.6.0"
 
